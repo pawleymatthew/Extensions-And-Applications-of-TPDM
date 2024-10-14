@@ -21,6 +21,7 @@ options(knitr.kable.NA = "")
 
 ```{r background-source-functions}
 #| include: false
+sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
 sapply(list.files(path = "R/background", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
 ```
 
@@ -36,9 +37,7 @@ The distribution of $M_n$ is given by
 \begin{equation*}
     \mathbb{P}(M_n \leq x) = \mathbb{P}(X_1\leq x,\ldots X_n \leq x) = \prod_{i=1}^n \mathbb{P}(X_i \leq x) = F^n(x).
 \end{equation*}
-In practice, this result is not particularly useful, since $F$ is usually unknown. Instead, we leverage asymptotic theory to study the limiting behaviour of $F^n$ as $n\to\infty$. 
-
-The asymptotic distribution of $M_n$ is degenerate, since $M_n \overset{p}{\to} x_F$, the (possibly infinite) upper end-point of $F$. The Extremal Types Theorem states that, after suitable rescaling, there are three classes of non-degenerate asymptotic distribution.
+In practice, this result is not particularly useful, since $F$ is usually unknown. Instead, we leverage asymptotic theory to study the limiting behaviour of $F^n$ as $n\to\infty$. The asymptotic distribution of $M_n$ is degenerate, since $M_n \overset{p}{\to} x_F$, the (possibly infinite) upper end-point of $F$. The Extremal Types Theorem states that, after suitable rescaling, there are three classes of non-degenerate asymptotic distribution.
 
 :::{#thm-extremal-types}
 Suppose there exist real sequences $\{a_n > 0\}$ and $\{b_n\in\R\}$ and a non-degenerate distribution function $G$ such that
@@ -48,11 +47,11 @@ Suppose there exist real sequences $\{a_n > 0\}$ and $\{b_n\in\R\}$ and a non-de
 Then $G$ belongs to one of three parametric families: Gumbel, Fréchet or negative Weibull.
 :::
 
-When \eqref{eq-extremal-types} holds, we say that $F$ lies in the maximum domain of attraction (MDA) of $G$. The three families are unified by the Generalised Extreme Value (GEV) distribution, with distribution function
+When \eqref{eq-extremal-types} holds, we say that $F$ lies in the maximum domain of attraction (MDA) of $G$. The three families are unified by the Generalised Extreme Value (GEV) distribution. Its distribution function is
 \begin{equation}\label{eq-gev}
     G(x) = \exp\left\lbrace - \left[ 1 + \xi \left(\frac{x-\mu}{\sigma}\right)\right]_+^{-1/\xi} \right\rbrace.
 \end{equation}
-The parameters $\mu\in\R$, $\sigma >0$ and $\xi\in\R$ are called the location, scale, and shape, respectively. The shape dictates which sub-class the asymptotic distribution belongs to: $\xi>0$ corresponds to the heavy-tailed Fréchet class; $\xi=0$ (interpreted as $\xi\to 0$) corresponds to the exponential-tailed Gumbel class; $\xi<0$ corresponds to the negative Weibull class, which has a finite upper limit.
+The parameters $\mu\in\R$, $\sigma >0$ and $\xi\in\R$ are called the location, scale, and shape, respectively. The sign of the shape parameter determines the sub-class: $\xi>0$ corresponds to the heavy-tailed Fréchet class, $\xi=0$ (interpreted as $\xi\to 0$) corresponds the exponential-tailed Gumbel class, and $\xi<0$ the negative Weibull class, which has a finite upper limit.
 
 The GEV distribution is used to model the upper tail of $X$ via the block maxima approach. Let $x_1,\ldots,x_n$ denote independent observations of $X_1,\ldots,X_n$. The data are then partitioned into finite blocks of size $m$. Provided $m$ is sufficiently large, @thm-extremal-types implies that the maximum observation in each block is approximately GEV distributed. Estimates for the GEV parameters are obtained from the set of block-wise maxima, e.g. by maximum likelihood inference. The choice of block size is critical and involves managing a bias-variance trade-off. If $m$ is too small, then the asymptotic approximation may not be valid. If $m$ is too large, then the number of blocks (and therefore block-wise maxima) will be small, resulting in high variances in the estimates. 
 
@@ -125,9 +124,7 @@ Suppose $\bm{X}=(X_1,\ldots,X_d)$ has joint distribution function $F$ and contin
 \end{equation}
 :::
 
-The copula $C$ characterises the dependence structure of the variables. It represents the distribution function of $\bm{X}$ after transforming to standard uniform margins. 
-
-Uniform margins are a standard choice in multivariate statistics, but one could easily conceive of copulae defined with alternative marginal distributions. In extreme value theory, it is common to work with Fréchet, exponential, or Gumbel margins. The different choices will accentuate particular features of the extreme values. For example, heavy-tailed Fréchet margins will highlight the most extreme values, while light-tailed Gumbel or exponential margins are often preferred for conditional extremes modelling (CITE Heffernan and Tawn).
+The copula $C$ characterises the dependence structure of the variables. It represents the distribution function of $\bm{X}$ after transforming to standard uniform margins. Uniform margins are a standard choice in multivariate statistics, but one could easily conceive of copulae defined with alternative marginal distributions. In extreme value theory, it is common to work with Fréchet, exponential, or Gumbel margins. The different choices accentuate particular features of the extreme values. For example, heavy-tailed Fréchet margins will highlight the most extreme values. Light-tailed Gumbel or exponential margins are often preferred for conditional extremes modelling (CITE Heffernan and Tawn).
 
 There are broadly two ways of performing the preliminary standardisation. Suppose $\bm{X}=(X_1,\ldots,X_d)$ has marginal distributions $X_i\sim F_i$ for $i=1,\ldots,d$. If the functions $F_i$ are known, then the marginal distributions can be transformed to some common distribution $F_\star$ via by the probability integral transform:
 \begin{equation}\label{eq-marginal-transformation}
@@ -392,27 +389,29 @@ Suppose $\bm{X}=(X_1,X_2)$ is max-linear with parameter matrix $A\in\R_+^{2\time
 
 The bivariate dependence measure $\chi_{ij}$ is usually estimated by computing the empirical probabilities $\hat{\chi}_{ij}(u)$ at a sequence of high quantiles $u$ approaching one. An example of the resulting diagnostic plot is provided in @fig-chi-estimation. The underlying data are generated from a symmetric logistic model with $\alpha=0.5$. The black points represent the empirical estimates $\hat{\chi}_{ij}(u)$ over the range $0.8 \leq u \leq 0.995$, with a 95\% confidence interval depicted by the grey region. The true value $\chi_{ij}=2-\sqrt{2}\approx 0.59$ (see \autoref{ex-symmetric-logistic-chi}) is indicated by the red horizontal line. The plot illustrates a clear example of the bias-variance trade-off in relation to the choice of quantile/threshold. This phenomenon is ubiquitous in threshold-based extreme value statistics and will be discussed in more detail in Section ??. 
 
-```{r make-fig-chi-estimation}
+```{r background-make-fig-chi-estimation}
 #| label: fig-chi-estimation
-#| fig-cap: "Symmetric logistic with $\\alpha=0.5$. True $\\chi=2-2^\\alpha\\approx 0.586$. Estimates based on data $n=5000$. 95\\% Wald CI based on \\texttt{mev::taildep} function."
-#| fig-scap: "Blah"
-#| fig-height: 3.5
+#| fig-cap: "Empirical estimates $\\hat{\\chi}_{12}(u)$ of the tail dependence coefficient for bivariate symmetric logistic data with $\\gamma=0.5$ and $n=5,000$ observations. The true coefficient $\\chi_{12}=2-2^\\gamma\\approx 0.59$ is marked by the dashed line. The shaded region represents the 95\\% Wald confidence interval."
+#| fig-scap: "Empirical estimates $\\hat{\\chi}_{12}(u)$ for bivariate symmetric logistic data."
+#| fig-height: 2.8
+#| fig-width: 5
 
 set.seed(1)
-X <- rmev(n = 5000, d = 2, par = 1 / 0.5, model = "log")
-chi_q <- taildep(X, meas = "chi", qlim = c(0.8, 0.995), plot = FALSE)$chi %>%
-  as.data.frame() %>%
-  mutate(q = seq(from = 0.8, to = 0.995, length.out = 40))
+gamma <- 0.5
+X <- rmev(n = 5000, d = 2, par = 1 / gamma, model = "log")
 
-ggplot(data = chi_q, aes(x = q, y = coef)) +
-  geom_ribbon(aes(ymax = upperci, ymin = lowerci), fill = "darkgrey", colour = "grey", alpha = 0.4, linewidth = 0.3, linetype = "dashed") +
-  geom_point() +
-  geom_hline(yintercept = 2 - 2^0.5, linetype = "dashed", colour = "red") +
-  scale_x_continuous(limits = c(0.8, 1), expand = expansion(mult = c(0.01, 0))) +
+taildep(X, meas = "chi", qlim = c(0.8, 0.995), plot = FALSE)$chi %>%
+  as.data.frame() %>%
+  mutate(q = seq(from = 0.8, to = 0.995, length.out = 40)) %>%
+  ggplot(aes(x = q, y = coef)) +
+  geom_ribbon(aes(ymax = upperci, ymin = lowerci), fill = "lightblue", colour = NA, alpha = 0.4) +
+  geom_line(colour = "blue") +
+  geom_point(colour = "blue") +
+  geom_hline(yintercept = sl_chi(gamma), linetype = "dashed", colour = "black") +
+  scale_x_continuous(limits = c(0.8, 1), expand = expansion(mult = c(0.01, 0)), breaks = breaks_extended(n = 8)) +
   theme_light() +
-  labs(colour = "Measure",
-       x = expression(u),
-       y = expression(hat(chi)[ij](u)))
+  labs(x = expression(u),
+       y = expression(hat(chi)[12](u)))
 ```
 
 Estimation of $\chi_\beta$ for $|\beta| > 2$ is more complicated. Determining the collection of $\beta$ for which $\chi_\beta > 0$ is equivalent to identifying the support of the angular measure, i.e. which faces of the simplex possess $H$-mass. *This will be explained later. Sparsity assumption, empirical angular measure only places mass on interior, etc.*
@@ -694,83 +693,53 @@ In summary, the diagonal entries pertain to the marginal scales while the off-di
 We now compute the TPDM for a selection of parametric models. Parametric angular densities are typically specified for the $\alpha=1$ case, i.e. with respect to standard Fréchet margins and the $L_1$-norm. Happily, @prp-tpdm-h1-formula provides the formula for calculating the TPDM from such functions. We assume Fréchet margins as in \eqref{eq-alpha-frechet}, so that we may substitute $m=2$ into \eqref{eq-tpdm-h1-formula}. We reiterate that the following expressions hold for any choice of $\alpha\geq 1$. Invariably these expressions will involve intractable integrals. The angular densities are provided by \textit{(CITE thesis entitled Inference on the Angular Distribution of Extremes.)}. 
 
 :::{#exm-symmetric-logistic-tpdm}
-Suppose $\bm{X}=(X_1,\ldots,X_d)$ follows the symmetric logistic distribution with dependence parameter $\alpha\in(0,1)$. Then
+Suppose $\bm{X}=(X_1,\ldots,X_d)$ follows the symmetric logistic distribution with dependence parameter $\gamma\in(0,1)$. Then
     \begin{align}
-        \tilde{h}_1(\theta;\alpha) &= \frac{1-\alpha}{2\alpha}[\theta(1-\theta)]^{\frac{1}{\alpha}-2}[\theta^{1/\alpha} + (1-\theta)^{1/\alpha}]^{\alpha-2}, \\
-        \sigma_{ij} &= \frac{1-\alpha}{\alpha} \int_0^1 [u(1-u)]^{\frac{1}{\alpha}-\frac{3}{2}}[(1-u)^{1/\alpha} + u^{1/\alpha}]^{\alpha-2}\,\dee u.
+        \tilde{h}_1(\theta;\gamma) &= \frac{1-\gamma}{2\gamma}[\theta(1-\theta)]^{\frac{1}{\gamma}-2}[\theta^{1/\gamma} + (1-\theta)^{1/\gamma}]^{\gamma-2}, \\
+        \sigma_{ij}(\gamma) &= \frac{1-\gamma}{\gamma} \int_0^1 [u(1-u)]^{\frac{1}{\gamma}-\frac{3}{2}}[(1-u)^{1/\gamma} + u^{1/\gamma}]^{\gamma-2}\,\dee u.
     \end{align}
-    The limiting cases are $\lim_{\alpha\to 0}\sigma_{ij} = 1$ and $\lim_{\alpha\to 1}\sigma_{ij} = 0$.
+    The limiting cases are $\lim_{\gamma\to 0}\sigma_{ij}(\gamma) = 1$ (full asymptotic dependence) and $\lim_{\gamma\to 1}\sigma_{ij} = 0$ (asymptotic independence).
 :::
 
 :::{#exm-husler-reiss-tpdm}
 Suppose $\bm{X}=(X_1,\ldots,X_d)$ follows the Hüsler-Reiss distribution with parameter matrix $\Lambda=(\lambda_{ij}^2)$. Then, 
     \begin{align}
         \tilde{h}_1(\theta;\lambda) &= \frac{\exp\left(-\lambda/4\right)}{4\lambda [\theta(1-\theta)]^{3/2}}\phi\left(\frac{1}{2\lambda}\log\left(\frac{\theta}{1-\theta}\right)\right), \\
-        \sigma_{ij} &= \int_0^1 \frac{\exp(-\lambda_{ij}/4)}{2\lambda_{ij} u(1-u)} \phi\left(\frac{1}{2\lambda_{ij}}\log\left(\frac{u}{1-u}\right)\right) \,\dee u.
+        \sigma_{ij}(\Lambda) &= \int_0^1 \frac{\exp(-\lambda_{ij}/4)}{2\lambda_{ij} u(1-u)} \phi\left(\frac{1}{2\lambda_{ij}}\log\left(\frac{u}{1-u}\right)\right) \,\dee u.
     \end{align}
 :::
 
 The solid lines in @fig-parametric-chi-tpdm depict $\sigma_{ij}$ (blue) and $\chi_{ij}$ (red) as functions of the dependence parameter for the bivariate symmetric logistic and Hüsler-Reiss distributions. The dependence measures take different values (i.e. $\sigma_{ij}\neq\chi_{ij}$ in general) but the qualitative features of the curves are the same. In each case, the strength of association is a decreasing function of the model parameter. Perfect asymptotic dependence and asymptotic independence occur as the parameter approaches zero and its upper limit, respectively. For the Hüsler-Reiss distribution, both metrics indicate that dependence essentially vanishes beyond $\lambda\approx 3$. In order to empirically verify our analytical formulae, we overlay sample-based estimates of $\sigma_{ij}$ (blue points) and $\chi_{ij}$ (red points). Each estimate is derived from $n=5\times 10^5$ independent samples and $\alpha=2$. The data are generated using the \texttt{rmev} function in the \texttt{mev} package. Due to the abundance of samples, it is reasonable to neglect the influence of estimation error; this aspect will be examined in Section XXX. The empirical estimates of the tail dependence coefficient are taken as $\hat{\chi}_{ij}(0.9995)$. Estimates of $\sigma_{ij}$ are derived from the empirical TPDM, to be defined later. Reassuringly, the empirical estimates closely align with the curves, corroborating our formulae.
 
-```{r make-fig-parametric-chi-tpdm}
+```{r background-make-fig-parametric-chi-tpdm}
 #| label: fig-parametric-chi-tpdm
-#| fig-cap: "Blah"
-#| fig-scap: "Blah"
+#| fig-cap: "True dependence strengths for the symmetric logistic (left) and Hüsler-Reiss (right) models, measured using the tail dependence coefficient (red line) and TPDM (blue line). The shaded regions represent the minimum/maximum values of empirical estimates over 10 repeated simulations using bivariate samples of size $n=5\\times 10^5$."
+#| fig-scap: "Dependence $\\chi$ and $\\sigma$ for symmetric logistic and Hüsler-Reiss models."
 #| fig-height: 3.5
 
 data <- readRDS(file.path("scripts", "background", "results", "parametric_chi_tpdm_empirical.RDS")) 
 
-sl_tpdm <- function(a) { 
-  sl_integrand <- function(x, a) (1 - a) / a * (x * (1-x))^(1/a - 3/2) * ((1-x)^(1/a) + x^(1/a))^(a-2) 
-  if (a == 0) { 
-    1 
-  } else if (a == 1) { 
-    0 
-  } else { 
-    integrate(function(x) sl_integrand(x, a = a), lower = 0, upper = 1, subdivisions = 500)$value 
-  } 
-} 
-hr_tpdm <- function(lambda) { 
-  hr_integrand <- function(x, a) { 
-    g1 <- a/2 - 1/a * log(x^2/(1-x^2)) 
-    g2 <- a/2 - 1/a * log((1-x^2)/x^2) 
-    term1 <- 2 / (a * sqrt(1 - x^2)) 
-    term2 <- ((1 - g1/a) / x^2) * dnorm(g1) 
-    term3 <- ((1 - g2/a) / (1-x^2)) * dnorm(g2) 
-    out <- term1 * (term2 + term3) 
-    return(out) 
-  } 
-  ifelse(lambda == 0, 
-         1, 
-         integrate(function(x) hr_integrand(x, a = 2 * lambda), lower = 0, upper = 1, 
-                   subdivisions = 500)$value)   
-  
-} 
-sl_chi <- function(x) {2 - 2^x} 
-hr_chi <- function(lambda) 2 * (1 - pnorm(lambda)) 
-
 p1 <- ggplot() + 
-  geom_point(data = filter(data, model == "log"), aes(x = dep_par, y = chi), colour = "red", alpha = 0.1, size = 0.7) + 
-  geom_point(data = filter(data, model == "log"), aes(x = dep_par, y = sigma), colour = "blue", alpha = 0.1, size = 0.7) + 
+  stat_summary(data = filter(data, model == "log"), aes(x = dep_par, y = chi), fun.min = min, fun.max = max, geom = "ribbon", fill = "red", colour = NA, alpha = 0.2) +
+  stat_summary(data = filter(data, model == "log"), aes(x = dep_par, y = sigma), fun.min = min, fun.max = max, geom = "ribbon", fill = "blue", colour = NA, alpha = 0.2) +
   geom_function(aes(colour = "chi"), fun = sl_chi, xlim = c(0, 1)) + 
-  geom_function(aes(colour = "tpdm"), fun = Vectorize(sl_tpdm), xlim = c(0, 1)) + 
-  scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 3)) + 
+  geom_function(aes(colour = "tpdm"), fun = sl_tpdm, xlim = c(0, 1)) + 
+  scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 5)) + 
   scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.02))) + 
   scale_colour_manual(values = c("red", "blue"), labels = expression(chi, sigma)) + 
   theme_light() + 
   labs(colour = "Measure", 
-       x = expression(alpha), 
+       x = expression(gamma), 
        y = "Dependence strength", 
        title = "Symmetric logistic") + 
-  theme(legend.position = "right", 
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 10))  
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 10))  
 
 p2 <- ggplot() + 
-  geom_point(data = filter(data, model == "hr"), aes(x = dep_par, y = chi), colour = "red", alpha = 0.1, size = 0.7) + 
-  geom_point(data = filter(data, model == "hr"), aes(x = dep_par, y = sigma), colour = "blue", alpha = 0.1, size = 0.7) + 
+  stat_summary(data = filter(data, model == "hr"), aes(x = dep_par, y = chi), fun.min = min, fun.max = max, geom = "ribbon", fill = "red", colour = NA, alpha = 0.2) +
+  stat_summary(data = filter(data, model == "hr"), aes(x = dep_par, y = sigma), fun.min = min, fun.max = max, geom = "ribbon", fill = "blue", colour = NA, alpha = 0.2) + 
   geom_function(aes(colour = "chi"), fun = hr_chi, xlim = c(0, 3.5)) + 
-  geom_function(aes(colour = "tpdm"), fun = Vectorize(hr_tpdm), xlim = c(0, 3.5)) + 
-  scale_x_continuous(limits = c(0, 3.5), expand = c(0, 0)) + 
+  geom_function(aes(colour = "tpdm"), fun = hr_tpdm, xlim = c(0, 3.5)) + 
+  scale_x_continuous(limits = c(0, 3.5), expand = c(0, 0), breaks = breaks_extended(n = 4)) + 
   scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.02))) + 
   scale_colour_manual(values = c("red", "blue"), labels = expression(chi, sigma)) + 
   theme_light() + 
@@ -778,8 +747,7 @@ p2 <- ggplot() +
        x = expression(lambda), 
        y = "Dependence strength", 
        title = "Hüsler-Reiss") + 
-  theme(legend.position = "right", 
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 10)) 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 10)) 
 
 ggarrange(p1, p2, ncol = 2, common.legend = TRUE) 
 ``` 
@@ -975,7 +943,7 @@ Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is max-linear with 
 \end{equation*}
 For any pair of upper-triangular index pairs $(i,j)$ and $(l,m)$, we have
 \begin{align*}
-     \mathrm{Var}_{\bm{\Theta}\sim H}(\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) 
+     \mathrm{Var}_{\bm{\Theta}\sim H} & (\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) \\
      &= d \int_{\mathbb{S}_{+(\alpha)}^{d-1}} [(\theta_i\theta_j)^\alpha + 2(\theta_i\theta_j\theta_l\theta_m)^{\alpha/2} +(\theta_l\theta_m)^\alpha] \,\dee H(\bm{\theta}) - \left[ \sigma_{ij} + \sigma_{lm} \right]^2 \\
      &= d \sum_{s=1}^q \frac{(a_{is}a_{js})^\alpha + 2(a_{is}a_{js}a_{ls}a_{ms})^{\alpha/2} + (a_{ls}a_{ms})^\alpha}{\|\bm{a}_s\|_\alpha^\alpha} - \left[ \sigma_{ij} + \sigma_{lm} \right]^2 \\
      &= \nu_{ij}^2 + \nu_{lm}^2 + d \sum_{s=1}^q \frac{2(a_{is}a_{js}a_{ls}a_{ms})^{\alpha/2}}{\|\bm{a}_s\|_\alpha^\alpha} - 2\sigma_{ij}\sigma_{lm}
@@ -1006,130 +974,314 @@ The blue ellipses are the true 95\% confidence ellipses centred at the true TPDM
 
 ```{r make-fig-max-linear-example-A-Sigma-V}
 #| label: fig-max-linear-example-A-Sigma-V
-#| fig-cap: "Blah"
-#| fig-scap: "Blah"
-#| fig-height: 7
+#| fig-cap: "A randomly generated max-linear parameter matrix $A$ with $d=4$ and $q=12$ (top), the corresponding TPDM $\\Sigma$ (bottom left), and the asymptotic covariance matrix $V$ of the empirical TPDM (bottom right)."
+#| fig-scap: "Max-linear parameter matrix, TPDM, and asymptotic covariance matrix."
+#| fig-height: 6
 
-res <- readRDS("scripts/background/results/max-linear-asymptotic-tpdm.RDS")
-A <- readRDS("scripts/background/results/max-linear-asymptotic-tpdm-A.RDS")
-Sigma <- readRDS("scripts/background/results/max-linear-asymptotic-tpdm-Sigma.RDS")
-V <- readRDS("scripts/background/results/max-linear-asymptotic-tpdm-V.RDS")
+data <- readRDS("scripts/background/results/max-linear-asymptotic-tpdm.RDS")
 
-# colour palette
-n_colpal <- 13
-colpal_seq <- colorspace::sequential_hcl(n = n_colpal, "Viridis")
-colpal_div <- colorspace::diverging_hcl(n = n_colpal, "Blue-Red")
+p1 <- plot_tpdm(data$A, y_labels = FALSE)
+p2 <- plot_tpdm(data$Sigma)
+p3 <- plot_tpdm_eigen(data$V)
 
-plot_A <- t(A[rev(seq_len(nrow(A))), ]) %>% t()
-p1 <- lattice::levelplot(plot_A, 
-                         col.regions = colpal_seq,
-                         at = lattice::do.breaks(c(0, 1.01 * max(A)), length(colpal_seq)),
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(draw = FALSE),
-                                       y = list(labels = parse(text = rev(colnames(plot_A))))))
-
-plot_Sigma <- t(Sigma[nrow(Sigma):1, ])
-colnames(plot_Sigma) <- rev(rownames(plot_Sigma))
-p2 <- lattice::levelplot(plot_Sigma, col.regions = colpal_seq, 
-                         at = lattice::do.breaks(c(0, max(Sigma)), length(colpal_seq)),
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(labels = parse(text = rownames(plot_Sigma))),
-                                       y = list(labels = parse(text = colnames(plot_Sigma)))))
-
-plot_V <- t(V[nrow(V):1, ])
-colnames(plot_V) <- rev(rownames(plot_V))
-p3 <- lattice::levelplot(plot_V, col.regions = colpal_div, 
-                         at = lattice::do.breaks(max(abs(V)) * c(-1.01, 1.01), length(colpal_div)),
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(labels = parse(text = rownames(plot_V))),
-                                       y = list(labels = parse(text = colnames(plot_V)))))
-
-
-ggarrange(p1, ggarrange(p2, p3, nrow = 2), ncol = 2)
+ggarrange(p1, ggarrange(p2, p3, ncol = 2), nrow = 2)
 ```
 
 ```{r make-fig-max-linear-example-ggpairs}
 #| label: fig-max-linear-example-ggpairs
-#| fig-cap: "Blah"
-#| fig-scap: "Blah"
+#| fig-cap: "Pairs plot illustrating asymptotic normality of the empirical TPDM. Based on 1,000 empirical TPDMs estimated from samples with $n=10^4$ and $k=100$. The data are generated from a max-linear model with parameter matrix $A$ as in @fig-max-linear-example-A-Sigma-V. All panels: red represents the empirical quantity based on the 1,000 repeated simulations; blue represents the theoretical limit based on asymptotic normality. Diagonal panels: the distribution (histogram or density function) of $\\hat{\\sigma}_{ij}$. Lower triangular panels: pairwise scatter plots of $(\\hat{\\sigma}_{ij},\\hat{\\sigma}_{lm})$ (grey points) along with the mean (crosses) and the 95\\% data ellipse. Upper triangular panels: the entries $v_{ij,lm}$ of $V$."
+#| fig-scap: "Pairs plot illustrating asymptotic normality of empirical TPDM."
 #| fig-height: 6
 #| warning: false
 #| message: false
 
-alpha <- 1
-tpdm_max_linear_ggpairs(data = res, Sigma = A^(alpha / 2) %*% t(A^(alpha / 2)), V = asy_V(A), k = 100)
+tpdm_max_linear_ggpairs(data = data$emp_V, Sigma = data$Sigma, V = data$V, k = data$k)
 ```
+
 
 ## Existing applications and extensions of the TPDM
 
-*Copy this section over.*
+The general goal of this thesis is to develop novel statistical applications of the TPDM for analysing extremal dependence. Before outlining our contributions, it seems logical to first familiarise the reader with existing TPDM-based methods in the literature. Our methods will either build upon these (e.g. compositional PCA in Chapter XXX) or address gaps in the field.
 
-## Bias in the empirical TPDM in weak-dependence scenarios
+Our survey divides TPDM-related tools into four categories: principal components analysis (PCA), clustering, model fitting, and miscellaneous. The PCA methods leverage the TPDM eigendecomposition to perform dimension reduction. The extremal dependence structure is thereby represented by a low-dimensional object, facilitating exploratory analysis [@jiangPrincipalComponentAnalysis2020; @russellAnalyzingDependenceMatrices2018; @szemkusSpatialPatternsIndices2024]
 
-*Copy this section over.*
 
-```{r make-fig-parametric-chi-tpdm-small-n}
+and generation of synthetic extreme events [@rohrbeckSimulatingFloodEvent2023]. The clustering techniques use the TPDM to partition a collection of random variables into groups according to asymptotic (in)dependence [@fomichovSphericalClusteringDetection2023; @richardsModernExtremeValue2024]. When applied as a preliminary step, this splits a high-dimensional problem into several `independent', low-dimensional, sub-problems. The model fitting section explains how the TPDM can be used to aid inference for the max-linear model [@fixSimultaneousAutoregressiveModels2021; @kirilioukEstimatingProbabilitiesMultivariate2022]. Fitting a parametric model permits straightforward estimation of tail event probabilities. We conclude with a summary of other applications and extensions of the TPDM, such as in time series [@mhatreTransformedLinearModelsTime2021] and graphical models [@gongPartialTailCorrelationCoefficient2024; @leePartialTailCorrelation2023].
+
+### Principal component analysis (PCA) for extremes
+
+:::{#def-sparsity-i}
+The support of the angular measure has dimension $p^\star \ll d$.
+:::
+
+This means the angular measure can be represented by a low-dimensional object, prompting the application of dimension reduction methods. 
+
+#### PCA in general finite-dimensional Hilbert spaces
+
+In classical multivariate analysis, principal component analysis (PCA) is the flagship method for reducing the dimension of a random vector. PCA identifies linear subspaces that minimise the distance between the data and its low-dimensional projections.
+
+PCA revolves around an underlying algebraic-geometric structure. Specifically, PCA assumes one is working in a Hilbert space $\mathcal{H}$. Without this theoretical foundation, it is meaningless to speak of principal components as orthogonal basis vectors or consider low-rank reconstructions as unique projections onto a subspace. A Hilbert space comprises a $d$-dimensional vector space with operations $\oplus$ and $\odot$ endowed with an inner product $\left\langle\cdot,\cdot\right\rangle_{\mathcal{H}}$. The induced norm and metric are $\|\cdot\|_{\mathcal{H}}=\left\langle\cdot,\cdot\right\rangle_{\mathcal{H}}^{1/2}$ and $d_{\mathcal{H}}(\bm{x},\bm{y})=\|\bm{x}\ominus\bm{y}\|_{\mathcal{H}}$, respectively. In most applications $\mathcal{H}=\R^d$ with the usual Euclidean geometry. This thesis will additionally consider PCA in alternative spaces, including $\R_+^d$ and $\mathbb{S}_{+(1)}^{d-1}$. However, in each case, the Hilbert space in question will be isometric to the usual Euclidean space $(\R^d, \left\langle\cdot,\cdot\right\rangle)$. That is, there exists an isomorphism $h:\mathcal{H}\to\R^d$ such that for any $\bm{x},\bm{y}\in\mathcal{H}$,
+\begin{equation*}
+    \left\langle\bm{x},\bm{y}\right\rangle_{\mathcal{H}} = \left\langle h(\bm{x}),h(\bm{y})\right\rangle, \qquad \|\bm{x}\ominus \bm{y}\|_{\mathcal{H}} = \|h(\bm{x})-h(\bm{y})\|_2.
+\end{equation*}
+We present PCA for random vectors in $\R^d$, with the understanding that the data may have undergone an isometric transformation in pre-processing and outputs may need to be back-transformed to lie in the original space. This transform/back-transform approach is equivalent to conducting the analysis in the original space with appropriately generalised notions of mean, variance, etc. [@pawlowsky-glahnGeometricApproachStatistical2001].
+
+\begin{table}[]
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+$\mathcal{H}$ & $\R^d$ & $\R_+^d$ @cooleyDecompositionsDependenceHighdimensional2019 & $\mathbb{S}_{+(1)}^{d-1}$ @aitchisonPrincipalComponentAnalysis1983 \\ \midrule
+$h:\mathcal{H}\to\R^d$ & $h(\bm{x})=\bm{x}$ & $h(\bm{x}) = \tau^{-1}(\bm{x}) = \log[\exp(\bm{x})-1]$ & $h(\bm{x})=\mathrm{clr}(\bm{x})=\log[\bm{x}/\bar{g}(\bm{x})]$ \\
+$h^{-1}:\R^d\to\mathcal{H}$ & $h^{-1}(\bm{y})=\bm{y}$ & $h^{-1}(\bm{y}) = \tau(\bm{y}) = \log[1+\exp(\bm{y})]$ & $h^{-1}(\bm{y}) = \mathrm{clr}^{-1}(\bm{y})=\mathcal{C}\exp(\bm{y})$ \\
+$\bm{x}\oplus\bm{y}$ & $\bm{x} + \bm{y}$ & $\tau[\tau^{-1}(\bm{x})+\tau^{-1}(\bm{y})]$ & $\mathcal{C}(x_1y_1,\ldots,x_dy_d)$ \\
+$\alpha\odot\bm{x}$ & $\alpha \bm{x}$ & $\tau[\alpha \tau^{-1}(\bm{x})]$ & $\mathcal{C}(x_1^\alpha,\ldots,x_d^\alpha)$ \\
+$\left\langle \bm{x},\bm{y}\right\rangle_{\mathcal{H}}$ & $\sum_{i=1}^d x_iy_i$ & $\sum_{i=1}^d \tau^{-1}(x_i)\tau^{-1}(y_i)$ & $\sum_{i=1}^d \log[x_i/\bar{g}(\bm{x})]\log[y_i/\bar{g}(\bm{x})]$ \\ \bottomrule
+\end{tabular}
+\end{table}
+
+Suppose $\bm{Y}=(Y_1,\ldots,Y_d)$ is a random vector in $\R^d$ satisfying $\mathbb{E}[\|\bm{Y}\|_2^2]<\infty$. Let $\bm{Y}_1,\ldots,\bm{Y}_n$ be independent copies of $\bm{Y}$. The reconstruction error of a subspace $\mathcal{S}\subseteq\R^d$ is measured as
+\begin{equation}\label{eq-pca-true-risk}
+    R(\mathcal{S}) := \mathbb{E}[\|\bm{Y}-\Pi_{\mathcal{S}}\bm{Y}\|_2^2] 
+\end{equation}
+Fundamental to PCA are the eigenvectors $\bm{u}_1,\ldots,\bm{u}_d\in\R^d$ and respective eigenvalues $\lambda_1\geq \ldots \geq \lambda_d \geq 0$ of the positive semi-definite matrix
+\begin{equation*}
+    \Sigma=\mathbb{E}[\bm{Y}\bm{Y}^T].
+\end{equation*}
+The entries of $\Sigma$, herein referred to as the non-centred covariance matrix, are the second-order moments of $\bm{Y}$.  By a change of basis, the random vector $\bm{Y}$ may be equivalently decomposed as 
+\begin{equation*}
+    \bm{Y} = \sum_{j=1}^d \left\langle \bm{Y},\bm{u}_j\right\rangle \bm{u}_j.
+\end{equation*}
+The scores $V_j:=\left\langle \bm{Y},\bm{u}_j \right\rangle$ represent the stochastic basis coefficients when $\bm{Y}$ is decomposed into the basis $\{\bm{u}_1,\ldots,\bm{u}_d\}$. They satisfy $\mathbb{E}[V_iV_j]=\lambda_i\ind\{i=j\}$. For $1\leq p < d$, the truncated expansion 
+\begin{equation*}
+    \hat{\bm{Y}}^{[p]} := \sum_{j=1}^p V_j \bm{u}_j = \Pi_{\mathrm{span}\{\bm{u}_1,\ldots,\bm{u}_p\}}\bm{Y}.
+\end{equation*}
+produces the optimal $p$-dimensional projection of $\bm{Y}$. In other words, the subspace $\mathcal{S}_p=\mathrm{span}\{\bm{u}_1,\ldots,\bm{u}_p\}$ minimises the criterion \eqref{eq-pca-true-risk} over $\mathcal{V}_p$, the set of all linear subspaces of dimension $p$ of $\R^d$. It is the unique minimiser provided the multiplicity of $\lambda_p$ is one. The corresponding risk is determined by the eigenvalues of the discarded components via $R(\mathcal{S}_p)=\sum_{j>p}\lambda_j$. 
+
+In practice, the covariance matrix is unknown so \eqref{eq-pca-true-risk} cannot be minimised directly. Instead we resort to an empirical risk minimisation (ERM) approach, whereby the risk is replaced by
+\begin{equation}\label{eq-pca-empirical-risk}
+    \hat{R}(\mathcal{S}) := \frac{1}{n} \sum_{i=1}^n \|\bm{Y}_i-\Pi_{\mathcal{S}}\bm{Y}_i\|_2^2
+\end{equation} 
+Minimisation of the empirical risk follows analogously based on the empirical non-centred covariance matrix 
+\begin{equation*}
+    \hat{\Sigma}=\frac{1}{n}\sum_{i=1}^n \bm{Y}_i\bm{Y}_i^T
+\end{equation*}
+and its ordered eigenpairs $(\hat{\lambda}_j,\hat{\bm{u}}_j)$ for $j=1,\ldots,d$. For $p=1,\ldots,d$ and $i=1,\ldots,n$, the rank-$p$ reconstruction of $\bm{Y}_i$ is given by
+\begin{equation*}
+    \hat{\bm{Y}}_i^{[p]} := \sum_{j=1}^p \hat{V}_{ij} \bm{u}_j = \Pi_{\mathrm{span}\{\hat{\bm{u}}_1,\ldots,\hat{\bm{u}}_p\}}\bm{Y},
+\end{equation*}
+where $\hat{V}_{ij}:=\left\langle \bm{Y}_i,\bm{u}_j\right\rangle$.
+The subspace $\hat{\mathcal{S}}_p=\mathrm{span}\{\hat{\bm{u}}_1,\ldots,\hat{\bm{u}}_p\}$ minimises \eqref{eq-pca-empirical-risk} in $\mathcal{V}_p$; the objective at the minimum is $\hat{R}(\hat{\mathcal{S}}_p)=\sum_{j>p}\hat{\lambda}_j$.
+
+Usually the dimension of the target subspace (if it exists) is unknown, so the number of retained components $p$ must be selected according to some criterion. At the heart of this choice is a trade-off between dimension reduction and approximation error. Selecting $p=\max\{j:\hat{\lambda}_j>0\}$ results in perfect reconstructions but the reduction in dimension will be minimal if any. Excessive compression incurs information loss and destroys key features of the data. Several criteria for selecting the number of retained components based on the eigenvalues have been proposed. These include stopping when the reconstruction error $\sum_{j>p}\hat{\lambda}_j$ is acceptably small, cutting off components with $\lambda_j<1$, or retaining components based on where the `scree plot' forms an elbow.  
+
+If $\bm{Y}$ is mean-zero (or the $n\times d$ data matrix is column-centred in pre-processing), then $\Sigma$ is the covariance matrix of $\bm{Y}$ and the procedure is termed centred PCA. In this case, PCA can be equivalently reformulated in terms of finding low-dimensional projections that maximally preserve variance. In the non-centred case this interpretation is not valid, the projections merely maximise variability around the origin. A detailed comparison between centred PCA and non-centred PCA is conducted in @cadimaRelationshipsUncentredColumnCentred2009. They obtain relationships between and bounds on the eigenvectors/eigenvalues of the non-centred and standard covariance matrices. Based on their theoretical analysis and a series of example, they conclude that both types of PCA generally produce similar results. In particular, the leading eigenvector (up to sign and scaling) of the non-centred covariance matrix is very often close to the vector of the column means of the data matrix. Thus the first non-centred principal component essentially relates to the centre of the data.
+
+We now return to the context of multivariate extremes. Suppose $\bm{X}\in\mathcal{RV}_+^d(\alpha)$ has sparse angular measure $H$ and $\bm{X}_1,\ldots,\bm{X}_n$ is a sample of $\bm{X}$. There are several reasons why the  the low-dimensional structure of the angular measure cannot be identified by naively applying standard PCA to $\bm{X}_1,\ldots,\bm{X}_n$. At a practical level, the components $X_1,\ldots,X_d$ are heavy-tailed, so the requirement that second-order moments exist may be violated. The variance of an $\alpha$-regularly varying random variable is infinite if $\alpha<2$. More pertinently, standard PCA reveals relationships between variables in the centre rather than the tail of the joint distribution, because it arises from the covariance matrix. Moreover, the non-centred/centred covariance matrix captures dependence in both directions around the origin/mean, whereas we focus on extremes in a particular direction of interest (`positive'). Finally, standard PCA fails to capitalise on the probabilistic structure inherent to MRV random vectors. The one-dimensional radial component is (asymptotically) independent of the angular component. This points towards targetting dimension reduction at the angular component $\bm{\Theta}$ rather than the original vector $\bm{X}$. Indeed, the two key PCA methods of @dreesPrincipalComponentAnalysis2021 and @cooleyDecompositionsDependenceHighdimensional2019 follow this approach. Despite emerging almost simultaneously, both are essentially based on eigendecomposition of the TPDM. 
+
+#### @dreesPrincipalComponentAnalysis2021
+
+Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathrm{RV}_+^{d-1}(2)$ with angular measure $H$ with respect to the Euclidean norm $\|\cdot\|_2$. The aim is to identify a low-dimensional linear subspace of $\R^d$ supporting $H$. For any subspace $\mathcal{S}\subset\R^d$, define the risk
+\begin{equation*}
+    R(\mathcal{S}) = \mathbb{E}_{\bm{\Theta}\sim H}[\|\bm{\Theta}-\Pi_{\mathcal{S}}\bm{\Theta}\|_2^2].
+\end{equation*}
+This represents the expected reconstruction error under the limit model. By assumption, there exists a linear subspace $\mathcal{S}^\star\in\mathcal{V}_{p^\star}$ of dimension $p^\star \ll d$ such that $R(\mathcal{S}^\star)=0$, and $R(\mathcal{S})>0$ for all $\mathcal{S}\in\mathcal{V}_p$ with $p<p^\star$. The angular measure is unknown, so they adopt an ERM approach following the intuition that above a sufficiently high threshold the extremal angles will lie in a neighbourhood of $\mathcal{S}^\star$. The empirical risk is defined by replacing $H$ with the empirical angular measure $\hat{H}$ based on the $k$ largest observations in norm among a sample $\bm{X}_1,\ldots,\bm{X}_n$. That is
+\begin{equation*}
+    \hat{R}(\mathcal{S}) 
+    := \hat{\mathbb{E}}_{\bm{\Theta}\sim H}[\|\bm{\Theta}-\Pi_{\mathcal{S}}\bm{\Theta}\|_2^2] 
+    = \frac{m}{k}\sum_{i=1}^k \|\bm{\Theta}_{(i)}-\Pi_{\mathcal{S}}\bm{\Theta}_{(i)}\|_2^2.
+\end{equation*}
+This setup is almost identical to classical PCA on the random vector $\bm{\Theta}$. Note that boundedness of the simplex guarantees $\mathbb{E}[\|\bm{\Theta}\|_2^2]<\infty$. Let $\Sigma=\mathbb{E}_{\bm{\Theta}\sim H}[\bm{\Theta}\bm{\Theta}^T]$ be the TPDM of $\bm{X}$ and $(\bm{u}_j,\lambda_j)$ its (ordered) eigenpairs for $j=1,\ldots,d$. Then $\mathcal{S}_p=\mathrm{span}\{\bm{u}_1,\ldots,\bm{u}_d\}$ minimises $R$ in $\mathcal{V}_p$ and $R(\mathcal{S}_p)=\sum_{j>p}\lambda_p$. Choosing $p\geq p^\star$ yields $R(\mathcal{S}_p)=0$. Analogously, the minimiser $\hat{\mathcal{S}}_p\in\mathcal{V}_p$ of $\hat{R}$ is the subspace spanned by the leading $p$ eigenvectors of the empirical TPDM $\hat{\Sigma}$. 
+
+ @dreesPrincipalComponentAnalysis2021 derive theoretical statistical guarantees for their approach. Most importantly, they prove that the learnt subspace converges to the optimal one as the sample size increases to infinity. Provided $k(n)$ satisfies the rate conditions \eqref{eq-k-rate-conditions}, then $\hat{\mathcal{S}}_{p}\to \mathcal{S}_{p}$ in the sense that
+\begin{equation*}
+    \lim_{n\to\infty} \sup_{\bm{\theta}\in\mathbb{S}_{+(2)}^{d-1}} \|\Pi_{\hat{\mathcal{S}}_{p}}\bm{\theta} - \Pi_{\mathcal{S}_{p}}\bm{\theta}\|_2  = 0.
+\end{equation*}
+If the target dimension is chosen correctly as $p=p^\star$, then $\hat{\mathcal{S}}_{p^\star}\to \mathcal{S}^\star$. They also provide high probability bounds on $|\hat{R}(\mathcal{S})-R(\mathcal{S})|$ for fixed $n$.
+
+Basing their approach on the angles viewed as points in $\R^d$ eases the derivation of theoretical guarantees, but creates interpretability issues. Consider $\hat{\bm{\Theta}}_i^{[p]}=\Pi_{\mathcal{S}_p}\bm{\Theta}_i$, the rank-$p$ reconstruction of an extremal angle $\bm{\Theta}_i$. Its components need not satisfy the unit-norm constraint and may even be negative. This may be remedied by shifting/normalising $\hat{\bm{\Theta}}_i^{[p]}$ appropriately, but its optimality properties will be destroyed in the process. One can also question whether Euclidean distances are an appropriate measure of angular reconstruction error; angular distances such as cosine distance may be better suited. Similarly, the hypothesis that the angular measure's low-dimensional structure manifests in a linear fashion may be unrealistic, since data in the simplex are prone to exhibit curvature @aitchisonPrincipalComponentAnalysis1983.
+
+#### @cooleyDecompositionsDependenceHighdimensional2019
+
+The PCA technique developed by @cooleyDecompositionsDependenceHighdimensional2019 focusses on reconstruction and exploration of extreme events in terms of the original vector $\bm{X}$. As such, their PCA is grounded on an inner product space on $\mathcal{H}=\R_+^d$, the natural sample space of the data. The vector space is based on the softplus transformation
+\begin{equation*}
+    \tau:\R\to \R_+, \qquad \tau(x) = \log[1+\exp(x)].
+\end{equation*}
+This transformation is bijective with inverse function $\tau^{-1}(y)=\log[\exp(y)-1]$. The reason for choosing this particular mapping is that it is tail-preserving, i.e. $\lim_{x\to 1}\tau(x)/x = 1$. This provides an avenue for moving between the spaces $\R^d$ and $\R_+^d$ with negligible effect on the tails.
+
+The linear-transformed inner product space is constructed as follows. For any $\bm{x},\bm{y}\in\R_+^d$ and $\alpha\in\R$, define
+\begin{align*}
+    \bm{x} \oplus \bm{y} &= \tau[\tau^{-1}(\bm{x})+\tau^{-1}(\bm{y})] \\
+    \alpha \odot \bm{x} &= \tau[a\tau^{-1}(\bm{x})].
+\end{align*}
+Then the vector space $(\R_+^d,\oplus,\odot)$ is endowed with an inner product and norm
+\begin{align*}
+    \left\langle \bm{x},\bm{y}\right\rangle_\tau &= \sum_{i=1}^d \tau^{-1}(x_i)\tau^{-1}(y_i) = \left\langle \tau^{-1}(\bm{x}),\tau^{-1}(\bm{y})\right\rangle \\
+    \|\bm{x}\|_\tau &= \left\langle \bm{x},\bm{x}\right\rangle_\tau^{1/2} = \|\tau^{-1}(\bm{x})\|_2.
+\end{align*}
+The transform $\tau^{-1}$ is an isometry linking their inner product space on the positive orthant to the standard Euclidean space $\R^d$. Thus the PCA of @cooleyDecompositionsDependenceHighdimensional2019 can be equivalently formulated in $\R_+^d$ with regards to the original data in the space or in $\R^d$ using the transform/back-transform approach articulated earlier.
+
+Suppose $\bm{X}\in\mathrm{RV}_+^d(\alpha)$ has TPDM $\Sigma$. Denote the ordered eigenpairs of $\Sigma$ in $\R^d$ by $(\bm{u}_j,\lambda_j)$ for $j=1,\ldots,d$. Then $\{\bm{\omega}_1,\ldots,\bm{\omega}_d\}=\{\tau({\bm{u}}_1),\ldots,\tau({\bm{u}}_d)\}$ forms an orthonormal basis of $\R_+^d$. In this new basis, the random vector $\bm{X}$ may be decomposed as
+\begin{equation*}
+    \bm{X} = \bigoplus_{j=1}^d (V_j \odot \bm{\omega}_j) = \tau\left(\sum_{j=1}^d V_j\bm{u}_j\right),
+\end{equation*}
+where
+\begin{equation*}
+    V_j = \left\langle \bm{X},\bm{\omega}_j\right\rangle_\tau = \left\langle \tau^{-1}(\bm{X}),\bm{u}_j\right\rangle, \qquad (j=1,\ldots,d).
+\end{equation*}
+Rank-$p$ reconstructions of $\bm{X}$ are obtained by the truncated expansion
+\begin{equation*}
+    \hat{\bm{X}}^{[p]} = \bigoplus_{j=1}^d (V_j \odot \bm{\omega}_j) = \tau\left(\sum_{j=1}^d V_j\bm{u}_j\right), \qquad (p=1,\ldots,d).
+\end{equation*}
+The process follows analogously for PCA based on an independent sample $\bm{X}_1,\ldots,\bm{X}_n$ and the empirical TPDM $\hat{\Sigma}$.
+
+The elements of the $\R^d$-valued random vector $\bm{V}=(V_1,\ldots,V_d)$ are called the extremal principal components of $\bm{X}$. The random vector $\bm{V}$ is MRV with the same tail index as $\bm{X}$, but its angular measure $H_V$ lives on the entire unit sphere, not just its restriction to the positive orthant. Although the dimension of $\bm{V}$ is the same as $\bm{X}$, the crucial difference is that its components are ordered according to their contribution to the extreme behaviour of $\bm{X}$. Proposition 6 in @cooleyDecompositionsDependenceHighdimensional2019 states that
+\begin{equation*}
+    \mathrm{scale}(|V_i|) = \lambda_i^{1/\alpha}, \qquad (i=1,\ldots,d),
+\end{equation*}
+and therefore $\mathrm{scale}(|V_1|)\geq \ldots \geq \mathrm{scale}(|V_d|)\geq 0$. The $i$th eigenvector $\bm{\omega}_i$ represents the direction of maximum scale after accounting for information contained in $\bm{\omega}_1,\ldots,\bm{\omega}_{i-1}$; sequential examination of the eigenvectors provides insight into the extremal dependence structure. 
+
+#### Applications
+
+The PCA method of @cooleyDecompositionsDependenceHighdimensional2019 has been applied for exploratory purposes in the context of climatology [@jiangPrincipalComponentAnalysis2020; @szemkusSpatialPatternsIndices2024], finance [@cooleyDecompositionsDependenceHighdimensional2019] and sport [@russellAnalyzingDependenceMatrices2018]. 
+
+@jiangPrincipalComponentAnalysis2020 analyse the extremal behaviour of precipitation across the United States. They discover an increasing temporal trend in the coefficient of the first principal component $V_1$, and relate the eigenvectors to the El-Niño Southern Oscillation (ENSO), a cyclical phenomenon that is known to be a key climatological driver. They find that low-rank reconstructions of Hurricane Floyd broadly capture the event's large-scale structure, but a large number of eigenvectors are needed to recreate more localised features. The spatial extent of the study region and relatively localised behaviour of extreme behaviour leads them to consider a 'pairwise-thresholded' estimator of the TPDM instead of the usual estimator \eqref{eq-empirical-tpdm} thresholded on the norm of entire vector. This alternative estimator is given by
+\begin{equation*}
+    \tilde{\Sigma}=(\tilde{\sigma}_{ij}), \qquad \tilde{\sigma}_{ij} = \frac{2}{k} \sum_{l=1}^n \Theta_{li}\Theta_{lj}\ind\{R_l^{ij} > R_{(k+1)}^{ij}\},
+\end{equation*}
+where $R_l^{ij} = \|(X_{li},X_{lj})\|$ and $R_{(k+1)}^{ij}$ is the $(k+1)$th upper order statistic of $\{R_l^{ij}:l=1,\ldots,n\}$. The estimator $\tilde{\Sigma}$ is not positive semi-definite, so the PCA analysis is instead conducted using the nearest positive definite matrix in Frobenius norm. The ramifications of this ad-hoc step, in terms of the estimator's theoretical properties and practical performance, are not studied.
+
+@szemkusSpatialPatternsIndices2024 devise an extension of the TPDM, called the cross-TPDM, to study the joint extremal behaviour between two sets of variables. They analyse two meteorological variables -- daily maximum temperature and a measure of accumulated precipitation deficit -- to describe the dynamics of summer heatwaves in Europe. The cross-TPDM is the analogue of the cross-covariance matrix. Letting $\bm{X}=(X_1,\ldots,X_p)\in\mathrm{RV}_+^p(2)$ and $\bm{Y}=(Y_1,\ldots,Y_q)\in\mathrm{RV}_+^q(2)$, the cross-TPDM is defined as the $p\times q$ matrix with entries
+\begin{equation*}
+    \sigma_{ij}^{XY} = \int_{\mathbb{S}_+^{p+q-1}} \theta_i^X\theta_j^Y \,\dee H(\bm{\theta}),
+\end{equation*}
+where $H$ is the angular measure of $(\bm{X},\bm{Y})=(X_1,\ldots,X_p,Y_1,\ldots,Y_q)\in\mathrm{RV}_+^{p+q}(2)$ and the variable of integration is indexed as $\bm{\theta}=(\theta_1^X,\ldots,\theta_p^X,\theta_1^Y,\ldots,\theta_q^Y)$. (This definition could be extended to cater for an arbitrary tail index by introducing the usual $\alpha/2$ exponents in the integrand.) In the context of their climatological study, the entry $\sigma_{ij}^{XY}$ represents the strength of extremal dependence between the maximum temperature at location $i$ and the precipitation deficit at location $j$. The singular-value decomposition of the cross-TPDM is used to analyse the dynamics of compound extreme events. They devise extremal pattern indices to quantify whether particular patterns of interest -- those signified by the singular vectors of the cross-TPDM -- are highly pronounced.
+
+A more unusual application of the TPDM is found in @russellAnalyzingDependenceMatrices2018. Their study characterises the difference in performance between typical and elite-level National Football League (NFL) performers across the Scouting Combine event. The Combine comprises six physical tests: Bench Press, Vertical Jump, Broad Jump, 40-yard Sprint, the Shuttle Drill, and the Three Cone Drill. The tests afford teams the opportunity to gauge the athletic ability of prospective players, thereby influencing whether (or how highly) they are drafted for the upcoming season. @russellAnalyzingDependenceMatrices2018 explore how strongly player performance correlates across these tests. Intuitively, if two events exhibit strong association, then they may be measuring the same underlying skills (speed, strength, agility etc.). After standardising player performance to account for differences in playing position, they find significant differences between the bulk dependence structure and the extremal dependence structure. In particular, the leading eigenvectors of the covariance matrix reveal that the Combine events cluster into three distinct groups, corresponding to strength, agility, and explosiveness. On the other hand, the TPDM eigenvectors produce only two such groups: power and agility. This reveals differences between non-elite and elite performers; recommendations regarding the composition of the Combine events are made accordingly. 
+
+@rohrbeckSimulatingFloodEvent2023 move beyond the use of the extremal PCA for purely exploratory purposes and demonstrate how it be used to generate synthetic extreme events. Hazard event sets are widely used in catastrophe modelling to assess exposure to extreme events. Imagine an insurance company insures against damage to a portfolio of properties, and wishes to gauge its exposure to claims caused by flooding. Given (i) the spatial locations of these properties, (ii) other relevant characteristics such as property value and construction standard, and (iii) a set of simulated flood events, one can derive a probabilistic loss distribution. If the exposure is unacceptably high, they might adjust their underwriting strategy or purchase reinsurance. @rohrbeckSimulatingFloodEvent2023 show how to generate approximate samples from $H$, even in high-dimensions, by leveraging the PCA method of @cooleyDecompositionsDependenceHighdimensional2019. Their generative framework hinges on the fact that the leading components of $\bm{V}$ account for the greatest proportion of extremal behaviour of $\bm{X}$. Thus, efforts may be concentrated towards modelling the dependence structure of the sub-vector $(V_1,\ldots,V_p)$ for some appropriately chosen $p<d$. To achieve this, they use a spherical kernel density estimate to flexibly model the dependence between $V_1,\ldots,V_p$ and additionally between $(V_1,\ldots,V_p)$ and $(V_{p+1},\ldots,V_d)$. The dependence structure of $(V_{p+1},\ldots,V_d)$ is simply modelled by a nearest-neighbours approach. The number of components $p$ entering into the complex model is selected by a leave-one-out cross validation procedure. This involves discarding an extreme observation $\bm{x}_{(i)}$, generating a large number of samples $\tilde{\bm{x}}_1^{[p]},\ldots,\tilde{\bm{x}}_N^{[p]}$ for a range of values $p$, and then assessing whether any of the generated samples resemble the discarded event using
+\begin{equation*}
+    D_i(p) = \min_{l=1,\ldots,N} \varrho \left(\bm{x}_{(i)},\tilde{\bm{x}}_{l}^{[p]}\right),
+\end{equation*}
+where $\varrho(\cdot,\cdot)$ is an angular dissimilarity measure. After repeating for all extreme events $i=1\ldots,k$, one chooses the optimal $p$ as that which minimises the average error
+\begin{equation*}
+    \bar{D}(p) = \frac{1}{k}\sum_{i=1}^k D_i(p).
+\end{equation*}
+Their approach is illustrated using historical river flow data across $d=45$ gauges in northern England and southern Scotland. They select $p=7$ and find reasonable agreement between the observed river flow extreme events and the synthetic ones generated by their algorithm, e.g. by examining QQ-plots comparing the observed and sampled distributions of $\max_{j\in\mathcal{G}}X_j$ or $\|(X_i:i\in\mathcal{G})\|$ for selected groups of gauges $\mathcal{G}\subset \{1,\ldots,d\}$.
+
+\textit{Add more critical comments, especially about asymptotic independence when using large study regions or with localised extremes, e.g. rainfall. Or leave this to the 'bias' section?} 
+
+### Clustering into asymptotically dependent groups
+
+Within multivariate extremes, the umbrella term `clustering` can refer to a multitude of tasks. To avoid confusion, we briefly describe these and clarify which type we are referring to. 
+
+- **Prototypical events.** Assume that the angular measure concentrates at/near a small number of points in $\mathbb{S}_{+}^{d-1}$. Then one might wish to identify cluster centres $\bm{w}_1,\ldots\bm{w}_K$ minimising some objective function of the form
+\begin{equation}\label{eq-clustering-objective-function}
+    \mathbb{E}_{\bm{\Theta}\sim H}\left[\min_{l=1,\ldots,K}\varrho(\bm{\Theta},\bm{w}_l)\right],
+\end{equation}
+where $\varrho:\mathbb{S}_+^{d-1}\times \mathbb{S}_+^{d-1}\to[0,1]$ is some distance/dissimilarity function. The cluster centres can be interpreted as the directions of prototypical extremes events. See @chautruDimensionReductionMultivariate2015, @janssenKmeansClusteringExtremes2020 and @medinaSpectralLearningMultivariate2021 for further details.
+- **Identification of concomitant extremes.** Suppose that angular measure is supported on a set of $K\ll 2^{d-1}$ subspaces (faces) of the simplex $C_{\beta_1},\ldots,C_{\beta_K}$, where $\beta_1,\ldots,\beta_K\in\mathcal{P}(\{1,\ldots,d\})\setminus\emptyset$ and
+\begin{equation*}
+    C_\beta = \{\bm{\theta}\in\mathbb{S}_+^{d-1}:\theta_i>0 \iff i\in\beta\}.
+\end{equation*}
+Only those groups (`clusters') of components indexed by $\beta_1,\ldots,\beta_K$ may be simultaneously extreme. Identification of the support of the angular measure is notoriously challenging because the extremal angles $\bm{\Theta}_{(1)},\ldots,\bm{\Theta}_{(k)}$ lie (almost surely) in the interior of the simplex. @goixSparseRepresentationMultivariate2017 and @simpsonDeterminingDependenceStructure2020 identify clusters according to whether observations fall within appropriately sized rectangular/conic neighbourhoods of the corresponding axis in $\R_+^d$. @meyerDetectionExtremalDirections2020 take a different approach, whereby the angular component is defined with respect to the Euclidean projection [@liuEfficientEuclideanProjections2009] rather than usual projection based on self-normalisation. The geometry of the projection is such that the projected data lie on subfaces of the simplex. The price paid is that the limiting conditional distribution of the angles is related to, but not identical to, the angular measure.
+- **Partitioning into AD/AI groups components.** This notion of clustering is related to the previous type. We assume that the variables $X_1,\ldots,X_d$ can be partitioned into $K$ clusters, such that $X_i$ and $X_j$ are asymptotically dependent if and only if they belong to the same cluster. In other words, there exists $2\leq K \leq d$ and a partition $\beta_1,\ldots,\beta_K$ of $\{1,\ldots,d\}$ such that the angular measure is supported on $C_{\beta_1},\ldots,C_{\beta_K}$ or lower-dimensional subspaces thereof, i.e.
+\begin{equation*}
+    H\left(\bigcup_{l=1}^K \bigcup_{\beta'_l\subseteq \beta_l} C_{\beta'_l}\right) = m.
+\end{equation*}
+The task of modelling the dependence structure of $\bm{X}$ can be divided into lower-dimensional sub-problems involving the random sub-vectors $\bm{X}_{\beta_1},\ldots,\bm{X}_{\beta_K}$. If $K=d$, then all variables are asymptotically independent. The underlying hypothesis is very strong and unlikely to hold in practice. Nevertheless, it is often a useful simplifying modelling assumption. @bernardClusteringMaximaSpatial2013 propose grouping components using the $k$-medoids algorithm [@kaufmanFindingGroupsData1990] with a dissimilarity matrix populated with pairwise measures of tail dependence, similar to $\chi_{ij}$ and $\sigma_{ij}$. The approaches of @fomichovSphericalClusteringDetection2023 and @richardsModernExtremeValue2024 involve the TPDM; these are reviewed in greater detail below.
+
+#### @fomichovSphericalClusteringDetection2023
+
+@fomichovSphericalClusteringDetection2023 show that the latter kind of clustering may be performed using the framework of the first kind. They provide a link between the principal eigenvector $\bm{u}_1$ of the TPDM and the minimiser of the objective \eqref{eq-clustering-objective-function} with quadratic cost $\varrho(\bm{\theta},\bm{\phi})=\left\langle\bm{\theta},\bm{\phi}\right\rangle^2$ and $K=1$:
+\begin{equation*}
+    \min_{\bm{\theta}\in\mathbb{S}_{+(2)}^{d-1}} \mathbb{E}_{\bm{\Theta}\sim H}\left[\varrho(\bm{\Theta},\bm{\theta})\right] = \mathbb{E}_{\bm{\Theta}\sim H}\left[\varrho(\bm{\Theta},\bm{u}_1)\right].
+\end{equation*}
+Note that $\bm{u}_1\in\mathbb{S}_{+(2)}^{d-1}$ is assumed to be suitably normalised with all entries being non-negative; the Perron-Frobenius theorem guarantees this is possible. This result informs an iterative clustering procedure called spherical $k$-principal-components. Consider a set of extremal angles $\bm{\theta}_{(1)},\ldots,\bm{\theta}_{(k)}\in\mathbb{S}_{+(2)}^{d-1}$ and current centroids $\hat{\bm{w}}_{1},\ldots,\hat{\bm{w}}_{K}\in\mathbb{S}_{+(2)}^{d-1}$. A single iteration of their procedure yields new centroids $\hat{\bm{w}}_{1}^\star,\ldots,\hat{\bm{w}}_{K}^\star\in\mathbb{S}_{+(2)}^{d-1}$ given by the respective principal eigenvectors of
+\begin{equation*}
+    \hat{\Sigma}^{[i]} = \sum_{l=1}^k \bm{\theta}_{(l)}\bm{\theta}_{(l)}^T\ind\{\argmin_{j=1,\ldots,K}\varrho(\bm{\theta}_{(l)},\bm{w}_j)=i\}, \qquad (i=1,\ldots,K).
+\end{equation*}
+The matrix $\hat{\Sigma}^{[i]}$ represents the empirical TPDM (up to some multiplicative constant) based on the nearest neighbours of the $i$th centroid. @fomichovSphericalClusteringDetection2023 prove that, under certain conditions, the limiting centroids lie in a neighbourhood of the faces of interest $C_{\beta_1},\ldots,C_{\beta_K}$. Thresholding the centroid vectors yields the final partition $\beta_1,\ldots,\beta_K$.
+
+#### @richardsModernExtremeValue2024
+
+@richardsModernExtremeValue2024 apply hierarchical clustering using the empirical TPDM as the underlying similarity matrix. The clustering method constitutes a minor aspect of their submission to the EVA (2023) Data Challenge. Few methodological details are provided, so the following explanation constitutes our interpretation of their method, drawing on Figure 4 in @richardsModernExtremeValue2024 and the accompanying code made available at \url{https://github.com/matheusguerrero/yalla}. Define the dissimilarity between $X_i$ and $X_j$ as $\varrho_{ij} = 1 - \sigma_{ij}$. This satisfies the properties of a dissimilarity measure (CITE: A MATHEMATICAL THEORY FOR CLUSTERING IN METRIC SPACES):
+\begin{equation*}
+    \varrho_{ij} \geq 0, \qquad \varrho_{ii} = 0, \qquad \varrho_{ij}=\varrho_{ji}.
+\end{equation*}
+The $d\times d$ dissimilarity matrix $\mathcal{D}=1-\Sigma=(\varrho_{ij})$ can be fed into standard hierarchical clustering algorithms. Agglomerative hierarchical clustering initially assigns each variable belongs to its own cluster, i.e. $\beta_i=\{i\}$ for $i=1,\ldots,d$. The algorithm proceeds iteratively, repeatedly joining together the two closest clusters until some stopping criterion is satisfied. Under complete-linkage clustering, the distance between clusters $\beta\neq\beta'$ is given by $\max\{\varrho_{ij} : i\in\beta,j\in\beta'\}$. The merging process may be stopped when there is a sufficiently small number of clusters or when the clusters are sufficiently separated.
+
+### Parametric model fitting
+
+@fixSimultaneousAutoregressiveModels2021 consider the extremal behaviour of a spatial process $\{\bm{X}(\bm{s}):\bm{s}\in\R^2\}$ at fixed sites $\bm{s}_1,\ldots,\bm{s}_d\in\R^2$ by modelling $\bm{X}=(\bm{X}(\bm{s}_i) : i=1\ldots,d)\in\mathrm{RV}_+^d(2)$ as
+\begin{equation}\label{eq-sar-model}
+    \bm{X} = (I - \rho W)^{-1}\otimes\bm{Z}.
+\end{equation}
+This is called the extremal spatial auto-regressive (SAR) model. The $d\times d$ matrix $W$ contains the (known) pairwise spatial distances and $\rho\in(0,1/4)$ is a spatial dependence parameter. The extremal SAR model is a special case of the max-linear model \eqref{eq-max-linear-X-cooley} with $A=A(\rho)=(I-\rho W)^{-1}$. They propose estimating the model parameter $\rho$ by minimising the discrepancy between the empirical TPDM and the theoretical TPDM $\Sigma(\rho):=A(\rho)A(\rho)^T$, that is
+\begin{equation}\label{eq-sar-rho-estimator}
+    \hat{\rho} = \argmin_{\rho\in(0,1/4)}\|\hat{\Sigma} - \Sigma(\rho)\|_F^2.
+\end{equation}
+In fact, $\hat{\Sigma}$ is replaced with a bias-corrected version of the empirical TPDM; this will be discussed in Section XX.
+
+@kirilioukEstimatingProbabilitiesMultivariate2022 consider the more general problem of modelling arbitrary max-linear random vectors $\bm{X}=A\times_{\max}\bm{Z}\in \mathrm{RV}_+^d(2)$. In a similar spirit to @fixSimultaneousAutoregressiveModels2021, they propose estimating $A$ so as to enforce conformity between the empirical and model TPDMs. This means that the estimate of $A$ belongs to the set
+\begin{equation*}
+    \mathcal{CP}(\hat{\Sigma}) := \left\lbrace \hat{A}\in\R_+^{d\times q} : q\geq 1, \,\hat{\Sigma}=\hat{A}^{\alpha/2}(\hat{A}^{\alpha/2})^T\right\rbrace.
+\end{equation*}
+Choosing $\hat{A}\in\mathcal{CP}(\hat{\Sigma})$ guarantees that the pairwise dependencies of the fitted model match those exhibited by the data. The set $\mathcal{CP}(\hat{\Sigma})$ is in direct correspondence to the set of completely positive (CP) factors of $\hat{\Sigma}$; we call $\hat{A}\in\mathcal{CP}(\hat{\Sigma})$ a CP-estimate of $A$. The naive estimate \eqref{eq-empirical-A} belongs to this class, but @kirilioukEstimatingProbabilitiesMultivariate2022 provide an algorithm for efficiently obtaining further estimates $\hat{A}\in \R_+^{d\times d}\cap \mathcal{CP}(\hat{\Sigma})$. 
+
+@fixSimultaneousAutoregressiveModels2021 and @kirilioukEstimatingProbabilitiesMultivariate2022 evaluate the practical performance of their estimators by computing tail event probabilities in a series of simulated/real-world scenarios. *More details here, when I've written up formulae for failure events.*
+
+### Miscellaneous: time series and extremal graphical models
+
+[@mhatreTransformedLinearModelsTime2021; @gongPartialTailCorrelationCoefficient2024; @leePartialTailCorrelation2023].
+
+## Bias in the empirical TPDM in weak-dependence scenarios}
+
+Section XX reviewed the asymptotic properties of the empirical TPDM. We recall in particular that it is asymptotically unbiased, meaning $\mathbb{E}[\hat{\Sigma}] \to \Sigma$ as $n\to\infty$. The associated rate of convergence is $\mathcal{O}(k^{-1/2})$, where $k$ represents the number of extreme observations and satisfies the rate conditions \eqref{eq-k-rate-conditions}. For example, choosing $k(n)=\sqrt{n}$ yields a convergence rate of $\mathcal{O}(n^{-1/4})$. In practical settings the number of extreme events $k$ is normally small, both in relative (by definition) and absolute terms. For example, commonly available climate records typically span approximately 50 years \parencite{boulaguiem_modeling_2022}. A study of temperature extremes might then be based on, say, $n\approx 50 \times 100 = 5,000$ daily observations recorded in the summer months over this time span. Working with small effective sample sizes means it is critical to understand the non-asymptotic, finite-sample performance of the empirical TPDM. 
+
+### Bias in threshold-based estimators
+
+At finite levels, the empirical TPDM exhibits an upwards bias in weak dependence scenarios [@cooleyDecompositionsDependenceHighdimensional2019; @fixSimultaneousAutoregressiveModels2021; @mhatreTransformedLinearModelsTime2021]. This is true more generally of threshold-based estimators in multivariate extremes [@huserLikelihoodEstimatorsMultivariate2016]. They conduct simulation studies with $d=2$ and $n=10^4$ examining the performance of various estimators of $\gamma$, the dependence parameter of the symmetric logistic model. The results show that block-maxima based estimators have a small bias but very high variability. On the other hand, each of the threshold-based estimators $\hat{\gamma}$ tend to overestimate the dependence strength, that is $\mathrm{Bias}(\hat{\gamma}) = \mathbb{E}[\hat{\gamma}] - \gamma < 0$. Moreover, the discrepancy increases as dependence weakens ($\gamma\to 1$). 
+
+The empirical TPDM suffers from the same issue when dependence is weak. This can be summarised as
+\begin{equation}\label{eq-empirical-tpdm-bias}
+    \sigma_{ij} \ll 1 \implies \mathrm{Bias}(\hat{\sigma}_{ij}) = \mathbb{E}[\hat{\sigma}_{ij}] - \sigma_{ij} > 0.
+\end{equation}
+Note that overestimating the dependence strength now corresponds to a positive bias, so the inequality is reversed. 
+
+### Simulation experiments
+
+See @fig-parametric-chi-tpdm-small-n.
+
+
+```{r background-make-fig-parametric-chi-tpdm-small-n}
 #| label: fig-parametric-chi-tpdm-small-n
-#| fig-cap: "Blah"
-#| fig-scap: "Blah"
+#| fig-cap: "True dependence strengths for the symmetric logistic (left) and Hüsler-Reiss (right) models, measured using the tail dependence coefficient (red line) and TPDM (blue line). The shaded regions represent the minimum/maximum values of empirical estimates over 10 repeated simulations using bivariate samples of size $n=5\\times 10^3$."
+#| fig-scap: "Bias in estimation of $\\sigma$ for symmetric logistic and Hüsler-Reiss models."
 #| fig-height: 3.5
 
 data <- readRDS(file.path("scripts", "background", "results", "parametric_chi_tpdm_empirical_smalln.RDS")) 
 
-sl_tpdm <- function(a) { 
-  sl_integrand <- function(x, a) (1 - a) / a * (x * (1-x))^(1/a - 3/2) * ((1-x)^(1/a) + x^(1/a))^(a-2) 
-  if (a == 0) { 
-    1 
-  } else if (a == 1) { 
-    0 
-  } else { 
-    integrate(function(x) sl_integrand(x, a = a), lower = 0, upper = 1, subdivisions = 500)$value 
-  } 
-} 
-hr_tpdm <- function(lambda) { 
-  hr_integrand <- function(x, a) { 
-    g1 <- a/2 - 1/a * log(x^2/(1-x^2)) 
-    g2 <- a/2 - 1/a * log((1-x^2)/x^2) 
-    term1 <- 2 / (a * sqrt(1 - x^2)) 
-    term2 <- ((1 - g1/a) / x^2) * dnorm(g1) 
-    term3 <- ((1 - g2/a) / (1-x^2)) * dnorm(g2) 
-    out <- term1 * (term2 + term3) 
-    return(out) 
-  } 
-  ifelse(lambda == 0, 
-         1, 
-         integrate(function(x) hr_integrand(x, a = 2 * lambda), lower = 0, upper = 1, 
-                   subdivisions = 500)$value)   
-  
-} 
-sl_chi <- function(x) {2 - 2^x} 
-hr_chi <- function(lambda) 2 * (1 - pnorm(lambda)) 
-
 p1 <- ggplot() + 
-  geom_point(data = filter(data, model == "log"), aes(x = dep_par, y = chi), colour = "red", alpha = 0.1, size = 0.7) + 
-  geom_point(data = filter(data, model == "log"), aes(x = dep_par, y = sigma), colour = "blue", alpha = 0.1, size = 0.7) + 
+  stat_summary(data = filter(data, model == "log"), aes(x = dep_par, y = chi), fun.min = min, fun.max = max, geom = "ribbon", fill = "red", colour = NA, alpha = 0.2) +
+  stat_summary(data = filter(data, model == "log"), aes(x = dep_par, y = sigma), fun.min = min, fun.max = max, geom = "ribbon", fill = "blue", colour = NA, alpha = 0.2) +
   geom_function(aes(colour = "chi"), fun = sl_chi, xlim = c(0, 1)) + 
-  geom_function(aes(colour = "tpdm"), fun = Vectorize(sl_tpdm), xlim = c(0, 1)) + 
-  scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 3)) + 
+  geom_function(aes(colour = "tpdm"), fun = sl_tpdm, xlim = c(0, 1)) + 
+  scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 5)) + 
   scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.02))) + 
   scale_colour_manual(values = c("red", "blue"), labels = expression(chi, sigma)) + 
   theme_light() + 
   labs(colour = "Measure", 
-       x = expression(alpha), 
+       x = expression(gamma), 
        y = "Dependence strength", 
        title = "Symmetric logistic") + 
-  theme(legend.position = "right", 
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 10))  
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 10))  
 
 p2 <- ggplot() + 
-  geom_point(data = filter(data, model == "hr"), aes(x = dep_par, y = chi), colour = "red", alpha = 0.1, size = 0.7) + 
-  geom_point(data = filter(data, model == "hr"), aes(x = dep_par, y = sigma), colour = "blue", alpha = 0.1, size = 0.7) + 
+  stat_summary(data = filter(data, model == "hr"), aes(x = dep_par, y = chi), fun.min = min, fun.max = max, geom = "ribbon", fill = "red", colour = NA, alpha = 0.2) +
+  stat_summary(data = filter(data, model == "hr"), aes(x = dep_par, y = sigma), fun.min = min, fun.max = max, geom = "ribbon", fill = "blue", colour = NA, alpha = 0.2) + 
   geom_function(aes(colour = "chi"), fun = hr_chi, xlim = c(0, 3.5)) + 
-  geom_function(aes(colour = "tpdm"), fun = Vectorize(hr_tpdm), xlim = c(0, 3.5)) + 
-  scale_x_continuous(limits = c(0, 3.5), expand = c(0, 0)) + 
+  geom_function(aes(colour = "tpdm"), fun = hr_tpdm, xlim = c(0, 3.5)) + 
+  scale_x_continuous(limits = c(0, 3.5), expand = c(0, 0), breaks = breaks_extended(n = 4)) + 
   scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.02))) + 
   scale_colour_manual(values = c("red", "blue"), labels = expression(chi, sigma)) + 
   theme_light() + 
@@ -1137,9 +1289,28 @@ p2 <- ggplot() +
        x = expression(lambda), 
        y = "Dependence strength", 
        title = "Hüsler-Reiss") + 
-  theme(legend.position = "right", 
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 10)) 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 10)) 
 
 ggarrange(p1, p2, ncol = 2, common.legend = TRUE) 
 ``` 
+
+
+\subsection{Existing approaches to bias-correction for the TPDM}
+
+Estimation error in the empirical TPDM was first studied by @cooleyDecompositionsDependenceHighdimensional2019. In the Supplementary Material, they assess the accuracy of the eigenvalues/eigenvectors of the empirical TPDM. Their example is based on a Brown-Resnick process, for which the true TPDM is known (@exm-husler-reiss-tpdm). They find that the leading eigenvalue is overestimated ($\hat{\lambda}_1 > \lambda_1$) and subsequent eigenvalues are underestimated ($\hat{\lambda}_j < \lambda_j$ for $j\geq 2$). The bias reduces when the sample size and radial threshold are increased. In the non-extreme setting, the sample covariance matrix has the same deficiency, especially when the sample size and dimension are comparable in magnitude [@mestreImprovedEstimationEigenvalues2008]. Poor spectrum estimation can have important consequences in a downstream analysis, such as deciding how many principal components are retained in PCA. @cooleyDecompositionsDependenceHighdimensional2019 do not propose any solutions to improve TPDM estimation.
+
+The bias issue \eqref{eq-empirical-tpdm-bias} is addressed more directly by @mhatreTransformedLinearModelsTime2021. In their Supplementary Material, they conduct simulation studies to examine the performance of the empirical TPDF, the time series analogue of the TPDM (see Section XX). They show that $\sigma(h)$ exhibits a positive bias, especially at higher lags where the theoretical TPDM should vanish to zero. Their bias-corrected TPDF estimator works by subtracting the mean from the time series in pre-processing. The rationale for their estimator is described in terms of the position of extreme points in a lag plot (i.e. a scatter plot of $(X_t, X_{t+h})$ for some fixed lag $h$). Subtracting the mean has little effect on points near the middle of this plot, but points close to the coordinate axes are driven even closer. 
+
+The first bias-correction estimation procedure for the TPDM is found in @fixSimultaneousAutoregressiveModels2021. Recall from Section XX that they use the empirical TPDM to estimate the spatial dependence parameter $\rho$ of the extremal SAR model \eqref{eq-sar-model}. When the spatial extent of the study domain is large compared to that of the modelled phenomenon, their estimation procedure \eqref{eq-sar-rho-estimator} is liable to overestimate $\rho$. This is because the empirical TPDM fails to capture the weak dependence between distant pairs of sites. Their bias-correction procedure is founded on the assumption that the pairwise asymptotic dependence strength vanishes to zero as the distance between two sites increases. Consider a spatial process $\{X(\bm{s}) : s\in \R^2\}$ and fixed locations $\bm{s}_1,\ldots,\bm{s}_d\in \R^2$. Let $X_i=X(\bm{s}_i)$ represent the process at site $i$ and $h_{ij}$ the spatial distance between $\bm{s}_i$ and $\bm{s}_j$. Treating the empirical TPDM entries as functions of distance, they model the relationship between the empirical TPDM and spatial distance via
+\begin{equation*}
+    \hat{\sigma}(h) = \beta_0 \exp(-\beta_1 h) + \beta_2.
+\end{equation*}
+The parameters $\beta_0,\beta_1,\beta_2$ are estimated from the observed data $\{(\hat{\sigma}_{ij},h_{ij}):1\leq i<j\leq d\}$ by non-linear least squares estimation, e.g. using \texttt{nls()}. Since $\hat{\sigma}(h)\to\beta_2$ as $h\to\infty$, the horizontal asymptote $\hat{\beta}_2$ of the fitted model is used as a proxy for the bias at large distances. This determines the amount of shrinkage that should be applied to the off-diagonal entries, yielding the final estimator
+\begin{equation}\label{eq-fix-bias-corrected-tpdm}
+    \tilde{\Sigma}=(\tilde{\sigma}_{ij}), \qquad \tilde{\sigma}_{ij} = \begin{cases}
+        \hat{\sigma}_{ij}, & i=j, \\
+        (\hat{\sigma}_{ij} - \hat{\beta}_2)_+, & i\neq j.
+    \end{cases}
+\end{equation}
+Estimates of the diagonal entries are found to be unbiased -- and their values are known if the margins are standardised -- so they are unaltered. @fixSimultaneousAutoregressiveModels2021 find that $\tilde{\Sigma}$ is effective in reducing the bias in estimation of $\rho$. Its performance more broadly as an estimator for $\Sigma$ is not studied. In any case, their procedure is only applicable in settings where there is a notion of distance between variables. The estimator \eqref{eq-fix-bias-corrected-tpdm} results from element-wise application of the soft-thresholding operator (with shrinkage parameter $\hat{\beta}_2$) to the empirical TPDM \parencite{rothman_generalized_2009}. This connection will be developed further in Chapter XX, where we propose alternative bias-corrected TPDM estimators.
 

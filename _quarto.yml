@@ -13,10 +13,6 @@ book:
     - index.qmd
     - introduction.qmd
     - background.qmd
-    - changing-ext-dep.qmd
-    - compositional.qmd
-    - eva-data-challenge.qmd
-    - shrinkage-tpdm.qmd
     - references.qmd
   search:
     location: navbar
