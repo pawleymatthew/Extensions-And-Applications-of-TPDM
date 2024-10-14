@@ -1,0 +1,13 @@
+# Introduction
+
+## Motivation
+
+## Thesis aims and outline
+
+- Summarise general idea of the thesis.
+- Chapter 2: introduction to key concepts of EVT; define TPDM, describe its properties, and review its applications so far; explain and demonstrate bias issue when dependence is weak. 
+- Chapter 3: EVA Data Challenge
+- Chapter 4: changing dependence
+- Chapter 5: compositional perspectives
+- Chapter 6: shrinkage TPDM, sparse/robust methods etc. to handle the bias issue
+- Chapter 7: summary, discussion and outlook

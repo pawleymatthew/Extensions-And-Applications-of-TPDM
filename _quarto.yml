@@ -1,0 +1,72 @@
+project:
+  type: book
+
+book:
+  title: "Extensions and Applications of the Tail Pairwise Dependence Matrix"
+  author: 
+    - name: Matthew Pawley
+      url: https://people.bath.ac.uk/mtp34/
+      affiliation: University of Bath
+  date: today
+  date-format: long
+  chapters:
+    - index.qmd
+    - introduction.qmd
+    - background.qmd
+    - changing-ext-dep.qmd
+    - compositional.qmd
+    - eva-data-challenge.qmd
+    - shrinkage-tpdm.qmd
+    - references.qmd
+  search:
+    location: navbar
+    type: overlay
+
+bibliography: references.bib
+
+execute:
+  echo: false
+
+crossref:
+  chapters: true
+
+fig-pos: "H"
+fig-width: 8
+fig-cap-location: bottom
+fig-format: pdf
+
+toc: true
+toc-depth: 3
+
+lof: true
+lot: true
+
+include-before-body:
+  text: |
+    \pagenumbering{roman}
+
+format:
+  pdf:
+    documentclass: scrreprt
+    mathspec: true
+    include-in-header: 
+      - "_macros.tex"
+      - text: |
+         \usepackage{fancyhdr}
+         \usepackage[yyyymmdd,hhmmss]{datetime}
+         \usepackage{textcase}
+         \pagestyle{fancy}
+         \fancyhead[R]{\slshape\nouppercase{\leftmark}}
+         \fancyhead[L]{Compiled on \today\ at \currenttime}
+         \fancyfoot[C]{\thepage}
+    linestretch: 1.5
+    geometry:
+      - top=25mm
+      - left=40mm
+      - bottom=25mm
+      - right=25mm
+    cite-method: biblatex
+    biblatexoptions: maxcitenames=2, style=authoryear, date=year, doi=false, isbn=false, url=false, eprint=false
+    
+editor: source
+

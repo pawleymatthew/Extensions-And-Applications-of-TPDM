@@ -1,0 +1,5 @@
+\pagenumbering{arabic}
+
+# Preface {.unnumbered}
+
+Draft thesis of {{< meta author >}}, created on {{< meta date >}}.
