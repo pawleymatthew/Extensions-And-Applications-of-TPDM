@@ -29,15 +29,15 @@ sapply(list.files(path = "R/background", pattern = "*.R", full.names = TRUE, rec
 
 ### Block maxima and the generalised extreme value (GEV) distribution}
 
-Let $X_1,X_2,\ldots$ be a sequence of independent and identically distributed, continuous random variables with distribution function $F$. For $n\geq 1$, define
+Let $X_1,X_2,\ldots$ be a sequence of independent, identically distributed, continuous random variables with distribution function $F$. For $n\geq 1$, define the random variable
 \begin{equation}
     M_n := \max (X_1,\ldots, X_n) = \bigvee_{i=1}^n X_i.
 \end{equation}
-The distribution of $M_n$ is given by
+The exact distribution of $M_n$ is given by
 \begin{equation*}
-    \mathbb{P}(M_n \leq x) = \mathbb{P}(X_1\leq x,\ldots X_n \leq x) = \prod_{i=1}^n \mathbb{P}(X_i \leq x) = F^n(x).
+    \mathbb{P}(M_n \leq x) = \mathbb{P}(X_1\leq x,\ldots X_n \leq x) = \prod_{i=1}^n \mathbb{P}(X_i \leq x) = F^n(x), \qquad (x\in\R).
 \end{equation*}
-In practice, this result is not particularly useful, since $F$ is usually unknown. Instead, we leverage asymptotic theory to study the limiting behaviour of $F^n$ as $n\to\infty$. The asymptotic distribution of $M_n$ is degenerate, since $M_n \overset{p}{\to} x_F$, the (possibly infinite) upper end-point of $F$. The Extremal Types Theorem states that, after suitable rescaling, there are three classes of non-degenerate asymptotic distribution.
+This result is not particularly useful in practice, where $F$ is typically unknown. Instead, we study the limiting behaviour of $F^n$ as $n\to\infty$. Clearly the asymptotic distribution of $M_n$ is degenerate, since $M_n \overset{p}{\to} x_F:=\sup\{x:F(x)<1\}$, the (possibly infinite) upper end-point of $F$. However, the Extremal Types Theorem states that, after suitable rescaling, there are three classes of non-degenerate asymptotic distribution (CITE).
 
 :::{#thm-extremal-types}
 Suppose there exist real sequences $\{a_n > 0\}$ and $\{b_n\in\R\}$ and a non-degenerate distribution function $G$ such that
@@ -49,51 +49,28 @@ Then $G$ belongs to one of three parametric families: Gumbel, Fréchet or negati
 
 When \eqref{eq-extremal-types} holds, we say that $F$ lies in the maximum domain of attraction (MDA) of $G$. The three families are unified by the Generalised Extreme Value (GEV) distribution. Its distribution function is
 \begin{equation}\label{eq-gev}
-    G(x) = \exp\left\lbrace - \left[ 1 + \xi \left(\frac{x-\mu}{\sigma}\right)\right]_+^{-1/\xi} \right\rbrace.
+    G(x) = \exp\left\lbrace - \left[ 1 + \xi \left(\frac{x-\mu}{\sigma}\right)\right]_+^{-1/\xi} \right\rbrace,
 \end{equation}
-The parameters $\mu\in\R$, $\sigma >0$ and $\xi\in\R$ are called the location, scale, and shape, respectively. The sign of the shape parameter determines the sub-class: $\xi>0$ corresponds to the heavy-tailed Fréchet class, $\xi=0$ (interpreted as $\xi\to 0$) corresponds the exponential-tailed Gumbel class, and $\xi<0$ the negative Weibull class, which has a finite upper limit.
+where $[x]_+:=\max(0,x)$ denote the positive part of $x$. The parameters $\mu\in\R$, $\sigma >0$ and $\xi\in\R$ are called the location, scale, and shape, respectively. The sign of the shape parameter determines the sub-class that $G$ belongs to: $\xi>0$ corresponds to the heavy-tailed Fréchet class, $\xi=0$ (with \eqref{eq-extremal-types} interpreted as $\xi\to 0$) corresponds the exponential-tailed Gumbel class, and $\xi<0$ the negative Weibull class, which has a finite upper limit.
 
-The GEV distribution is used to model the upper tail of $X$ via the block maxima approach. Let $x_1,\ldots,x_n$ denote independent observations of $X_1,\ldots,X_n$. The data are then partitioned into finite blocks of size $m$. Provided $m$ is sufficiently large, @thm-extremal-types implies that the maximum observation in each block is approximately GEV distributed. Estimates for the GEV parameters are obtained from the set of block-wise maxima, e.g. by maximum likelihood inference. The choice of block size is critical and involves managing a bias-variance trade-off. If $m$ is too small, then the asymptotic approximation may not be valid. If $m$ is too large, then the number of blocks (and therefore block-wise maxima) will be small, resulting in high variances in the estimates. 
+The GEV distribution is used to model the upper tail of $X$ via the block maxima approach (CITE). Let $x_1,\ldots,x_n$ denote independent observations of $X_1,\ldots,X_n$. The data are partitioned into finite blocks of size $m$. Provided $m$ is sufficiently large, the maximum observation in each block is approximately GEV distributed by @thm-extremal-types. Once the block-wise maxima have been extracted, estimates of the GEV parameters may be obtained, e.g. by maximum likelihood inference. The performance of the fitted model is sensitive to the choice of block size. Selection of the tuning parameter $m$ requires managing a bias-variance trade-off. If the blocks are too small, then the underlying asymptotic approximation may not be valid and the maxima may not be representative as extreme events, biasing the estimates. Taking larger blocks reduces the amount of data available for inference, resulting in noisier estimation of the GEV parameter estimates.
 
 ### Threshold exceedances and the generalised Pareto distribution (GPD)
 
-The block maxima procedure is considered wasteful, because it fails to exploit all the available information. Specifically, observations that are `extreme' but not block maxima are discarded, even though they can be informative for the tail behaviour. This motivates the alternative but intimately related peaks-over-threshold method. If $X$ is in the maximum domain of attraction of a $\mathrm{GEV}(\mu,\sigma,\xi)$ distribution, then
+The block maxima procedure is considered inefficient, because it fails to exploit all the available information. Each block is summarised by a (single) maximum value, even if it contains other 'extreme' events that might be informative for the tail. The intimately related peaks-over-threshold method makes better use of the available data. If $X$ is in the maximum domain of attraction of a $\mathrm{GEV}(\mu,\sigma,\xi)$ distribution, then
 \begin{equation}\label{eq-gpd}
     \lim_{u\to\infty} \mathbb{P}(X-u>x \mid X>u) = \left[1+\frac{\xi x}{\tilde{\sigma}}\right]_+^{-1/\xi}, \qquad (x>0),
 \end{equation}
-where $\tilde{\sigma}=\sigma + \xi(u-\mu)$. The limiting conditional distribution is called the generalised Pareto distribution (GPD). Given observations $x_1,\ldots,x_n$, it suggests itself to choose a high threshold $u$, and assume that exceedances of the threshold are approximately GPD distributed. The GPD parameters can then be estimated by likelihood or Bayesian inference procedures. Threshold selection is subject to similar considerations as for the block size. If the threshold is too low then the GPD model is not valid, leading to a bias in the fitted model. If the threshold is too high, then the uncertainty in the estimated model parameters will be unnecessarily high. Many diagnostics and methodologies are proposed in the literature to aid with this choice.
+where $\tilde{\sigma}=\sigma + \xi(u-\mu)$ (CITE). The limiting conditional distribution is called the generalised Pareto distribution (GPD). The GPD describes the distribution of excesses over a high threshold. Given observations $x_1,\ldots,x_n$, the peaks-over-threshold method assumes that exceedances of some pre-specified high threshold $u>0$ are approximately GPD distributed. Maximum likelihood or Bayesian inference procedures may be used to estimate the GPD parameters $\bar{\sigma},\xi$. Threshold selection is subject to similar considerations as for the block size. Picking a low threshold risks model misspecification, causing bias in the fitted model. Choosing a high threshold directly reduces the number of threshold exceedances, increasing the uncertainty in the parameter estimates. Various diagnostics and procedures have been proposed to aid with this choice. Many approaches rely on inspecting diagnostic plots, such as mean residual life (MRL) plots (CITE) and parameter stability plots (CITE). Automated selection procedures aim to remove subjectivity by optimising with respect to some criterion. These include change-point methods (CITE Wadsworth 2016), cross-validation in a Bayesian framework (CITE Northrop et al. 2017), and minimising expected quantile discrepancies (CITE Murphy and Tawn 2024). 
 
-### Regular variation
 
-:::{#def-regular-variation-function}
-A function $f:\R_+\to\R_+$ is regularly varying with index $\alpha\in\R$ if, for all $x>0$,
-    \begin{equation}
-        \lim_{t\to\infty}\frac{f(tx)}{f(t)} = x^\alpha.
-    \end{equation}
-:::
+### Non-stationary extremes
 
-In the case $\alpha=0$, $f$ is called slowly-varying. This notion is extended to random variables by treating the distributional tail as the function of interest. 
-
-:::{#def-regular-variation-random-variable}
-A non-negative random variable $X$ is regularly varying with tail index $\alpha \geq 0$ if the right-tail of its distribution function is regularly varying with index $-\alpha$, i.e. for all $x>1$,
-    \begin{equation*}
-        \lim_{t\to\infty} \mathbb{P}(X > tx \mid X > t) = x^{-\alpha}.
-    \end{equation*}
-:::
-
-If $X$ is regularly varying with index $\alpha$, then its survivor function is of the form
-\begin{equation}\label{eq-regularly-varying-survivor-function}
-    \mathbb{P}(X>x) = x^{-\alpha} L(x)
-\end{equation}
-for some slowly-varying function $L$ [@jessenRegularlyVaryingFunctions2006]. This says that regularly varying random variables are those with power law tails. In fact, a random variable $X$ is regularly varying if and only if it belongs to the Fréchet MDA. Moreover, \eqref{eq-regularly-varying-survivor-function} means that regularly varying distributions are asymptotically scale invariant, in the sense that for all $\lambda>0$,
+The block-maxima and peaks-over-threshold methods presented above assume that the data are stationary over the observation period. In environmental applications, climate change poses a significant challenge to the validity of this assumption. Changes in the frequency and intensity of extreme weather events (CITE) directly contradict the assumption that the distribution of extreme events remains constant over time. Non-stationary models account for temporal trends by permitting parameters to vary over time or in relation to covariates. For example, CITE Vanem 2015 incorporate time-dependent trends into the GEV location and scale parameters by specifying
 \begin{equation*}
-    \mathbb{P}(X > \lambda x) = (\lambda x)^{-\alpha} L(\lambda x) \sim \lambda^{-\alpha} \mathbb{P}(X > x).
+\mu(t)=\mu_0 + \mu_1 t,\qquad \sigma(t) = \exp(\sigma_0 + \sigma_1 t).
 \end{equation*}
-This asymptotic homogeneity explains why regular variation is ubiquitous in extreme value theory. 
-
-\subsection{Non-stationary extremes}
-
-*To do.*
+If the parameters $\mu_1$ and $\sigma_1$ are significantly different from zero, it suggests there is evidence for a temporal trend. The shape parameter may be extended in a similar way, e.g. $\xi(t)=\xi_0+\xi_1 t$, but the shape is notoriously challenging to estimate accurately and results (quantiles, return periods, etc.) are very sensitive to changes in its sign. *CITE further papers or a review?* 
 
 ## Multivariate extreme value theory
 
@@ -275,6 +252,34 @@ The logistic-type, Hüsler-Reiss and max-linear models will be used to generate 
 *Make figure depicting the dependence structure of SL, HR and max-linear models.*
 
 ### Multivariate regular variation
+
+#### Univariate regular variation
+
+:::{#def-regular-variation-function}
+A function $f:\R_+\to\R_+$ is regularly varying with index $\alpha\in\R$ if, for all $x>0$,
+    \begin{equation}
+        \lim_{t\to\infty}\frac{f(tx)}{f(t)} = x^\alpha.
+    \end{equation}
+:::
+
+In the case $\alpha=0$, $f$ is called slowly-varying. This notion is extended to random variables by treating the distributional tail as the function of interest. 
+
+:::{#def-regular-variation-random-variable}
+A non-negative random variable $X$ is regularly varying with tail index $\alpha \geq 0$ if the right-tail of its distribution function is regularly varying with index $-\alpha$, i.e. for all $x>1$,
+    \begin{equation*}
+        \lim_{t\to\infty} \mathbb{P}(X > tx \mid X > t) = x^{-\alpha}.
+    \end{equation*}
+:::
+
+If $X$ is regularly varying with index $\alpha$, then its survivor function is of the form
+\begin{equation}\label{eq-regularly-varying-survivor-function}
+    \mathbb{P}(X>x) = x^{-\alpha} L(x)
+\end{equation}
+for some slowly-varying function $L$ [@jessenRegularlyVaryingFunctions2006]. This says that regularly varying random variables are those with power law tails. In fact, a random variable $X$ is regularly varying if and only if it belongs to the Fréchet MDA. Moreover, \eqref{eq-regularly-varying-survivor-function} means that regularly varying distributions are asymptotically scale invariant, in the sense that for all $\lambda>0$,
+\begin{equation*}
+    \mathbb{P}(X > \lambda x) = (\lambda x)^{-\alpha} L(\lambda x) \sim \lambda^{-\alpha} \mathbb{P}(X > x).
+\end{equation*}
+This asymptotic homogeneity explains why regular variation is ubiquitous in extreme value theory.
 
 Multivariate regular variation (MRV) provides an alternative characterisation of the probabilistic structure of multivariate extreme events. Under this framework, the asymptotic joint tail distribution is represented by a homogeneous limit measure. Although MRV can be formulated more generally, we focus on the case where $\bm{X}$ takes values on the positive orthant $\R_+^d:=[0,\infty)^d$. This common assumption is not as restrictive as it might initially seem. In most applications, the risk being assessed is directional. For example, a climatologist might focus on the lows or highs of precipitation records, depending on whether he is assessing drought risk or flood risk. Without loss of generality, and by means of a transformation if necessary, we can define this direction of interest to be ‘positive’.
 

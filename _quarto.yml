@@ -12,10 +12,7 @@ book:
   chapters:
     - index.qmd
     - introduction.qmd
-<<<<<<< HEAD
-=======
     - background.qmd
->>>>>>> 442c7a32c142f6236b8df0331db325340b29df6f
     - references.qmd
   search:
     location: navbar
