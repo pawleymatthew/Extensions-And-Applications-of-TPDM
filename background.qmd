@@ -63,36 +63,37 @@ The block maxima procedure is considered inefficient, because it fails to exploi
 \end{equation}
 where $\tilde{\sigma}=\sigma + \xi(u-\mu)$ (CITE). The limiting conditional distribution is called the generalised Pareto distribution (GPD). The GPD describes the distribution of excesses over a high threshold. Given observations $x_1,\ldots,x_n$, the peaks-over-threshold method assumes that exceedances of some pre-specified high threshold $u>0$ are approximately GPD distributed. Maximum likelihood or Bayesian inference procedures may be used to estimate the GPD parameters $\bar{\sigma},\xi$. Threshold selection is subject to similar considerations as for the block size. Picking a low threshold risks model misspecification, causing bias in the fitted model. Choosing a high threshold directly reduces the number of threshold exceedances, increasing the uncertainty in the parameter estimates. Various diagnostics and procedures have been proposed to aid with this choice. Many approaches rely on inspecting diagnostic plots, such as mean residual life (MRL) plots (CITE) and parameter stability plots (CITE). Automated selection procedures aim to remove subjectivity by optimising with respect to some criterion. These include change-point methods (CITE Wadsworth 2016), cross-validation in a Bayesian framework (CITE Northrop et al. 2017), and minimising expected quantile discrepancies (CITE Murphy and Tawn 2024). 
 
-
 ### Non-stationary extremes
 
-The block-maxima and peaks-over-threshold methods presented above assume that the data are stationary over the observation period. In environmental applications, climate change poses a significant challenge to the validity of this assumption. Changes in the frequency and intensity of extreme weather events (CITE) directly contradict the assumption that the distribution of extreme events remains constant over time. Non-stationary models account for temporal trends by permitting parameters to vary over time or in relation to covariates. For example, CITE Vanem 2015 incorporate time-dependent trends into the GEV location and scale parameters by specifying
+The block-maxima and peaks-over-threshold methods as presented above assume that the data are stationary over the observation period. In environmental applications, climate change threatens the validity of this assumption, with changes in the frequency and intensity of extreme weather events (CITE). Non-stationary models accommodate temporal dependence by allowing parameters to vary over time or in relation to covariates. For example, CITE Vanem 2015 incorporate trends into the GEV location and scale parameters by specifying
 \begin{equation*}
 \mu(t)=\mu_0 + \mu_1 t,\qquad \sigma(t) = \exp(\sigma_0 + \sigma_1 t).
 \end{equation*}
-If the parameters $\mu_1$ and $\sigma_1$ are significantly different from zero, it suggests there is evidence for a temporal trend. The shape parameter may be extended in a similar way, e.g. $\xi(t)=\xi_0+\xi_1 t$, but the shape is notoriously challenging to estimate accurately and results (quantiles, return periods, etc.) are very sensitive to changes in its sign. *CITE further papers or a review?* 
+If the parameters $\mu_1$ and $\sigma_1$ are significantly different from zero, it suggests the data exhibit non-stationarity. In principle the shape parameter may be extended analogously. Often the shape parameter is assumed constant because is notoriously difficult to estimate accurately and results (quantiles, return periods, etc.) are very sensitive to changes in its sign. *CITE further papers or a review?* 
 
 ## Multivariate extreme value theory
 
+Multivariate extreme value theory (MEVT) generalises the study of extreme events from univariate to multivariate settings. Understanding the joint tail behaviour of several variables is critical in various fields. In environmental science, practitioners are tasked with assessing the risk of compound extreme events involving several variables. For example, the impact of drought -- defined by the IPCC (CITE) as a prolonged period of low precipitation -- is exacerbated by high temperatures. Similarly, extreme rainfall occurring simultaneously across multiple locations may lead to a widespread flood event. In finance, investors seek to diversify their portfolio to mitigate against the risk of simultaneous extreme losses across multiple assets. Each of these examples calls for a statistical analysis of the joint tail distribution of some random vector.
+
 ### Componentwise maxima
 
-Let $\bm{X}=(X_1,\ldots,X_d)$ be a $d$-dimensional random vector with unknown joint distribution function $F$. That is, for any $\bm{x}=(x_1,\ldots,x_d)\in\R^d$,
+Consider a $d$-dimensional random vector $\bm{X}=(X_1,\ldots,X_d)$ with unknown joint distribution function $F$, meaning
 \begin{equation*}
-    F(\bm{x}) := \mathbb{P}(X_1\leq x_1, \ldots, X_d \leq x_d).
+    F(\bm{x}) := \mathbb{P}(X_1\leq x_1, \ldots, X_d \leq x_d),
 \end{equation*}
-Let $\bm{X}_1,\bm{X}_2,\ldots$ be a sequence of independent copies of $\bm{X}$. In the multivariate setting, the notion of a 'maximum' becomes subjective, since $\R^d$ is not an ordered set. One possibility is to define the maximum component-wise as
+for any $\bm{x}=(x_1,\ldots,x_d)\in\R^d$. Let $\bm{X}_1,\bm{X}_2,\ldots$ be a sequence of independent copies of $\bm{X}$. The notion of `extremes' or a 'maximum' becomes subjective in the multivariate setting, because $\R^d$ is not an ordered set. One possibility is to define the maximum component-wise as
 \begin{equation*}
     \bm{M}_n := \left( \bigvee_{i=1}^n X_{i1}, \ldots, \bigvee_{i=1}^n X_{id} \right). 
 \end{equation*}
-Analgously to the univariate case, we say that $F$ lies in the multivariate MDA of a non-degenerate distribution $G$ if there exist $\R^d$-valued sequences $\{\bm{a}_n > \bm{0}\}$ and $\{\bm{b}_n \in \R^d\}$ such that
+We say that $F$ lies in the multivariate MDA of a non-degenerate distribution $G$ if there exist $\R^d$-valued sequences $\{\bm{a}_n > \bm{0}\}$ and $\{\bm{b}_n \in \R^d\}$ such that
 \begin{equation}\label{eq-multivariate-mda}
     \mathbb{P}\left(\frac{\bm{M}_n - \bm{b}_n}{\bm{a}_n} \leq \bm{x} \right) \overset{d}{\to} G(\bm{x}), \qquad (n\to\infty).
 \end{equation}
-By application of @thm-extremal-types to the marginal components, one can show that the margins of $G$ follow a univariate GEV distribution. Unlike the univariate case, the full (joint) limit distribution $G$ does not admit a parametric representation. To study the properties of $G$, it is usual to standardise to common margins.
+Applying @thm-extremal-types to the marginal components reveals that the margins of $G$ follow a univariate GEV distribution. The crucial difference to the univariate setting is that now the limit (joint) distribution $G$ does *not* admit a parametric representation. The inherently challenging nature of MEVT largely stem from this fact. The problem of estimating/modelling $G$ is usually split into two (sequential) steps. First, one models the margins to describe the extreme behaviour of each variable individually (using univariate EVT). Then, one standardises to common margins and models the extremal dependence structure, i.e. the inter-relationships between extremes across multiple variables. Copula theory provides a rigorous justification for this two-step process.
 
 ### Copulae and marginal standardisation
 
- In multivariate statistics, copula theory provides a way to divide the modelling process into two steps: modelling the margins and modelling the dependence between the variables. 
+In multivariate statistics, Sklar's theorem allows for the separation of the marginal distributions of variables from their joint dependence structure through the use of a copula. It states that any multivariate distribution can be expressed as a combination of individual marginal distributions and a copula that captures the dependence between them.
 
 :::{#thm-sklar}
 Suppose $\bm{X}=(X_1,\ldots,X_d)$ has joint distribution function $F$ and continuous marginal distributions $X_i\sim F_i$ for $i=1,\ldots,d$. Then there exists a unique copula $C$ such that
@@ -101,49 +102,51 @@ Suppose $\bm{X}=(X_1,\ldots,X_d)$ has joint distribution function $F$ and contin
 \end{equation}
 :::
 
-The copula $C$ characterises the dependence structure of the variables. It represents the distribution function of $\bm{X}$ after transforming to standard uniform margins. Uniform margins are a standard choice in multivariate statistics, but one could easily conceive of copulae defined with alternative marginal distributions. In extreme value theory, it is common to work with Fréchet, exponential, or Gumbel margins. The different choices accentuate particular features of the extreme values. For example, heavy-tailed Fréchet margins will highlight the most extreme values. Light-tailed Gumbel or exponential margins are often preferred for conditional extremes modelling (CITE Heffernan and Tawn).
+The copula $C$ characterises the dependence structure of the variables, and represents the distribution function of $\bm{X}$ after transforming to standard uniform margins. Uniform margins are a standard choice in multivariate statistics, but copulae may be defined with alternative marginal distributions. In extreme value theory, it is common to use Fréchet, exponential or Gumbel margins. The different choices accentuate particular features of the extreme values. For example, heavy-tailed Fréchet margins serve to highlight the most extreme values, while Gumbel or exponential margins are often favoured for conditional extremes modelling (CITE Heffernan and Tawn). Although the marginal distribution is an important modelling choice, ultimately all choices are valid/equivalent in the sense that monotonic transformations of the univariate marginals do not change the nature of tail dependence [@resnickHeavytailPhenomenaProbabilistic2007].
 
-There are broadly two ways of performing the preliminary standardisation. Suppose $\bm{X}=(X_1,\ldots,X_d)$ has marginal distributions $X_i\sim F_i$ for $i=1,\ldots,d$. If the functions $F_i$ are known, then the marginal distributions can be transformed to some common distribution $F_\star$ via by the probability integral transform:
+There are broadly two ways of performing the preliminary marginal standardisation. Suppose $\bm{X}=(X_1,\ldots,X_d)$ has marginal distributions $X_i\sim F_i$ for $i=1,\ldots,d$. If the functions $F_i$ are known, then the marginal distributions can be transformed to some common target distribution $F_\star$ via the probability integral transform:
 \begin{equation}\label{eq-marginal-transformation}
     X_i \mapsto F_\star^{-1}(F_i(X_i)) \sim F_\star, \qquad (i=1,\ldots,d).
 \end{equation}
-In applications, the marginal distributions are usually unknown. Then an estimate $\hat{F}_i$ replaces $F_i$ in \eqref{eq-marginal-transformation}. This is typically the empirical CDF (non-parametric) possibly with GPD tails above a high threshold (semi-parametric). Uncertainty arising from the empirical marginal standardisation step will be neglected in this thesis.
+If the marginal distributions are unknown, as is usually the case, then $F_i$ is replaced with some estimate $\hat{F}_i$ in \eqref{eq-marginal-transformation}. A standard choice for $\hat{F}_i$ is the empirical CDF (non-parametric), perhaps with GPD tails above a high threshold (semi-parametric). Examples of these two approaches can be found in @russellAnalyzingDependenceMatrices2018 and @rohrbeckSimulatingFloodEvent2023, respectively. Throughout this thesis, uncertainty arising from estimation of the marginal distributions shall be neglected. Relaxing this assumption, as in @clemenconConcentrationBoundsEmpirical2023, represents an avenue for future work. 
 
 ### The exponent measure and angular measure
 
-Suppose $\bm{X}$ is on unit Fréchet margins, so that for $i=1,\ldots,d$,
+Suppose $\bm{X}$ is on unit Fréchet margins, that is
 \begin{equation}\label{eq-unit-frechet}
-    \mathbb{P}(X_i<x) = \exp(-1/x), \qquad (x>0).
+    \mathbb{P}(X_i<x) = \exp(-1/x), \qquad (x>0),
 \end{equation}
-This corresponds to a GEV distribution \eqref{eq-gev} with $\mu=\sigma=\xi=1$. Then the distribution $G$ in \eqref{eq-multivariate-mda} may be expressed as 
+for $i=1,\ldots,d$. This corresponds to a GEV distribution with $\mu=\sigma=\xi=1$. The joint distribution $G$ in \eqref{eq-multivariate-mda} may be rewritten in the form 
 \begin{equation}\label{eq-mevd}
     G(\bm{x}) = \exp(-V(\bm{x})),
 \end{equation}
 where $\bm{x}=(x_1,\ldots,x_d)$ and $x_i>0$ for $i=1,\ldots,d$. The exponent measure $V$ is a function of the form
 \begin{equation}\label{eq-exponent-measure}
-    V(\bm{x}) = d \int_{\mathbb{S}_{+(1)}^{d-1}} \bigvee_{i=1}^d \left(\frac{\theta_i}{x_i}\right)\,\dee H(\bm{\theta}),
+    V(\bm{x}) = d \int_{\mathbb{S}_{+(1)}^{d-1}} \bigvee_{i=1}^d \left(\frac{\theta_i}{x_i}\right)\,\dee H(\bm{\theta}).
 \end{equation}
-where
+Here
 \begin{equation}
-    \mathbb{S}_{+(1)}^{d-1} := \{\bm{x}\in\R_+^d : \|\bm{x}\|_1 = 1\}
+    \mathbb{S}_{+(p)}^{d-1} := \{\bm{x}\in\R_+^d : \|\bm{x}\|_p = 1\}
 \end{equation}
-is the $\ell_1$-simplex in $\R^d$ and the angular measure $H$ is a probability measure that satisfies the moment constraints
+denotes the $L_p$-simplex in the non-negative orthant of $\R^d$ and the angular measure $H$ is a probability measure on $\mathbb{S}_{+(1)}^{d-1}$ satisfying the moment constraints
 \begin{equation}\label{eq-H-mean-constraints}
     \int_{\mathbb{S}_{+(1)}^{d-1}} \theta_i \,\dee H(\bm{\theta}) = 1/d, \qquad (i=1,\ldots,d).
 \end{equation}
-These constraints stem from the fixing of the margins. Functions $G$ satisfying \eqref{eq-mevd} are called multivariate extreme value distributions. If $V$ is differentiable, then the density $h$ of $H$ exists in the interior and on the low-dimensional boundaries of the simplex. The relation between $V$ and $h$ is given by
+Our notation for the simplex is borrowed from @fixSimultaneousAutoregressiveModels2021. The exponent $d-1$ highlights the fact that the simplex is a $(d-1)$-dimensional set embedded in the $d$-dimensional space $\R^d$. The $+$ and $(p)$ in the subscript convey that the set is restricted to the non-negative orthant and is with respect to the $L_p$-norm, respectively. The constraints on $H$ arise due to tail equivalence of the margins. Functions $G$ satisfying \eqref{eq-mevd} are called multivariate extreme value distributions. If $V$ is differentiable, then the density $h$ of $H$ exists in the interior and on the low-dimensional boundaries of the simplex. The relation between $V$ and $h$ is given by
 \begin{equation}
     h\left(\frac{\bm{x}}{\|\bm{x}\|_1}\right) = -\frac{\|\bm{x}\|_1^{d+1}}{d}\frac{\partial^d}{\partial x_1\cdots \partial x_d} V(\bm{x}).
 \end{equation}
-Models for $G$ are typically defined by specifying a parametric form for $V$ or $H$.
+The benefit of introducing the exponent and angular measures is that models for $G$ may be specified in terms of $V$ or $H$. The extremal dependence structure of $\bm{X}$ is completely characterised by $H$: the angular measure determines $V$ via \eqref{eq-exponent-measure} and subsequently $G$ via \eqref{eq-mevd}. Modelling the angular measure now becomes our primary focus.
 
 ### Parametric multivariate extreme value models
 
-The class of valid dependence structures is in direct correspondence to the class of valid measures $H$, which is infinite-dimensional. This is a significant impediment to performing statistics: efficient estimation via likelihood inference, hypothesis testing, and inclusion of covariates become unavailable. To circumvent this, one may postulate a parametric sub-family that generates a wide class of valid dependence structures. Many models of this kind have been proposed in the literature; a detailed review can be found in @gudendorfExtremeValueCopulas2010. The price paid is that working within a sub-family of the general class runs the risk of model misspecification. Generating valid models is challenging, owing to the awkward moment constraints. This results in distribution functions and parameter constraints that are often cumbersome and unwieldy. Moreover, striking the balance between flexibility and parsimony becomes difficult in high dimensions (i.e. when $d$ is large). For these reasons, parametric models are not a primary focus of this thesis. Nevertheless, we now review a small selection of models that will feature regularly as data-generating processes for our numerical experiments. 
+The class of valid dependence structures is in direct correspondence to the infinite-dimensional class of valid measures $H$. This greatly hinders efforts to perform statistical inference: efficient estimation via likelihood inference, hypothesis testing, and inclusion of covariates immediately become unavailable. We may return to the parametric paradigm by postulating a suitable parametric sub-family. Ideally the chosen sub-family generates a wide class of valid dependence structures. A detailed review of popular models can be found in @gudendorfExtremeValueCopulas2010. 
+
+There are several drawbacks to the parametric approach. Working with a parametric model instead of the general class runs the risk of model misspecification. Generating valid models is a challenging endeavour due to the moment constraints, resulting in models that are either overly simplistic or have unwieldy distribution functions and parameter constraints. Striking a balance between flexibility and parsimony becomes especially in high dimensions (i.e. when $d$ is large). For these reasons, parametric models are not a primary focus of this thesis. Nevertheless, we now review a small selection of models. These will feature regularly as data-generating processes for our numerical experiments. 
 
 #### Logistic-type models
 
-The simplest model is the symmetric logistic distribution (CITE Gumbel 1960).
+One of the oldest and simplest multivariate extreme value models is the symmetric logistic distribution [@gumbelBivariateExponentialDistributions1960].
 
 :::{#def-symmetric-logistic}
 The exponent measure of a random vector $\bm{X}=(X_1,\ldots,X_d)$ following the symmetric logistic distribution is
@@ -152,7 +155,7 @@ The exponent measure of a random vector $\bm{X}=(X_1,\ldots,X_d)$ following the 
 \end{equation}
 :::
 
-The single dependence parameter $\gamma\in(0,1]$ characterises the strength of (tail) association between all variables. The variables are independent when $\gamma=1$. As $\gamma\to 0$ they approach complete dependence. The distribution function is invariant under coordinate permutation, meaning the variables are exchangeable. A flexible extension is the asymmetric logistic model of @tawnModellingMultivariateExtreme1990. It permits greater control over the dependence structure at the expense of a greater number of parameters.
+The single dependence parameter $\gamma\in(0,1]$ characterises the strength of the association between all variables. Independence occurs when $\gamma=1$ and the variables approach complete dependence as $\gamma\to 0$. All variables are exchangeable, since the distribution function is invariant under coordinate permutation. A flexible extension is the asymmetric logistic model of @tawnModellingMultivariateExtreme1990. Greater control over the dependence structure is achieved by increasing the number of parameters.
 
 :::{#def-asymmetric-logistic}
 The exponent measure of a random vector $\bm{X}=(X_1,\ldots,X_d)$ following the asymmetric logistic distribution is of the form 
@@ -168,7 +171,7 @@ The exponent measure of a random vector $\bm{X}=(X_1,\ldots,X_d)$ following the 
 where $\mathcal{P}(\{1,\ldots,d\})\setminus\emptyset$ denotes the set of non-empty subsets of $\{1,\ldots,d\}$.
 :::
 
-The parameters $\gamma_\beta$ control the dependence between among $\{X_i : i\in\beta\}$ in a similar way to the symmetric logistic model. The asymmetry parameters $\bm{\theta}_\beta=(\theta_{i,\beta}:i\in\beta)$ \textit{explain their interpretation... }. Further models can be generated by `inverting' the logistic and asymmetric models. This yields the negative logistic model (CITE Galambos 1975) and the negative asymmetric logistic model [@joeFamiliesMinstableMultivariate1990], respectively.
+The set of parameters $\{\gamma_\beta:\beta\in \mathcal{P}(\{1,\ldots,d\})\setminus\emptyset\}$ control the dependence strength among the corresponding variables $\{X_i : i\in\beta\}$ in a similar way to the symmetric logistic model. The model's complexity is due to the set of asymmetry parameters $\bm{\theta}_\beta=(\theta_{i,\beta}:i\in\beta)$, which dictate the direction/composition of extreme events involving the variables $\{X_i : i\in\beta\}$. Further models can be generated by `inverting' the logistic and asymmetric models. **The purpose of inverting is...**. When applied to the models described above, inversion yields the negative symmetric logistic model [@galambosOrderStatisticsSamples1975] and the negative asymmetric logistic model [@joeFamiliesMinstableMultivariate1990], respectively.
 
 :::{#def-negative-symmetric-logistic}
 The exponent measure of a random vector $\bm{X}=(X_1,\ldots,X_d)$ following the negative symmetric logistic distribution is
@@ -184,9 +187,7 @@ The exponent measure of a random vector $\bm{X}=(X_1,\ldots,X_d)$ following the 
 \end{equation}
 :::
 
-:::{#def-bilogistic}
-@smithStatisticsMultivariateExtremes1990
-:::
+Other logistic-type models include the bilogistic @smithStatisticsMultivariateExtremes1990] and negative bilogistic [@colesStatisticalMethodsMultivariate1994].
 
 #### Brown-Resnick processes and the Hüsler-Reiss distribution
 
@@ -335,6 +336,7 @@ With $\bm{X}$ standardised to common margins, the centre of mass of $H$ must lie
     \int_{\mathbb{S}_{+}^{d-1}} \theta_i \,\dee H(\bm{\theta}) = \mu > 0, \qquad (i=1,\ldots,d).
 \end{equation}
 The value of $\mu$ depends on the choice of norm. If $\|\cdot\|=\|\cdot\|_1$, then $\mu=m/d$, in accordance with \eqref{eq-H-mean-constraints}. If $\|\cdot\|=\|\cdot\|_2$, then $m/d\leq \mu \leq m/\sqrt{d}$ [@fomichovSphericalClusteringDetection2023, Lemma 2.1]. 
+
 ### Extremal dependence
 
 Extremal dependence is analogous to, but separate from, the notion of statistical dependence in non-extreme statistics. In particular, two random processes might appear independent in the bulk of the distribution but exhibit dependence in their extremes, or vice versa. The extremal dependence structure can be very complex, being subject only to the mean constraints \eqref{eq-H-mean-constraints}. For example, the extremal dependence between a meteorological variable measured at two locations may depend on the topography of the spatial domain, the physics of the underlying climatological processes, and the locations' spatial proximity. 
