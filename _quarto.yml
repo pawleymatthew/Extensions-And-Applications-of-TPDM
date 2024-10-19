@@ -14,6 +14,8 @@ book:
     - introduction.qmd
     - background.qmd
     - references.qmd
+  appendices:
+    - appendix-background.qmd
   search:
     location: navbar
     type: overlay
@@ -26,13 +28,13 @@ execute:
 crossref:
   chapters: true
 
-fig-pos: "H"
+fig-pos: 'h'
 fig-width: 8
 fig-cap-location: bottom
 fig-format: pdf
 
 toc: true
-toc-depth: 3
+toc-depth: 4
 
 lof: true
 lot: true

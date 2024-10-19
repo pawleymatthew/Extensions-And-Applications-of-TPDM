@@ -1,0 +1,159 @@
+## Properties of the TPDM
+
+## Equivalence of TPDM definitions
+
+We aim to shed light on this matter by showing in the bivariate setting that the TPDM (with respect to some $\alpha\geq 1$) is independent of $\alpha$. The following lemma helps us achieve this: it gives the formula for transforming between angular densities defined with different $\alpha$ values.
+
+:::{#lem-angular-density-transformation}
+Suppose $\bm{X}=(X_i,X_j)\in\mathcal{RV}_+^2(\alpha)$ for some $\alpha\geq 1$. Let $H_\alpha$ denote the normalised angular measure with respect to $\|\cdot\|_\alpha$ and $h_\alpha:\mathbb{S}_{+(\alpha)}\to\R_+$ the corresponding angular density (assuming it exists). Moreover, we define
+\begin{equation*}
+    \tilde{h}_\alpha:[0,1]\to\R_+, \qquad \theta \mapsto h_\alpha\left(\left(\theta,(1-\theta^\alpha)^{1/\alpha}\right)\right).
+\end{equation*}
+Then
+\begin{equation}
+    \tilde{h}_\alpha(\theta) = \alpha \theta^{\alpha-1} \tilde{h}_1(\theta^\alpha).
+\end{equation}
+:::
+
+::: {.proof}
+The proof generalises the procedure described in Section 3.2 of the Supplementary Material of @fixSimultaneousAutoregressiveModels2021. First, we transform from $L_1$ polar coordinates $(r,\bm{\theta})$ to Cartesian coordinates $\bm{z}=(z_i,z_j)=(r\theta_i,r\theta_j)$. The Jacobian of the transformation is $\|\bm{z}\|_1^{-1}$ (CITE Prop 1in Cooley et al 2012). Using \eqref{eq-nu-H-relation} with $\alpha=1$ and $H_1(\dee \bm{\theta})=h_1(\bm{\theta})\dee \bm{\theta}$,
+    \begin{align*}
+        \nu(\dee r \times \dee \bm{\theta}) 
+        &= r^{-2} h_1(\bm{\theta}) \, \dee r\,\dee\bm{\theta} \\
+        &= \|\bm{z}\|_1^{-2} h_1(\bm{z}/\|\bm{z}\|_1) \|\bm{z}\|_1^{-1} \dee\bm{z} \\
+        &= \|\bm{z}\|_1^{-3} h_1(\bm{z}/\|\bm{z}\|_1) \dee\bm{z} \\
+        &= \nu(\dee \bm{z}).
+    \end{align*}
+    Next, we transform from tail index $\alpha=1$ to arbitrary $\alpha$. Let $\bm{y}=(y_i,y_j)=(z_i^{1/\alpha},z_j^{1/\alpha})$. The Jacobian of this transformation is $\alpha^2 y_i^{\alpha-1}y_j^{\alpha-1}$. Note that $\|\bm{z}\|_1=y_i^\alpha+y_j^\alpha=\|\bm{y}\|_\alpha^\alpha$.
+    \begin{equation*}
+        \nu(\bm{z}) 
+        = \left[\|\bm{y}\|_\alpha^{\alpha}\right]^{-3} h_1\left(\frac{y_i^\alpha}{\|\bm{y}\|_\alpha^{\alpha}},\frac{y_j^\alpha}{\|\bm{y}\|_\alpha^{\alpha}}\right) \alpha^2 y_i^{\alpha-1}y_j^{\alpha-1} \dee\bm{y} 
+        = \nu(\dee \bm{y}).
+    \end{equation*}
+    Finally, we transform to $L_\alpha$ polar coordinates $(s,\bm{\phi})$ with $s=\|\bm{y}\|_\alpha$ and $\bm{\phi}=(\phi_i,\phi_j)=\bm{y}/s$. By (CITE Lemma 1.1 in Song and Gupta (1997)), the Jacobian is $s(1 - \phi_i^\alpha)^{(1-\alpha)/a} = s\phi_j^{1-\alpha}$. We now have
+    \begin{align*}
+        \nu(\dee \bm{y}) 
+        &= \left[s^{\alpha}\right]^{-3} h_1\left(\phi_i^\alpha,\phi_j^\alpha \right) \alpha^2 (s\phi_i)^{\alpha-1}(s\phi_j)^{\alpha-1} s\phi_j^{1-\alpha} \,\dee s \,\dee\bm{\phi} \\
+        &= \alpha s^{-\alpha-1} \alpha \phi_i^{\alpha-1} h_1\left(\phi_i^\alpha,\phi_j^\alpha \right) \,\dee s\,\dee \bm{\phi} \\
+        &= \alpha s^{-\alpha-1} h_\alpha(\bm{\phi}) \,\dee s\,\dee \bm{\phi} \\
+        &= \nu(\dee s \times \dee \bm{\phi}),
+    \end{align*}
+    where $h_\alpha(\bm{\phi}):=\alpha \phi_i^{\alpha-1} h_1\left(\phi_i^\alpha,\phi_j^\alpha \right)$. The final step is to compute $\tilde{h}_\alpha$ by projecting the density $h_\alpha$, which lives on $\mathbb{S}_{+(\alpha)}^1$, down to $[0,1]$. Writing $\bm{\phi}$ as $(\phi,(1-\phi^\alpha)^{1/\alpha})$ gives
+    \begin{equation*}
+        \tilde{h}_{\alpha}(\phi) = h_\alpha\left(\left(\phi, (1-\phi^\alpha)^{1/\alpha}\right)\right) = \alpha \phi^{\alpha-1}h_1\left((\phi^\alpha, 1-\phi^\alpha)\right) = \alpha \phi^{\alpha-1} \tilde{h}_1(\phi^\alpha).
+    \end{equation*}
+:::
+
+In the trivial case $\alpha=1$ the formula reduces to $\tilde{h}_1(\theta) = \tilde{h}_1(\theta)$, as one would hope. Setting $\alpha=2$ yields $\tilde{h}_2(\theta) = 2\theta\tilde{h}_1(\theta^2)$, which matches the formula gives in @fixSimultaneousAutoregressiveModels2021. Note that $\tilde{h}_\alpha$ is well-defined (i.e. is a normalised density), since
+\begin{equation*}
+    \int_0^1 \tilde{h}_\alpha (\theta)\,\dee \theta = \int_0^1 \alpha\theta^{\alpha-1}\tilde{h}_1 (\theta^\alpha )\,\dee \theta = \int_0^1 \tilde{h}_1(\phi)\,\dee \phi = 1.
+\end{equation*}
+We now apply the transformation formula to express the TPDM for any $\alpha\geq 1$ in terms of the angular density $\tilde{h}_1$.
+
+:::{#prp-tpdm-h1-formula}
+Using the notation of @lem-angular-density-transformation, the off-diagonal entry in the TPDM of $\bm{X}$ is
+\begin{equation}\label{eq-tpdm-h1-formula}
+    \sigma_{ij} = m \int_0^1 \sqrt{u(1-u)} \, \tilde{h}_1(u)\,\dee \phi.
+\end{equation}
+:::
+
+::: {.proof}
+The relation between the normalised measure $H_\alpha$ and the measure $H$ in @def-tpdm-alpha is $H_\alpha=m^{-1}H$, where $m$ is the mass of $H$. Therefore, \eqref{eq-tpdm-alpha} can be equivalently restated as
+    \begin{equation*}
+        \sigma_{ij} = m \int_{\mathbb{S}_{+(\alpha)}} \theta_i^{\alpha/2}\theta_j^{\alpha/2} \,\dee H_\alpha (\bm{\theta})
+    \end{equation*}
+    Rewriting this in terms of the angular density and re-parametrising yields
+    \begin{align*}
+        \sigma_{ij} 
+        &= m \int_{\mathbb{S}_{+(\alpha)}} \theta_i^{\alpha/2}\theta_j^{\alpha/2} h_{\alpha}(\bm{\theta})\,\dee \bm{\theta} \\
+        &= m \int_{\mathbb{S}_{+(\alpha)}} \theta_i^{\alpha/2}[(1-\theta_i^\alpha)^{1/\alpha}]^{\alpha/2} h_\alpha(\bm{\theta})\,\dee \bm{\theta} \\
+        &= m \int_0^1 \theta^{\alpha/2} (1-\theta^\alpha)^{1/2} \tilde{h}_\alpha(\theta)\,\dee \theta.
+    \end{align*}
+    Finally, we apply @lem-angular-density-transformation and substitute $u=\theta^\alpha$ to obtain the final result
+    \begin{equation*}
+        \sigma_{ij} 
+        = m \int_0^1 \theta^{\alpha/2} (1-\theta^\alpha)^{1/2} \alpha \theta^{\alpha-1}\tilde{h}_1(\theta^\alpha)\,\dee \theta 
+        = m \int_0^1 \sqrt{u(1-u)}\,\tilde{h}_1(u)\,\dee \phi.
+    \end{equation*}
+:::
+
+Extra things to find a place for:
+
+Symmetric logistic angular density:
+\begin{equation*}
+\tilde{h}_1(\theta;\gamma) = \frac{1-\gamma}{2\gamma}[\theta(1-\theta)]^{\frac{1}{\gamma}-2}[\theta^{1/\gamma} + (1-\theta)^{1/\gamma}]^{\gamma-2}
+\end{equation*}
+Hüsler-Reiss angular density:
+\begin{equation*}
+\tilde{h}_1(\theta;\lambda) = \frac{\exp\left(-\lambda/4\right)}{4\lambda [\theta(1-\theta)]^{3/2}}\phi\left(\frac{1}{2\lambda}\log\left(\frac{\theta}{1-\theta}\right)\right)
+\end{equation*}
+
+## Formula for the asymptotic variance $\nu_{ij}^2$
+
+Adopting the notation of @prp-tpdm-h1-formula, the asymptotic variance can be expressed in terms of the angular density $\tilde{h}_1$ of $(X_,X_j)$. Using $\mathrm{Var}(Y)=\mathbb{E}[Y^2]-\mathbb{E}[Y]^2$, we have
+\begin{equation*}
+    \nu_{ij}^2 
+    = m^2 \int_{\mathbb{S}_{+(\alpha)}^{d-1}}(\theta_i\theta_j)^\alpha \,\dee H_\alpha(\bm{\theta}) - \sigma_{ij}^2 
+    = m^2 \int_0^1 \theta^\alpha (1-\theta^\alpha) \tilde{h}_\alpha(\theta) \,\dee \theta - \sigma_{ij}^2.
+\end{equation*}
+Substituting $u=\theta^\alpha$ and using @prp-tpdm-h1-formula gives the final expression
+\begin{equation}\label{eq-nu-squared-h1-formula}
+    \nu_{ij}^2 = m^2 \int_0^1 u(1-u)\,\tilde{h}_1(u)\,\dee u - \left[m\int_0^1 \sqrt{u(1-u)}\,\tilde{h}_1(u)\,\dee u \right]^2.
+\end{equation}
+The asymptotic distribution of $\hat{\sigma}_{ij}$ does not depend on $\alpha$. 
+
+## Proof of @prp-empirical-tpdm-normality
+
+::: {.proof}
+We follow the proof of Theorem 5.23 in CITE Krali Thesis but adapt it to the general $\alpha$ case. By the Cramér-Wold device (CITE), it is sufficient to show asymptotic normality of $\sqrt{k}\bm{\beta}^T(\hat{\bm{\sigma}}-\bm{\sigma})$ for all $\bm{\beta}\in\R^{d\choose 2}$. For convenience, the components of $\bm{\beta}$ are indexed to match the sub-indices of $\bm{\sigma}$. Then
+\begin{equation*}
+    \bm{\beta}^T\bm{\sigma}
+        = \sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\sigma_{ij} = \mathbb{E}_{\bm{\Theta}\sim H}\left[\sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\Theta_i^{\alpha/2}\Theta_j^{\alpha/2}\right] =: \mathbb{E}_{\bm{\Theta}\sim H}[g(\bm{\Theta};\bm{\beta})],
+    \end{equation*}
+where 
+\begin{equation*}
+        g(\bm{\theta};\bm{\beta}):=\sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\theta_i^{\alpha/2}\theta_j^{\alpha/2}
+\end{equation*}
+The corresponding empirical estimator is
+\begin{equation*}
+        \hat{\mathbb{E}}_{\bm{\Theta}\sim H}[g(\bm{\Theta};\bm{\beta})] = \frac{m}{k} \sum_{l=1}^{k}\sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\Theta_{(l),i}^{\alpha/2}\Theta_{(l),j}^{\alpha/2} = \sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\left(\frac{m}{k}\sum_{l=1}^k\Theta_{(l),i}^{\alpha/2}\Theta_{(l),j}^{\alpha/2} \right) = \bm{\beta}^T\hat{\bm{\sigma}}.
+\end{equation*}
+Noting that $g(\cdot\,;\bm{\beta})$ is continuous and applying \autoref{prop-clt-extremes}, we have
+\begin{equation*}
+        \sqrt{k}\bm{\beta}^T (\hat{\bm{\sigma}}-\bm{\sigma}) = \sqrt{k}\left(\hat{\mathbb{E}}_{\bm{\Theta}\sim H}[g(\bm{\Theta};\bm{\beta})] - \mathbb{E}_{\bm{\Theta}\sim H}[g(\bm{\Theta};\bm{\beta})]\right) \to N(0,v(\bm{\beta})).
+\end{equation*}
+where $v(\bm{\beta}):=\mathrm{Var}_{\bm{\Theta}\sim H}(g(\bm{\Theta};\bm{\beta}))$. The asymptotic normality of $\hat{\bm{\sigma}}$ follows by the Cramér-Wold device. The diagonal elements of the covariance matrix $V$ are as in @prp-empirical-tpdm-normality-entries. The off-diagonal entries are given by
+\begin{align*}
+        2\mathrm{Cov}\left(\sqrt{k}(\hat{\sigma}_{ij} - \sigma_{ij}),\sqrt{k}(\hat{\sigma}_{lm} - \sigma_{lm})\right) 
+        &=2k\,\mathrm{Cov}(\hat{\sigma}_{ij}, \hat{\sigma}_{lm}) \\
+        &= k\left[\mathrm{Var}(\hat{\sigma}_{ij} + \hat{\sigma}_{lm}) - \mathrm{Var}(\hat{\sigma}_{ij}) - \mathrm{Var}(\hat{\sigma}_{lm})\right] \\
+        &\to \mathrm{Var}_{\bm{\Theta}\sim H}(\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) - \nu_{ij}^2 - \nu_{lm}^2.
+\end{align*}
+:::
+
+## Derivation of the asymptotic covariance matrix $V$ under the max-linear model
+
+Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is max-linear with $q$ factors and parameter matrix $A$. Then, for any $i,j=1,\ldots,d$, we have $\sigma_{ij}=\sum_{l=1}^q a_{il}^{\alpha/2}a_{jl}^{\alpha/2}$ and
+\begin{equation*}
+        \nu_{ij}^2 
+        = d \int_{\mathbb{S}_{+(\alpha)}^{d-1}} (\theta_i\theta_j)^\alpha \,\dee H(\bm{\theta}) - \sigma_{ij}^2 
+        = d\sum_{s=1}^q \|\bm{a}_s\|_\alpha^\alpha \left(\frac{a_{is}a_{js}}{\|\bm{a}_s\|_\alpha^2}\right)^\alpha - \sigma_{ij}^2 
+        = d \sum_{s=1}^q \frac{(a_{is}a_{js})^\alpha}{\|\bm{a}_s\|_\alpha^\alpha} - \sigma_{ij}^2.
+\end{equation*}
+For any pair of upper-triangular index pairs $(i,j)$ and $(l,m)$, we have
+\begin{align*}
+     \mathrm{Var}_{\bm{\Theta}\sim H} & (\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) \\
+     &= d \int_{\mathbb{S}_{+(\alpha)}^{d-1}} [(\theta_i\theta_j)^\alpha + 2(\theta_i\theta_j\theta_l\theta_m)^{\alpha/2} +(\theta_l\theta_m)^\alpha] \,\dee H(\bm{\theta}) - \left[ \sigma_{ij} + \sigma_{lm} \right]^2 \\
+     &= d \sum_{s=1}^q \frac{(a_{is}a_{js})^\alpha + 2(a_{is}a_{js}a_{ls}a_{ms})^{\alpha/2} + (a_{ls}a_{ms})^\alpha}{\|\bm{a}_s\|_\alpha^\alpha} - \left[ \sigma_{ij} + \sigma_{lm} \right]^2 \\
+     &= \nu_{ij}^2 + \nu_{lm}^2 + d \sum_{s=1}^q \frac{2(a_{is}a_{js}a_{ls}a_{ms})^{\alpha/2}}{\|\bm{a}_s\|_\alpha^\alpha} - 2\sigma_{ij}\sigma_{lm}
+\end{align*}
+and therefore
+\begin{equation*}
+    2\rho_{ij,lm}
+        = d \sum_{s=1}^q \frac{2(a_{is}a_{js}a_{ls}a_{ms})^{\alpha/2}}{\|\bm{a}_s\|_\alpha^\alpha} - 2\sigma_{ij}\sigma_{lm}.
+\end{equation*}
+The expressions for $\nu_{ij}^2$ and $\rho_{ij,lm}$ can be summarised as
+\begin{equation}\label{eq-max-linear-V}
+        v_{ij,lm} = d \sum_{s=1}^q \frac{(a_{is}a_{js}a_{ls}a_{ms})^{\alpha/2}}{\|\bm{a}_s\|_\alpha^\alpha} - \sigma_{ij}\sigma_{lm}.
+\end{equation}
+
