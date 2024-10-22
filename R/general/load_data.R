@@ -158,7 +158,7 @@ load_red_sea_temp <- function(alpha) {
       .default = "none"))
   
   # temperature data - weekly maxima
-  load("data/red-sea-temperature/StatMarginsRedSeaAnomaly.Rdata")
+  sst.gauss <- readRDS("data/red-sea-temperature/StatMarginsRedSeaAnomaly.RDS")
   X <- sst.gauss %>% 
     mutate(week = (row_number() - 1) %/% 7) %>%
     group_by(week) %>%
