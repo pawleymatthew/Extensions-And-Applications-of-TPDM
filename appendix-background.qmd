@@ -1,4 +1,4 @@
-## Properties of the TPDM
+# Properties of the TPDM
 
 ## Equivalence of TPDM definitions
 
@@ -131,7 +131,7 @@ where $v(\bm{\beta}):=\mathrm{Var}_{\bm{\Theta}\sim H}(g(\bm{\Theta};\bm{\beta})
 \end{align*}
 :::
 
-## Derivation of the asymptotic covariance matrix $V$ under the max-linear model
+## Derivation of $V$ under the max-linear model
 
 Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is max-linear with $q$ factors and parameter matrix $A$. Then, for any $i,j=1,\ldots,d$, we have $\sigma_{ij}=\sum_{l=1}^q a_{il}^{\alpha/2}a_{jl}^{\alpha/2}$ and
 \begin{equation*}
@@ -157,3 +157,125 @@ The expressions for $\nu_{ij}^2$ and $\rho_{ij,lm}$ can be summarised as
         v_{ij,lm} = d \sum_{s=1}^q \frac{(a_{is}a_{js}a_{ls}a_{ms})^{\alpha/2}}{\|\bm{a}_s\|_\alpha^\alpha} - \sigma_{ij}\sigma_{lm}.
 \end{equation}
 
+
+# PCA in general finite-dimensional Hilbert spaces
+
+In classical multivariate analysis, principal component analysis (PCA) is the flagship method for reducing the dimension of a random vector. PCA identifies linear subspaces that minimise the distance between the data and its low-dimensional projections. This implicitly assumes an underlying algebraic-geometric structure. Specifically, PCA requires one to work in a Hilbert space $\mathcal{H}$. Without this theoretical foundation, it is meaningless to speak of principal components as orthogonal basis vectors or consider low-rank reconstructions as unique projections onto a subspace. A Hilbert space comprises a $d$-dimensional vector space with operations $\oplus$ and $\odot$ endowed with an inner product $\left\langle\cdot,\cdot\right\rangle_{\mathcal{H}}$. The induced norm and metric are $\|\cdot\|_{\mathcal{H}}=\left\langle\cdot,\cdot\right\rangle_{\mathcal{H}}^{1/2}$ and $d_{\mathcal{H}}(\bm{x},\bm{y})=\|\bm{x}\ominus\bm{y}\|_{\mathcal{H}}$, respectively. In most applications $\mathcal{H}=\R^d$ with the usual Euclidean geometry. This thesis will additionally consider PCA in alternative spaces, including $\R_+^d$ and $\mathbb{S}_{+(1)}^{d-1}$. However, in each case, the Hilbert space in question will be isometric to the usual Euclidean space $(\R^d, \left\langle\cdot,\cdot\right\rangle)$. That is, there exists an isomorphism $h:\mathcal{H}\to\R^d$ such that for any $\bm{x},\bm{y}\in\mathcal{H}$,
+\begin{equation*}
+    \left\langle\bm{x},\bm{y}\right\rangle_{\mathcal{H}} = \left\langle h(\bm{x}),h(\bm{y})\right\rangle, \qquad \|\bm{x}\ominus \bm{y}\|_{\mathcal{H}} = \|h(\bm{x})-h(\bm{y})\|_2.
+\end{equation*}
+We present PCA for random vectors in $\R^d$, with the understanding that the data may have undergone an isometric transformation in pre-processing and outputs may need to be back-transformed to lie in the original space. This transform/back-transform approach is equivalent to conducting the analysis in the original space with appropriately generalised notions of mean, variance, etc. [@pawlowsky-glahnGeometricApproachStatistical2001].
+
+\begin{table}[]
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+$\mathcal{H}$ & $\R^d$ & $\R_+^d$ & $\mathbb{S}_{+(1)}^{d-1}$ \\ \midrule
+$h:\mathcal{H}\to\R^d$ & $h(\bm{x})=\bm{x}$ & $h(\bm{x}) = \tau^{-1}(\bm{x}) = \log[\exp(\bm{x})-1]$ & $h(\bm{x})=\mathrm{clr}(\bm{x})=\log[\bm{x}/\bar{g}(\bm{x})]$ \\
+$h^{-1}:\R^d\to\mathcal{H}$ & $h^{-1}(\bm{y})=\bm{y}$ & $h^{-1}(\bm{y}) = \tau(\bm{y}) = \log[1+\exp(\bm{y})]$ & $h^{-1}(\bm{y}) = \mathrm{clr}^{-1}(\bm{y})=\mathcal{C}\exp(\bm{y})$ \\
+$\bm{x}\oplus\bm{y}$ & $\bm{x} + \bm{y}$ & $\tau[\tau^{-1}(\bm{x})+\tau^{-1}(\bm{y})]$ & $\mathcal{C}(x_1y_1,\ldots,x_dy_d)$ \\
+$\alpha\odot\bm{x}$ & $\alpha \bm{x}$ & $\tau[\alpha \tau^{-1}(\bm{x})]$ & $\mathcal{C}(x_1^\alpha,\ldots,x_d^\alpha)$ \\
+$\left\langle \bm{x},\bm{y}\right\rangle_{\mathcal{H}}$ & $\sum_{i=1}^d x_iy_i$ & $\sum_{i=1}^d \tau^{-1}(x_i)\tau^{-1}(y_i)$ & $\sum_{i=1}^d \log[x_i/\bar{g}(\bm{x})]\log[y_i/\bar{g}(\bm{x})]$ \\ \bottomrule
+\end{tabular}
+\end{table}
+
+Suppose $\bm{Y}=(Y_1,\ldots,Y_d)$ is a random vector in $\R^d$ satisfying $\mathbb{E}[\|\bm{Y}\|_2^2]<\infty$. Let $\bm{Y}_1,\ldots,\bm{Y}_n$ be independent copies of $\bm{Y}$. The reconstruction error of a subspace $\mathcal{S}\subseteq\R^d$ is measured as
+\begin{equation}\label{eq-pca-true-risk}
+    R(\mathcal{S}) := \mathbb{E}[\|\bm{Y}-\Pi_{\mathcal{S}}\bm{Y}\|_2^2] 
+\end{equation}
+Fundamental to PCA are the eigenvectors $\bm{u}_1,\ldots,\bm{u}_d\in\R^d$ and respective eigenvalues $\lambda_1\geq \ldots \geq \lambda_d \geq 0$ of the positive semi-definite matrix
+\begin{equation*}
+    \Sigma=\mathbb{E}[\bm{Y}\bm{Y}^T].
+\end{equation*}
+The entries of $\Sigma$, herein referred to as the non-centred covariance matrix, are the second-order moments of $\bm{Y}$.  By a change of basis, the random vector $\bm{Y}$ may be equivalently decomposed as 
+\begin{equation*}
+    \bm{Y} = \sum_{j=1}^d \left\langle \bm{Y},\bm{u}_j\right\rangle \bm{u}_j.
+\end{equation*}
+The scores $V_j:=\left\langle \bm{Y},\bm{u}_j \right\rangle$ represent the stochastic basis coefficients when $\bm{Y}$ is decomposed into the basis $\{\bm{u}_1,\ldots,\bm{u}_d\}$. They satisfy $\mathbb{E}[V_iV_j]=\lambda_i\ind\{i=j\}$. For $1\leq p < d$, the truncated expansion 
+\begin{equation*}
+    \hat{\bm{Y}}^{[p]} := \sum_{j=1}^p V_j \bm{u}_j = \Pi_{\mathrm{span}\{\bm{u}_1,\ldots,\bm{u}_p\}}\bm{Y}.
+\end{equation*}
+produces the optimal $p$-dimensional projection of $\bm{Y}$. In other words, the subspace $\mathcal{S}_p=\mathrm{span}\{\bm{u}_1,\ldots,\bm{u}_p\}$ minimises the criterion \eqref{eq-pca-true-risk} over $\mathcal{V}_p$, the set of all linear subspaces of dimension $p$ of $\R^d$. It is the unique minimiser provided the multiplicity of $\lambda_p$ is one. The corresponding risk is determined by the eigenvalues of the discarded components via $R(\mathcal{S}_p)=\sum_{j>p}\lambda_j$. 
+
+In practice, the covariance matrix is unknown so \eqref{eq-pca-true-risk} cannot be minimised directly. Instead we resort to an empirical risk minimisation (ERM) approach, whereby the risk is replaced by
+\begin{equation}\label{eq-pca-empirical-risk}
+    \hat{R}(\mathcal{S}) := \frac{1}{n} \sum_{i=1}^n \|\bm{Y}_i-\Pi_{\mathcal{S}}\bm{Y}_i\|_2^2
+\end{equation} 
+Minimisation of the empirical risk follows analogously based on the empirical non-centred covariance matrix 
+\begin{equation*}
+    \hat{\Sigma}=\frac{1}{n}\sum_{i=1}^n \bm{Y}_i\bm{Y}_i^T
+\end{equation*}
+and its ordered eigenpairs $(\hat{\lambda}_j,\hat{\bm{u}}_j)$ for $j=1,\ldots,d$. For $p=1,\ldots,d$ and $i=1,\ldots,n$, the rank-$p$ reconstruction of $\bm{Y}_i$ is given by
+\begin{equation*}
+    \hat{\bm{Y}}_i^{[p]} := \sum_{j=1}^p \hat{V}_{ij} \bm{u}_j = \Pi_{\mathrm{span}\{\hat{\bm{u}}_1,\ldots,\hat{\bm{u}}_p\}}\bm{Y},
+\end{equation*}
+where $\hat{V}_{ij}:=\left\langle \bm{Y}_i,\bm{u}_j\right\rangle$.
+The subspace $\hat{\mathcal{S}}_p=\mathrm{span}\{\hat{\bm{u}}_1,\ldots,\hat{\bm{u}}_p\}$ minimises \eqref{eq-pca-empirical-risk} in $\mathcal{V}_p$; the objective at the minimum is $\hat{R}(\hat{\mathcal{S}}_p)=\sum_{j>p}\hat{\lambda}_j$.
+
+Usually the dimension of the target subspace (if it exists) is unknown, so the number of retained components $p$ must be selected according to some criterion. At the heart of this choice is a trade-off between dimension reduction and approximation error. Selecting $p=\max\{j:\hat{\lambda}_j>0\}$ results in perfect reconstructions but the reduction in dimension will be minimal if any. Excessive compression incurs information loss and destroys key features of the data. Several criteria for selecting the number of retained components based on the eigenvalues have been proposed. These include stopping when the reconstruction error $\sum_{j>p}\hat{\lambda}_j$ is acceptably small, cutting off components with $\lambda_j<1$, or retaining components based on where the `scree plot' forms an elbow.  
+
+If $\bm{Y}$ is mean-zero (or the $n\times d$ data matrix is column-centred in pre-processing), then $\Sigma$ is the covariance matrix of $\bm{Y}$ and the procedure is termed centred PCA. In this case, PCA can be equivalently reformulated in terms of finding low-dimensional projections that maximally preserve variance. In the non-centred case this interpretation is not valid, the projections merely maximise variability around the origin. A detailed comparison between centred PCA and non-centred PCA is conducted in @cadimaRelationshipsUncentredColumnCentred2009. They obtain relationships between and bounds on the eigenvectors/eigenvalues of the non-centred and standard covariance matrices. Based on their theoretical analysis and a series of example, they conclude that both types of PCA generally produce similar results. In particular, the leading eigenvector (up to sign and scaling) of the non-centred covariance matrix is very often close to the vector of the column means of the data matrix. Thus the first non-centred principal component essentially relates to the centre of the data.
+
+# Applications -- original write up, can be removed
+
+The PCA method of @cooleyDecompositionsDependenceHighdimensional2019 has been applied for exploratory purposes in the context of climatology [@jiangPrincipalComponentAnalysis2020; @szemkusSpatialPatternsIndices2024], finance [@cooleyDecompositionsDependenceHighdimensional2019] and sport [@russellAnalyzingDependenceMatrices2018]. 
+
+@jiangPrincipalComponentAnalysis2020 analyse the extremal behaviour of precipitation across the United States. They discover an increasing temporal trend in the coefficient of the first principal component $V_1$, and relate the eigenvectors to the El-Niño Southern Oscillation (ENSO), a cyclical phenomenon that is known to be a key climatological driver. They find that low-rank reconstructions of Hurricane Floyd broadly capture the event's large-scale structure, but a large number of eigenvectors are needed to recreate more localised features. The spatial extent of the study region and relatively localised behaviour of extreme behaviour leads them to consider a 'pairwise-thresholded' estimator of the TPDM instead of the usual estimator \eqref{eq-empirical-tpdm} thresholded on the norm of entire vector. This alternative estimator is given by
+\begin{equation*}
+    \tilde{\Sigma}=(\tilde{\sigma}_{ij}), \qquad \tilde{\sigma}_{ij} = \frac{2}{k} \sum_{l=1}^n \Theta_{li}\Theta_{lj}\ind\{R_l^{ij} > R_{(k+1)}^{ij}\},
+\end{equation*}
+where $R_l^{ij} = \|(X_{li},X_{lj})\|$ and $R_{(k+1)}^{ij}$ is the $(k+1)$th upper order statistic of $\{R_l^{ij}:l=1,\ldots,n\}$. The estimator $\tilde{\Sigma}$ is not positive semi-definite, so the PCA analysis is instead conducted using the nearest positive definite matrix in Frobenius norm. The ramifications of this ad-hoc step, in terms of the estimator's theoretical properties and practical performance, are not studied.
+
+@szemkusSpatialPatternsIndices2024 devise an extension of the TPDM, called the cross-TPDM, to study the joint extremal behaviour between two sets of variables. They analyse two meteorological variables -- daily maximum temperature and a measure of accumulated precipitation deficit -- to describe the dynamics of summer heatwaves in Europe. The cross-TPDM is the analogue of the cross-covariance matrix. Letting $\bm{X}=(X_1,\ldots,X_p)\in\mathrm{RV}_+^p(2)$ and $\bm{Y}=(Y_1,\ldots,Y_q)\in\mathrm{RV}_+^q(2)$, the cross-TPDM is defined as the $p\times q$ matrix with entries
+\begin{equation*}
+    \sigma_{ij}^{XY} = \int_{\mathbb{S}_+^{p+q-1}} \theta_i^X\theta_j^Y \,\dee H(\bm{\theta}),
+\end{equation*}
+where $H$ is the angular measure of $(\bm{X},\bm{Y})=(X_1,\ldots,X_p,Y_1,\ldots,Y_q)\in\mathrm{RV}_+^{p+q}(2)$ and the variable of integration is indexed as $\bm{\theta}=(\theta_1^X,\ldots,\theta_p^X,\theta_1^Y,\ldots,\theta_q^Y)$. (This definition could be extended to cater for an arbitrary tail index by introducing the usual $\alpha/2$ exponents in the integrand.) In the context of their climatological study, the entry $\sigma_{ij}^{XY}$ represents the strength of extremal dependence between the maximum temperature at location $i$ and the precipitation deficit at location $j$. The singular-value decomposition of the cross-TPDM is used to analyse the dynamics of compound extreme events. They devise extremal pattern indices to quantify whether particular patterns of interest -- those signified by the singular vectors of the cross-TPDM -- are highly pronounced.
+
+A more unusual application of the TPDM is found in @russellAnalyzingDependenceMatrices2018. Their study characterises the difference in performance between typical and elite-level National Football League (NFL) performers across the Scouting Combine event. The Combine comprises six physical tests: Bench Press, Vertical Jump, Broad Jump, 40-yard Sprint, the Shuttle Drill, and the Three Cone Drill. The tests afford teams the opportunity to gauge the athletic ability of prospective players, thereby influencing whether (or how highly) they are drafted for the upcoming season. @russellAnalyzingDependenceMatrices2018 explore how strongly player performance correlates across these tests. Intuitively, if two events exhibit strong association, then they may be measuring the same underlying skills (speed, strength, agility etc.). After standardising player performance to account for differences in playing position, they find significant differences between the bulk dependence structure and the extremal dependence structure. In particular, the leading eigenvectors of the covariance matrix reveal that the Combine events cluster into three distinct groups, corresponding to strength, agility, and explosiveness. On the other hand, the TPDM eigenvectors produce only two such groups: power and agility. This reveals differences between non-elite and elite performers; recommendations regarding the composition of the Combine events are made accordingly. 
+
+@rohrbeckSimulatingFloodEvent2023 move beyond the use of the extremal PCA for purely exploratory purposes and demonstrate how it be used to generate synthetic extreme events. Hazard event sets are widely used in catastrophe modelling to assess exposure to extreme events. Imagine an insurance company insures against damage to a portfolio of properties, and wishes to gauge its exposure to claims caused by flooding. Given (i) the spatial locations of these properties, (ii) other relevant characteristics such as property value and construction standard, and (iii) a set of simulated flood events, one can derive a probabilistic loss distribution. If the exposure is unacceptably high, they might adjust their underwriting strategy or purchase reinsurance. @rohrbeckSimulatingFloodEvent2023 show how to generate approximate samples from $H$, even in high-dimensions, by leveraging the PCA method of @cooleyDecompositionsDependenceHighdimensional2019. Their generative framework hinges on the fact that the leading components of $\bm{V}$ account for the greatest proportion of extremal behaviour of $\bm{X}$. Thus, efforts may be concentrated towards modelling the dependence structure of the sub-vector $(V_1,\ldots,V_p)$ for some appropriately chosen $p<d$. To achieve this, they use a spherical kernel density estimate to flexibly model the dependence between $V_1,\ldots,V_p$ and additionally between $(V_1,\ldots,V_p)$ and $(V_{p+1},\ldots,V_d)$. The dependence structure of $(V_{p+1},\ldots,V_d)$ is simply modelled by a nearest-neighbours approach. The number of components $p$ entering into the complex model is selected by a leave-one-out cross validation procedure. This involves discarding an extreme observation $\bm{x}_{(i)}$, generating a large number of samples $\tilde{\bm{x}}_1^{[p]},\ldots,\tilde{\bm{x}}_N^{[p]}$ for a range of values $p$, and then assessing whether any of the generated samples resemble the discarded event using
+\begin{equation*}
+    D_i(p) = \min_{l=1,\ldots,N} \varrho \left(\bm{x}_{(i)},\tilde{\bm{x}}_{l}^{[p]}\right),
+\end{equation*}
+where $\varrho(\cdot,\cdot)$ is an angular dissimilarity measure. After repeating for all extreme events $i=1\ldots,k$, one chooses the optimal $p$ as that which minimises the average error
+\begin{equation*}
+    \bar{D}(p) = \frac{1}{k}\sum_{i=1}^k D_i(p).
+\end{equation*}
+Their approach is illustrated using historical river flow data across $d=45$ gauges in northern England and southern Scotland. They select $p=7$ and find reasonable agreement between the observed river flow extreme events and the synthetic ones generated by their algorithm, e.g. by examining QQ-plots comparing the observed and sampled distributions of $\max_{j\in\mathcal{G}}X_j$ or $\|(X_i:i\in\mathcal{G})\|$ for selected groups of gauges $\mathcal{G}\subset \{1,\ldots,d\}$.
+
+# Review of clustering methods based on the TPDM
+
+Within multivariate extremes, the umbrella term `clustering' has many meanings. To avoid confusion, we briefly describe these and clarify which type we are referring to. 
+
+- **Prototypical events.** Assume that the angular measure concentrates at/near a small number of points in $\mathbb{S}_{+}^{d-1}$. Then one might wish to identify cluster centres $\bm{w}_1,\ldots\bm{w}_K$ minimising some objective function of the form
+\begin{equation}\label{eq-clustering-objective-function}
+    \mathbb{E}_{\bm{\Theta}\sim H}\left[\min_{l=1,\ldots,K}\varrho(\bm{\Theta},\bm{w}_l)\right],
+\end{equation}
+where $\varrho:\mathbb{S}_+^{d-1}\times \mathbb{S}_+^{d-1}\to[0,1]$ is some distance/dissimilarity function. The cluster centres can be interpreted as the directions of prototypical extremes events. See @chautruDimensionReductionMultivariate2015, @janssenKmeansClusteringExtremes2020 and @medinaSpectralLearningMultivariate2021 for further details.
+- **Identification of concomitant extremes.** Suppose that angular measure is supported on a set of $K\ll 2^{d-1}$ subspaces (faces) of the simplex $C_{\beta_1},\ldots,C_{\beta_K}$, where $\beta_1,\ldots,\beta_K\in\mathcal{P}(\{1,\ldots,d\})\setminus\emptyset$ and
+\begin{equation*}
+    C_\beta = \{\bm{\theta}\in\mathbb{S}_+^{d-1}:\theta_i>0 \iff i\in\beta\}.
+\end{equation*}
+Only those groups (`clusters') of components indexed by $\beta_1,\ldots,\beta_K$ may be simultaneously extreme. Identification of the support of the angular measure is notoriously challenging because the extremal angles $\bm{\Theta}_{(1)},\ldots,\bm{\Theta}_{(k)}$ lie (almost surely) in the interior of the simplex. @goixSparseRepresentationMultivariate2017 and @simpsonDeterminingDependenceStructure2020 identify clusters according to whether observations fall within appropriately sized rectangular/conic neighbourhoods of the corresponding axis in $\R_+^d$. @meyerDetectionExtremalDirections2020 take a different approach, whereby the angular component is defined with respect to the Euclidean projection [@liuEfficientEuclideanProjections2009] rather than usual projection based on self-normalisation. The geometry of the projection is such that the projected data lie on subfaces of the simplex. The price paid is that the limiting conditional distribution of the angles is related to, but not identical to, the angular measure.
+- **Partitioning into AD/AI groups components.** This notion of clustering is related to the previous type. We assume that the variables $X_1,\ldots,X_d$ can be partitioned into $K$ clusters, such that $X_i$ and $X_j$ are asymptotically dependent if and only if they belong to the same cluster. In other words, there exists $2\leq K \leq d$ and a partition $\beta_1,\ldots,\beta_K$ of $\{1,\ldots,d\}$ such that the angular measure is supported on $C_{\beta_1},\ldots,C_{\beta_K}$ or lower-dimensional subspaces thereof, i.e.
+\begin{equation*}
+    H\left(\bigcup_{l=1}^K \bigcup_{\beta'_l\subseteq \beta_l} C_{\beta'_l}\right) = m.
+\end{equation*}
+The task of modelling the dependence structure of $\bm{X}$ can be divided into lower-dimensional sub-problems involving the random sub-vectors $\bm{X}_{\beta_1},\ldots,\bm{X}_{\beta_K}$. If $K=d$, then all variables are asymptotically independent. The underlying hypothesis is very strong and unlikely to hold in practice. Nevertheless, it is often a useful simplifying modelling assumption. @bernardClusteringMaximaSpatial2013 propose grouping components using the $k$-medoids algorithm [@kaufmanFindingGroupsData1990] with a dissimilarity matrix populated with pairwise measures of tail dependence, similar to $\chi_{ij}$ and $\sigma_{ij}$. The approaches of @fomichovSphericalClusteringDetection2023 and @richardsModernExtremeValue2024 involve the TPDM; these are reviewed in greater detail below.
+
+@fomichovSphericalClusteringDetection2023 show that the latter kind of clustering may be performed using the framework of the first kind. They provide a link between the principal eigenvector $\bm{u}_1$ of the TPDM and the minimiser of the objective \eqref{eq-clustering-objective-function} with quadratic cost $\varrho(\bm{\theta},\bm{\phi})=\left\langle\bm{\theta},\bm{\phi}\right\rangle^2$ and $K=1$:
+\begin{equation*}
+    \min_{\bm{\theta}\in\mathbb{S}_{+(2)}^{d-1}} \mathbb{E}_{\bm{\Theta}\sim H}\left[\varrho(\bm{\Theta},\bm{\theta})\right] = \mathbb{E}_{\bm{\Theta}\sim H}\left[\varrho(\bm{\Theta},\bm{u}_1)\right].
+\end{equation*}
+Note that $\bm{u}_1\in\mathbb{S}_{+(2)}^{d-1}$ is assumed to be suitably normalised with all entries being non-negative; the Perron-Frobenius theorem guarantees this is possible. This result informs an iterative clustering procedure called spherical $k$-principal-components. Consider a set of extremal angles $\bm{\theta}_{(1)},\ldots,\bm{\theta}_{(k)}\in\mathbb{S}_{+(2)}^{d-1}$ and current centroids $\hat{\bm{w}}_{1},\ldots,\hat{\bm{w}}_{K}\in\mathbb{S}_{+(2)}^{d-1}$. A single iteration of their procedure yields new centroids $\hat{\bm{w}}_{1}^\star,\ldots,\hat{\bm{w}}_{K}^\star\in\mathbb{S}_{+(2)}^{d-1}$ given by the respective principal eigenvectors of
+\begin{equation*}
+    \hat{\Sigma}^{[i]} = \sum_{l=1}^k \bm{\theta}_{(l)}\bm{\theta}_{(l)}^T\ind\{\argmin_{j=1,\ldots,K}\varrho(\bm{\theta}_{(l)},\bm{w}_j)=i\}, \qquad (i=1,\ldots,K).
+\end{equation*}
+The matrix $\hat{\Sigma}^{[i]}$ represents the empirical TPDM (up to some multiplicative constant) based on the nearest neighbours of the $i$th centroid. @fomichovSphericalClusteringDetection2023 prove that, under certain conditions, the limiting centroids lie in a neighbourhood of the faces of interest $C_{\beta_1},\ldots,C_{\beta_K}$. Thresholding the centroid vectors yields the final partition $\beta_1,\ldots,\beta_K$.
+
+@richardsModernExtremeValue2024 apply hierarchical clustering using the empirical TPDM as the underlying similarity matrix. The clustering method constitutes a minor aspect of their submission to the EVA (2023) Data Challenge. Few methodological details are provided, so the following explanation constitutes our interpretation of their method, drawing on Figure 4 in @richardsModernExtremeValue2024 and the accompanying code made available at \url{https://github.com/matheusguerrero/yalla}. Define the dissimilarity between $X_i$ and $X_j$ as $\varrho_{ij} = 1 - \sigma_{ij}$. This satisfies the properties of a dissimilarity measure (CITE: A MATHEMATICAL THEORY FOR CLUSTERING IN METRIC SPACES):
+\begin{equation*}
+    \varrho_{ij} \geq 0, \qquad \varrho_{ii} = 0, \qquad \varrho_{ij}=\varrho_{ji}.
+\end{equation*}
+The $d\times d$ dissimilarity matrix $\mathcal{D}=1-\Sigma=(\varrho_{ij})$ can be fed into standard hierarchical clustering algorithms. Agglomerative hierarchical clustering initially assigns each variable belongs to its own cluster, i.e. $\beta_i=\{i\}$ for $i=1,\ldots,d$. The algorithm proceeds iteratively, repeatedly joining together the two closest clusters until some stopping criterion is satisfied. Under complete-linkage clustering, the distance between clusters $\beta\neq\beta'$ is given by $\max\{\varrho_{ij} : i\in\beta,j\in\beta'\}$. The merging process may be stopped when there is a sufficiently small number of clusters or when the clusters are sufficiently separated.
