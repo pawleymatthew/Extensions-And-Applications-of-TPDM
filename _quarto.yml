@@ -14,6 +14,7 @@ book:
     - introduction.qmd
     - background.qmd
     - changing-ext-dep.qmd
+    - compositional.qmd
     - references.qmd
   appendices:
     - appendix-background.qmd
