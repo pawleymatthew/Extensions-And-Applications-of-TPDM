@@ -17,6 +17,7 @@ book:
     - references.qmd
   appendices:
     - appendix-background.qmd
+    - appendix-changing-ext-dep.qmd
   search:
     location: navbar
     type: overlay
@@ -56,7 +57,7 @@ format:
          \usepackage{textcase}
          \pagestyle{fancy}
          \fancyhead[R]{\slshape\nouppercase{\leftmark}}
-         \fancyhead[L]{Compiled on \today\ at \currenttime}
+         \fancyhead[L]{Compiled: \today}
          \fancyfoot[C]{\thepage}
     linestretch: 1.5
     geometry:

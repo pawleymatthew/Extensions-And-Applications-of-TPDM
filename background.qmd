@@ -338,7 +338,6 @@ Were this not the case it would imply that at least one variable can never be ex
 
 ### Extremal dependence measures
 
-
 The extremal dependence structure of a random vector $\bm{X}$ can be quantified and classified using a plethora of summary measures [@colesDependenceMeasuresExtreme1999]. We focus on the tail dependence coefficient and the extremal dependence measure. 
 
 #### The tail dependence coefficient
@@ -361,7 +360,7 @@ The nullity of otherwise of the tail dependence coefficients is determined by wh
 \end{equation}
 For example, consider the angular measures
 \begin{equation}\label{eq-limiting-discrete-H}
-    H^{(1)} = \frac{m}{d}\sum_{i=1}^d \delta_{\bm{e}_i}, \qquad H^{(2)} = m\delta_{\bm{1}/\|\bm{1}\|},
+    H^{(1)} = \frac{m}{d}\sum_{i=1}^d \delta_{\bm{e}_i}, \qquad H^{(2)} = m\delta_{\bm{1}_d/\|\bm{1}_d\|},
 \end{equation}
 where $\bm{e}_1,\ldots,\bm{e}_d$ denote the canonical basis vectors of $\R^d$. The measure $H^{(1)}$ places all its mass on the vertices of the simplex. This corresponds to full asymptotic independence, since then $\chi_\beta = 0$ for all $\beta\subseteq\{1,\ldots,d\}$ with cardinality at least equal to two. The angular measure $H^{(2)}$ concentrates at a single point at the centre of the simplex. This implies that $\chi_{\{1,\ldots,d\}}>0$ and consequently $\chi_{\beta}>0$ for all subsets $\beta$.
 
@@ -651,7 +650,7 @@ Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is max-linear with 
 Therefore $\Sigma=A^{\alpha/2}(A^{\alpha/2})^T$. Taking $A$ to be $A^{(1)}$ and $A^{(2)}$ as defined in @exm-max-linear-chi, the corresponding TPDMs are
 \begin{equation*}
 \Sigma^{(1)} = I_d I_d^T  = I_d, \qquad
-\Sigma^{(2)} = \bm{1}\bm{1}^T = J_d,
+\Sigma^{(2)} = \bm{1}_d\bm{1}_d^T = J_d,
 \end{equation*}
 where $J_d$ is the $d\times d$ all-ones matrix. By construction, these represent the TPDMs under asymptotic dependence and complete dependence, respectively.
 :::
@@ -714,7 +713,7 @@ As mentioned earlier, the TPDM's off-diagonal entries are simply pairwise EDMs. 
 
 ### Decompositions of the TPDM
 
-The TPDM is useful as a summary statistic for quantifying pairwise dependencies, but what sets it apart from other pairwise dependence matrices (e.g. the TDM)? The TPDM admits two types of decomposition: eigendecomposition and the completely positive decomposition [@cooleyDecompositionsDependenceHighdimensional2019]. These underpin most statistical applications of the TPDM. The following results and proofs are reproduced from @kirilioukEstimatingProbabilitiesMultivariate2022.
+The TPDM is useful as a summary statistic for quantifying pairwise dependencies, but what sets it apart from other pairwise dependence matrices (e.g. the TDM)? The TPDM admits two types of decomposition: eigendecomposition and the completely positive decomposition [@cooleyDecompositionsDependenceHighdimensional2019]. These underpin the key statistical applications of the TPDM described in Section XX. The following results and proofs are reproduced from @kirilioukEstimatingProbabilitiesMultivariate2022.
 
 :::{#prp-tpdm-symmetric-positive-definite}
 The TPDM is symmetric and positive semi-definite. 
@@ -733,17 +732,7 @@ Hence $\Sigma=\Sigma^T$. For any $\bm{y}\in\R^d\setminus\{\bm{0}\}$,
 \end{equation*}
 :::
 
-By standard linear algebra results, the TPDM can be decomposed as $\Sigma=UDU^T$, where $D\in\R^{d\times d}$ is a diagonal matrix of eigenvalues $\lambda_1 \geq \ldots \geq \lambda_d \geq 0$ and $U\in\R^{d\times d}$ is an orthogonal matrix whose columns are the corresponding eigenvectors $\bm{u}_1,\ldots,\bm{u}_d\in\R^d$. The below example hints at how it may be used for dimension reduction (Section XX). 
-
-:::{#exm-symmetric-logistic-tpdm-eigendecomposition}
-Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is symmetric logistic with parameter $\gamma$. Then 
-\begin{equation*}
-\Sigma = (1-\sigma)I_d + \sigma J_d,
-\end{equation*}
-where the constant $\sigma$ may be computed using @exm-symmetric-logistic-tpdm. It is straightforward to show that $\lambda_1=1+(d-1)\sigma$ and $\lambda_2 = \ldots = \lambda_d = 1-\sigma$. The principal eigenvector is $\bm{u}_1=d^{-1/2}\bm{1}_d$ and the remaining eigenvectors $\bm{u}_2,\ldots,\bm{u}_d$ are orthogonal to $\bm{u}_1$. In the limiting case of complete dependence ($\gamma\to 0$), $\lambda_1\to d$ and $\lambda_2,\ldots,\lambda_d\to 0$. The angular measure may be fully `explained' by the single eigenvector $\bm{u}_1$ pointing towards the centre of the simplex. When $\gamma=0$ (asymptotic independence) we have that $\lambda_j=1$ for all $j=1,\ldots,d$ and $\Sigma$ does not admit a low-rank representation in terms of eigenvectors. 
-:::
-
-*Write something here.*
+By standard linear algebra results, the TPDM can be decomposed as $\Sigma=UDU^T$, where $D\in\R^{d\times d}$ is a diagonal matrix of eigenvalues $\lambda_1 \geq \ldots \geq \lambda_d \geq 0$ and $U\in\R^{d\times d}$ is an orthogonal matrix whose columns are the corresponding eigenvectors $\bm{u}_1,\ldots,\bm{u}_d\in\R^d$. The eigendecomposition potentially offers a low-rank representation of the TPDM expressed in terms of its eigenvalues and eigenvectors. In contrast, the completely positive decomposition represents the matrix as a product of a (potentially low-rank) non-negative matrix with its transpose.
 
 :::{#def-cp}
 A matrix $M\in\R^{d\times d}$ is completely positive (CP) if there exists a matrix $B\in\R_+^{d\times q}$ such that $M=BB^T$.
@@ -754,10 +743,33 @@ The TPDM is completely positive.
 :::
 
 ::: {.proof}
-Let $\bm{X}\in\mathcal{RV}_+^d(\alpha)$ with angular measure $H$ and TPDM $\Sigma$. By Proposition 5 in @fougeresDenseClassesMultivariate2013, there exists a sequence of matrices $\{A_q\in\R_+^{d\times q}:q\geq 1\}$ such that $H_q\overset{v}{\to} H$, where $H_q$ is the angular measure of the max-linear random vector $\bm{X}_q\in\mathcal{RV}_+^d(\alpha)$ parametrised by $A_q$. The TPDM of $\bm{X}_q$ is $\Sigma_q=A_q^{\alpha/2}(A_q^{\alpha/2})^T$ by @exm-max-linear-tpdm. Thus, $\{\Sigma_q : q\geq 1\}$ is a sequence of completely positive matrices. The limit $\lim_{q\to\infty}\Sigma_q=\Sigma$ must also be completely positive (CITE Theorem 2.2 in Berman \& Shaked-Monderer (2003)).
+Let $\bm{X}\in\mathcal{RV}_+^d(\alpha)$ with angular measure $H$ and TPDM $\Sigma$. By Proposition 5 in @fougeresDenseClassesMultivariate2013, there exists a sequence of matrices $\{A_q\in\R_+^{d\times q}:q\geq 1\}$ such that $H_q\overset{v}{\to} H$, where $H_q$ is the angular measure of the max-linear random vector $\bm{X}_q\in\mathcal{RV}_+^d(\alpha)$ parametrised by $A_q$. The TPDM of $\bm{X}_q$ is $\Sigma_q=A_q^{\alpha/2}(A_q^{\alpha/2})^T$ by @exm-max-linear-tpdm. Thus, $\{\Sigma_q : q\geq 1\}$ is a sequence of completely positive matrices. The limit $\lim_{q\to\infty}\Sigma_q=\Sigma$ must also be completely positive because the set of completely positive matrices is closed [@haufmannCompletelyPositiveMatrices2011, Theorem 2.1.9].
 :::
 
-In principle this provides a way to check whether a given matrix is a TPDM, but the membership problem for the completely positive cone is NP-hard [@dickinsonComputationalComplexityMembership2014]. *Foreshadow here.*
+In principle this provides a way to check whether a given matrix is a TPDM, but the membership problem for the completely positive cone is NP-hard [@dickinsonComputationalComplexityMembership2014]. The following example illustrates how these two decompositions apply to the symmetric logistic model and hints towards their use for dimension reduction, to be formalised in Section XX.
+
+:::{#exm-symmetric-logistic-tpdm-decomposition}
+Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is symmetric logistic with parameter $\gamma\in(0,1]$. Then 
+\begin{equation*}
+\Sigma = (1-\sigma)I_d + \sigma J_d,
+\end{equation*}
+where the constant $\sigma$ depends on $\gamma$ via the formula in @exm-symmetric-logistic-tpdm. The eigenvalues of $\Sigma$ are $\lambda_1=1+(d-1)\sigma$ and $\lambda_2 = \ldots = \lambda_d = 1-\sigma$. The principal eigenvector is $\bm{u}_1=d^{-1/2}\bm{1}_d$ and the remaining eigenvectors $\bm{u}_2,\ldots,\bm{u}_d$ are orthogonal to $\bm{u}_1$. Rewriting the TPDM as
+\begin{equation*}
+\Sigma = \sum_{i=1}^d(1-\sigma)\bm{e}_i\bm{e}_i^T + \sigma\bm{1}_d\bm{1}_d^T,
+\end{equation*}
+and using @exm-max-linear-tpdm, the TPDM of $\bm{X}$ is identical to that of a max-linear random vector $\bm{Y}=(Y_1,\ldots,Y_d)\in\mathcal{RV}_+^d(\alpha)$ with parameter matrix
+\begin{equation*}
+A = 
+\begin{pmatrix}
+(1-\sigma)^{1/\alpha} & 0 & 0 & \cdots & 0 & \sigma^{1/\alpha} \\
+0 & (1-\sigma)^{1/\alpha} & 0 & \cdots & 0 & \sigma^{1/\alpha} \\
+0 & 0 & (1-\sigma)^{1/\alpha} & \cdots & 0 & \sigma^{1/\alpha} \\
+\vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
+0 & 0 & 0 & \cdots & (1-\sigma)^{1/\alpha} & \sigma^{1/\alpha}
+\end{pmatrix}.
+\end{equation*}
+Consider the limiting case of complete dependence as $\gamma\to 0$, whereby the angular measure tends towards $H^{(2)}$ from \eqref{eq-limiting-discrete-H} in the limit. The eigenvalues are $\lambda_1\to d$, $\lambda_2,\ldots,\lambda_d\to 0$, indicating a single eigenvector $\bm{u}_1$ is sufficient to fully `explain' the dependence structure. We also have $A\to(\bm{0},\ldots,\bm{0},\bm{1}_d)=\bm{1}_d=A^{(2)}$. (This is an abuse of notation; we simply mean that zero columns have no effect and may be omitted.) Both perspectives point towards a low-rank representation of the dependence structure involving the vector directed towards the centre of the simplex. Indeed, this perfectly describes $H^{(2)}=d\delta_{\bm{1}_d/\|\bm{1}_d\|_{\alpha}}$.
+:::
 
 ### The empirical TPDM
 
@@ -809,9 +821,9 @@ See @exm-edm-estimator.
 If $X_i$ and $X_j$ are asymptotically independent ($\sigma_{ij}=0$), then $\nu_{ij}^2=0$ and the limit distribution is degenerate. In this case, the above result only proves consistency, i.e. $\hat{\sigma}_{ij}\to 0$, and cannot be used to formally test for asymptotic independence [@lehtomaaAsymptoticIndependenceSupport2020].
 
 Using asymptotic normality one may construct asymptotic confidence intervals
-\begin{equation*}
+\begin{equation}\label{eq-tpdm-confidence-interval}
     \lim_{n\to\infty}\mathbb{P}\left[ |\sigma_{ij}-\hat{\sigma}_{ij}| < z_{\beta/2}\sqrt{\nu_{ij}^2/k}\right] = 1-\beta,
-\end{equation*}
+\end{equation}
 where $z_{\beta/2}=\Phi^{-1}(1-\beta/2)$. If the angular measure is known the asymptotic variance $\nu_{ij}^2$ may be computed using the formula derived in Appendix XX.
 
 
@@ -829,15 +841,19 @@ In practice, the asymptotic variance may be replaced with the plug-in estimator 
 \end{equation*}
 
 The following result, proved by @kraliCausalityEstimationMultivariate2018 for $\alpha=2$, generalises asymptotic normality of the empirical TPDM to the entire matrix, rather than just individual entries. This is most simply expressed in terms of upper-half vectorisations of $\Sigma$ and $\hat{\Sigma}$, that is
-\begin{align*}
+\begin{align}
     \bm{\sigma}
     &:= \mathrm{vecu}(\Sigma) 
-    := (\sigma_{12},\sigma_{13},\ldots,\sigma_{1d},\sigma_{23},\ldots,\sigma_{2d},\ldots,\sigma_{d-1,d}), \\
+    := (\sigma_{12},\sigma_{13},\ldots,\sigma_{1d},\sigma_{23},\ldots,\sigma_{2d},\ldots,\sigma_{d-1,d}), \label{eq-vecu-sigma} \\
     \hat{\bm{\sigma}} 
     &:= \mathrm{vecu}(\hat{\Sigma}) 
-    := (\hat{\sigma}_{12},\hat{\sigma}_{13},\ldots,\hat{\sigma}_{1d},\hat{\sigma}_{23},\ldots,\hat{\sigma}_{2d},\ldots,\hat{\sigma}_{d-1,d}).
-\end{align*}
-Each vector contains ${d \choose 2}=d(d-1)/2$ entries corresponding to the row-wise flattening of the upper triangular elements. This is justified because the matrices are symmetric and their diagonal entries are not relevant. Components are indexed according to the sub-indices of the corresponding matrix entry, e.g. the first entry of $\bm{\sigma}$ is $\sigma_{12}$ rather than $\sigma_{1}$.
+    := (\hat{\sigma}_{12},\hat{\sigma}_{13},\ldots,\hat{\sigma}_{1d},\hat{\sigma}_{23},\ldots,\hat{\sigma}_{2d},\ldots,\hat{\sigma}_{d-1,d}). \label{eq-vecu-sigma-hat}
+\end{align}
+Each vector contains 
+\begin{equation*}
+|\{(i,j):1\leq i < j \leq d\}|=\binom{d}{2}=\frac{1}{2}d(d-1)
+\end{equation*}
+entries. This is justified because the matrices are symmetric and their diagonal entries are irrelevant. Components are indexed according to the sub-indices of the corresponding matrix entry, e.g. the first entry of $\bm{\sigma}$ is $\sigma_{12}$ rather than $\sigma_{1}$.
 
 :::{#prp-empirical-tpdm-normality}
 Under the conditions of @thm-clt-extremes, the estimator $\hat{\bm{\sigma}}$ is consistent and asymptotically normal, i.e. 
@@ -847,7 +863,7 @@ Under the conditions of @thm-clt-extremes, the estimator $\hat{\bm{\sigma}}$ is 
 The diagonal and off-diagonal entries of the ${d \choose 2}\times{d \choose 2}$ asymptotic covariance matrix $V$ are given by
 \begin{equation*}
    v_{ij,lm} 
-   := \lim_{k\to\infty}k\mathrm{Cov}(\hat{\sigma}_{ij},\hat{\sigma}_{lm}) 
+   := \lim_{n\to\infty}k\mathrm{Cov}(\hat{\sigma}_{ij},\hat{\sigma}_{lm}) 
    = \begin{cases}
       \nu_{ij}^2, & (i,j) = (l,m),\\
       \rho_{ij,lm} & \text{otherwise},
@@ -1031,7 +1047,7 @@ Estimation error in the empirical TPDM was first studied by @cooleyDecomposition
 
 The first strategy for tackling the bias issue is found in @mhatreTransformedLinearModelsTime2021. Working in a time series context, they study serial dependence in extremes using the tail pairwise dependence function (TPDF) $\sigma(h)$, which summarises the tail dependence between $X_t$ and $X_{t+h}$ for a tail stationary time series $\{X_t:t=1\ldots,n\}$. Simulation experiments reveal that the empirical TPDF $\hat{\sigma}(h)$ is biased at higher lags where the true dependence is close to zero. To counteract this, they subtract the mean from the time series in pre-processing. The rationale for this is described in terms of the position of extreme points in a lag plot (i.e. a scatter plot of $(X_t, X_{t+h})$ for fixed $h$). Subtracting the mean has negligible effect on the angles corresponding to joint extremes, but points near a coordinate axis are shifted even closer to the axis. 
 
-@fixSimultaneousAutoregressiveModels2021 develop the first bias-corrected estimate of the TPDM. Recall from Section XX the problem of estimating the spatial dependence parameter $\rho$ of the extremal SAR model \eqref{eq-sar-model}. When the study domain is large or the modelled phenomenon is highly localised, the pairwise dependence between distant sites is weak and the empirical TPDM is prone to overestimation in the corresponding entries. This bias carries over to $\hat{\rho}$ defined in \eqref{eq-sar-rho-estimator}. Their bias-corrected estimate $\tilde{\Sigma}$ reduces the entries of $\hat{\Sigma}$ by element-wise application of the soft-thresholding operator \parencite{rothman_generalized_2009}, that is
+@fixSimultaneousAutoregressiveModels2021 develop the first bias-corrected estimate of the TPDM. Recall from Section XX the problem of estimating the spatial dependence parameter $\rho$ of the extremal SAR model \eqref{eq-sar-model}. When the study domain is large or the modelled phenomenon is highly localised, the pairwise dependence between distant sites is weak and the empirical TPDM is prone to overestimation in the corresponding entries. This bias carries over to $\hat{\rho}$ defined in \eqref{eq-sar-rho-estimator}. Their bias-corrected estimate $\tilde{\Sigma}$ reduces the entries of $\hat{\Sigma}$ by element-wise application of the soft-thresholding operator [@rothmanGeneralizedThresholdingLarge2009], that is
 \begin{equation}\label{eq-fix-bias-corrected-tpdm}
     \tilde{\Sigma}=(\tilde{\sigma}_{ij}), \qquad \tilde{\sigma}_{ij} = \begin{cases}
         \hat{\sigma}_{ij}, & i=j, \\

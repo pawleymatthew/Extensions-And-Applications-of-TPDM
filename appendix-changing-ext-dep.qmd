@@ -1,0 +1,155 @@
+```{r appendix-changing-ext-dep-load-packages}
+#| include: false
+library(tidyverse)
+library(tidyr)
+library(magrittr)
+library(SimCop)
+library(pracma)
+library(expm)
+library(sn)
+library(scales)
+library(ggh4x)
+library(CPAT)
+library(maps)
+library(patchwork)
+library(ggpubr)
+library(colorspace)
+library(pbapply)
+library(kableExtra)
+library(reshape2)
+library(e1071) # simulate Brownian bridge
+library(tictoc)
+
+options(dplyr.summarise.inform = FALSE)
+options(knitr.kable.NA = "")
+```
+
+
+```{r appendix-changing-ext-dep-source-functions}
+#| include: false
+sapply(list.files(path = "R/changing-ext-dep", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
+sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
+```
+
+# Summary of @dreesStatisticalInferenceChanging2023
+
+@dreesStatisticalInferenceChanging2023 tests \eqref{eq-changing-ext-dep-null-hyp} against \eqref{eq-changing-ext-dep-alt-hyp} via a large family $\mathcal{A}$ of subsets of $\mathbb{S}_+^{d-1}$ and suitably rescaled versions of stochastic processes
+\begin{equation}\label{eq-drees-test-process}
+\left\lbrace\int_0^t \hat{H}(A;s)\,\dee s - t \int_0^1 \hat{H}(A;s)\,\dee s : t\in[0,1]\right\rbrace, \qquad (A\in\mathcal{A}).
+\end{equation}
+Here $\hat{H}(A;s)$ denotes a non-parametric estimate of the angular measure $H(A;s)$ at time $s\in[0,1]$ -- see \eqref{eq-emp-angular-measure} for a formal definition. The null is rejected if any paths in \eqref{eq-drees-test-process} deviate from what would typically occur under the null. If $\mathcal{A}$ is sufficiently rich, then even very subtle dependence changes may be revealed, in principle. However, as the dimension $d$ increases the family of sets grows rapidly, typically $|\mathcal{A}|=\mathcal{O}(2^d)$. Consequently, the underlying computations become prohibitively intensive and the convergence $\hat{H(A;t)}\to H(A;t)$ of the non-parametric estimators is too slow. Thus, their method is primarily intended for the bivariate setting and is restricted to $d\leq 5$ in practice. Fundamentally, this limitation stems from the curse of dimensionality inherent to estimation of the angular measure. This impediment is exacerbated by the fact that inference must be performed *locally*, i.e. using only (extreme) observations lying within some small temporal neighbourhood.
+
+Our approach mitigates this issue by concentrating on bivariate summaries of tail dependence instead of the full dependence structure. The $\mathcal{O}(d^2)$ coefficients of the TPDM encode second-order information about the local angular measure and can be more reliably estimated in high dimensions. The downside is that the TPDM contains incomplete information about the angular measure. This means our test is powerless in certain circumstances; a class of examples is provided in @sec-constant-tpdm. 
+
+# Empirical power for different tuning parameters $b$ and $k$
+
+```{r load-sim-results-appendix}
+sim_results <- list(file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed1.RDS"),
+                    file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed2.RDS"),
+                    file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed3.RDS"),
+                    file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed4.RDS"),
+                    file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed5.RDS"),
+                    file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed6.RDS"),
+                    file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed7.RDS"),
+                    file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed8.RDS")) %>%
+  lapply(readRDS) %>%
+  bind_rows()
+```
+
+```{r make-fig-bivariate-power-vary-b-k}
+#| label: fig-bivariate-power-vary-b-k
+#| fig-cap: "Empirical power (%) as a function of the dependence parameter $\\vartheta_1$ for different combinations of tuning parameters $b$ and $k$. Based on 1000 simulations with $n=2,500$ and $d=2$. For the SL and HR models, $\\vartheta_0=2$ and $\\vartheta_0=1$, respectively. Tests are conducted at the 5\\% level (black dashed line)."
+#| fig-scap: "Empirical power against the dependence parameter $\\vartheta_1$ for selected $b$ and $k$."
+#| fig-height: 7
+
+p1 <- sim_results %>%
+  filter(change_type %in% c("none", "jump"), d == 2, n == 2500, model == "log") %>%
+  group_by(param1, n_blocks, k_frac, test_method, test_type) %>%
+  summarise(power = 100 * mean(reject_H0)) %>%
+  rename('n/b' = n_blocks, 'k/b' = k_frac) %>%
+  ggplot(aes(x = param1, y = power, colour = test_method, shape = test_type, linetype = test_type)) +
+  geom_point() +
+  geom_line() +
+  geom_hline(yintercept = 5, linetype = "dashed", colour = "black") +
+  facet_grid(`k/b` ~ `n/b`, labeller = purrr::partial(label_both, sep = " = ")) +
+  xlab(expression(vartheta[1])) +
+  ylab("Empirical power (%)") +
+  ggtitle("SL-jump") +
+  scale_x_continuous(breaks = breaks_extended(n = 5)) +
+  scale_y_continuous(breaks = breaks_extended(n = 4)) +
+  scale_color_manual(labels = c("Drees", "Pawley"), values = c("red", "blue")) +
+  scale_linetype_manual(labels = c("CM", "KS"), values = c(1, 3)) +
+  scale_shape_manual(labels = c("CM", "KS"), values = 0:1) +
+  theme_light() +
+  labs(colour = "Test method", shape = "Test type", linetype = "Test type") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 10))
+
+p2 <- sim_results %>%
+  filter(change_type %in% c("none", "linear"), d == 2, n == 2500, model == "log") %>%
+  group_by(param1, n_blocks, k_frac, test_method, test_type) %>%
+  summarise(power = 100 * mean(reject_H0)) %>%
+  rename('n/b' = n_blocks, 'k/b' = k_frac) %>%
+  ggplot(aes(x = param1, y = power, colour = test_method, shape = test_type, linetype = test_type)) +
+  geom_point() +
+  geom_line() +
+  geom_hline(yintercept = 5, linetype = "dashed", colour = "black") +
+  facet_grid(`k/b` ~ `n/b`, labeller = purrr::partial(label_both, sep = " = ")) +
+  xlab(expression(vartheta[1])) +
+  ylab("Empirical power (%)") +
+  ggtitle("SL-linear") +
+  scale_x_continuous(breaks = breaks_extended(n = 5)) +
+  scale_y_continuous(breaks = breaks_extended(n = 4)) +
+  scale_color_manual(labels = c("Drees", "Pawley"), values = c("red", "blue")) +
+  scale_linetype_manual(labels = c("CM", "KS"), values = c(1, 3)) +
+  scale_shape_manual(labels = c("CM", "KS"), values = 0:1) +
+  theme_light() +
+  labs(colour = "Test method", shape = "Test type", linetype = "Test type") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 10))
+
+
+p3 <- sim_results %>%
+  filter(change_type %in% c("none", "jump"), d == 2, n == 2500, model == "hr") %>%
+  group_by(param1, n_blocks, k_frac, test_method, test_type) %>%
+  summarise(power = 100 * mean(reject_H0)) %>%
+  rename('n/b' = n_blocks, 'k/b' = k_frac) %>%
+  ggplot(aes(x = param1, y = power, colour = test_method, shape = test_type, linetype = test_type)) +
+  geom_point() +
+  geom_line() +
+  geom_hline(yintercept = 5, linetype = "dashed", colour = "black") +
+  facet_grid(`k/b` ~ `n/b`, labeller = purrr::partial(label_both, sep = " = ")) +
+  xlab(expression(vartheta[1])) +
+  ylab("Empirical power (%)") +
+  ggtitle("HR-jump") +
+  scale_x_continuous(breaks = breaks_extended(n = 5)) +
+  scale_y_continuous(breaks = breaks_extended(n = 4)) +
+  scale_color_manual(labels = c("Drees", "Pawley"), values = c("red", "blue")) +
+  scale_linetype_manual(labels = c("CM", "KS"), values = c(1, 3)) +
+  scale_shape_manual(labels = c("CM", "KS"), values = 0:1) +
+  theme_light() +
+  labs(colour = "Test method", shape = "Test type", linetype = "Test type") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 10))
+
+p4 <- sim_results %>%
+  filter(change_type %in% c("none", "linear"), d == 2, n == 2500, model == "hr") %>%
+  group_by(param1, n_blocks, k_frac, test_method, test_type) %>%
+  summarise(power = 100 * mean(reject_H0)) %>%
+  rename('n/b' = n_blocks, 'k/b' = k_frac) %>%
+  ggplot(aes(x = param1, y = power, colour = test_method, shape = test_type, linetype = test_type)) +
+  geom_point() +
+  geom_line() +
+  geom_hline(yintercept = 5, linetype = "dashed", colour = "black") +
+  facet_grid(`k/b` ~ `n/b`, labeller = purrr::partial(label_both, sep = " = ")) +
+  xlab(expression(vartheta[1])) +
+  ylab("Empirical power (%)") +
+  ggtitle("HR-linear") +
+  scale_x_continuous(breaks = breaks_extended(n = 5)) +
+  scale_y_continuous(breaks = breaks_extended(n = 4)) +
+  scale_color_manual(labels = c("Drees", "Pawley"), values = c("red", "blue")) +
+  scale_linetype_manual(labels = c("CM", "KS"), values = c(1, 3)) +
+  scale_shape_manual(labels = c("CM", "KS"), values = 0:1) +
+  theme_light() +
+  labs(colour = "Test method", shape = "Test type", linetype = "Test type") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 10))
+
+ggarrange(p1, p2, p3, p4, ncol = 2, nrow = 2, common.legend = TRUE)
+```

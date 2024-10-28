@@ -17,7 +17,7 @@ redsea <- load_red_sea_temp(alpha = 2)
 
 set.seed(1)
 
-d_vals <- c(5, 10, 15)
+d_vals <- c(2, 5, 10)
 
 lapply(seq_along(d_vals), function(d_ind) {
   

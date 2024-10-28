@@ -23,6 +23,8 @@ A <- ml_params %>%
   filter(abs(sigma - 0.8) < 0.0005 & abs(v - 0.06) < 0.00015) %>%
   pull(A) 
 
+saveRDS(A, file = file.path("scripts", "changing-ext-dep", "results", "constant-tpdm-A.RDS"))
+
 # Generate dataset ------------------------------------------------------------------
 
 set.seed(1)

@@ -12,7 +12,7 @@ plot_test_drees <- function(data, format = c(1, 3)) {
     ggplot(aes(x = (block - 1) / n_blocks, y = S, colour = set)) +
     scale_colour_discrete_sequential("ag_GrnYl") +
     geom_step() +
-    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 1)) +
+    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 4)) +
     xlab("Time") +
     ylab(expression(S[y](t))) +
     labs(colour = "Set") +
@@ -22,10 +22,10 @@ plot_test_drees <- function(data, format = c(1, 3)) {
     ggplot(aes(x = block / n_blocks, y = IS, colour = set)) +
     scale_colour_discrete_sequential("ag_GrnYl") +
     geom_line() +
-    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 1)) +
+    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 4)) +
     scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
     xlab("Time") +
-    ylab(expression(IS[y](t))) +
+    ylab(expression(hat(IH)[y](t))) +
     labs(colour = "Set") +
     theme_light()
     
@@ -33,9 +33,9 @@ plot_test_drees <- function(data, format = c(1, 3)) {
     ggplot(aes(x = block / n_blocks, y = z, colour = set)) +
     scale_colour_discrete_sequential("ag_GrnYl") +
     geom_line() +
-    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 1)) +
+    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 4)) +
     xlab("Time") +
-    ylab(expression(Z[y](t))) +
+    ylab(expression(hat(Z)[y](t))) +
     labs(colour = "Set") +
     theme_light()
     
@@ -47,10 +47,10 @@ plot_test_drees <- function(data, format = c(1, 3)) {
     scale_colour_discrete_sequential("ag_GrnYl") +
     geom_line() +
     geom_hline(aes(yintercept = cv), colour = "black", linetype = "dashed") +
-    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 1)) +
-    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1), add = c(0, 0)), breaks = breaks_pretty(n = 3)) +
+    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 4)) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1), add = c(0, 0)), breaks = breaks_extended(n = 4)) +
     xlab("Time") +
-    ylab(expression("Norm of" ~ Z[y]*(t))) +
+    ylab("Test statistic process") +
     labs(colour = "Set") +
     theme_light()
 

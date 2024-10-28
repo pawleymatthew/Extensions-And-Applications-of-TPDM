@@ -63,36 +63,36 @@ plot_test_pawley <- function(data, variable_scheme = "colour", format = c(2, 2),
   
   p_sigma <- p_sigma +
     geom_step() +
-    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 1)) +
+    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 4)) +
     xlab("Time") +
-    ylab(expression(sigma[ij](t))) +
+    ylab(expression(hat(sigma)[ij](t))) +
     labs(colour = "Variables") +
     theme_light()
   
   p_psi <- p_psi +
     geom_line() +
-    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 1)) +
+    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 4)) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.02), add = c(0, 0))) +
     xlab("Time") +
-    ylab(expression(psi[ij](t))) +
+    ylab(expression(hat(psi)[ij](t))) +
     labs(colour = "Variables") +
     theme_light()
   
   p_z <- p_z +
     geom_line() +
-    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 1)) +
+    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 4)) +
     xlab("Time") +
-    ylab(expression(Z[ij](t))) +
+    ylab(expression(hat(Z)[ij](t))) +
     labs(colour = "Variables") +
     theme_light()
   
   p_cv <- p_cv +
     geom_line() +
     geom_hline(aes(yintercept = cv), colour = "black", linetype = "dashed") +
-    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 1)) +
-    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1), add = c(0, 0)), breaks = breaks_pretty(n = 3)) +
+    scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 4)) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1), add = c(0, 0)), breaks = breaks_extended(n = 4)) +
     xlab("Time") +
-    ylab(expression("Norm of" ~ Z[ij]*(t))) +
+    ylab("Test statistic process") +
     labs(colour = "Variables") +
     theme_light()
   
