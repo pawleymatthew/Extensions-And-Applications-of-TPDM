@@ -156,3 +156,12 @@ rmaxlinearfactor <- function(n, A, type = "maxlin", alpha = 1) {
   colnames(X) <- paste0("X", seq_len(ncol(X)))
   return(X)
 }
+
+
+# Sim HR ----------------------------------------------------------------------------
+
+make_hr_variogram <- function(d, beta = 3) {
+  H <- matrix(data = EnvStats::rpareto(d^2, location = 1, shape = 2.5), nrow = d, ncol = d)
+  Gamma <- (beta / d) * dist(H, upper = TRUE, diag = TRUE)^2 %>% as.matrix()
+  return(Gamma)
+}

@@ -1,4 +1,4 @@
-# Compositional perspectives on extremes
+# A compositional perspective on multivariate extremes
 
 ```{r compositional-load-packages}
 #| include: false
@@ -26,232 +26,290 @@ options(knitr.kable.NA = "")
 #| include: false
 sapply(list.files(path = "R/compositional", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
 sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
+sapply(list.files(path = "R/background", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
 ```
 
-The primary object of interest in multivariate extremes is the angular measure, which represents the limiting conditional distribution of $\bm{\Theta}\mid R>t$, where $\bm{\Theta}:=\bm{X}/\|\bm{X}\|_\alpha$ and $R:=\|\bm{X}\|_\alpha$, as $t\to\infty$. Taking $\alpha=1$ and $\bm{X}\in\mathrm{RV}_+^d(1)$ on unit Fréchet margins, the following statements are true:
+## Motivation
 
-1. $\bm{\Theta}$ lies in the $(d-1)$-dimensional simplex $\mathbb{S}_+^{d-1}=\{\bm{\theta}\in\R^d : \theta_j\geq 0, \sum_{j=1}^d \theta_j=1\}$ in $\R^d$. 
-2. In the limit as $t\to\infty$, the angle of threshold exceedances $\bm{\Theta}\mid R>t$ is independent of $R$. 
-3. The (normalised) angular measure satisfies $\int_{\mathbb{S}_+^{d-1}}\theta_j\,\dee H(\bm{\theta})=1/d$ for all $j=1,\ldots,d$.
+In multivariate extreme value statistics, the analysis of angular distributions is central to understanding the tail dependence structure. The angular measure describes the direction of large observations, focussing on the relative proportions of variables at extreme levels rather than their absolute values. Compositional data analysis (CoDA) provides tools to handle data that carry only relative information, enabling a more robust inference by accounting for the constraints imposed by their simplex structure [@aitchisonStatisticalAnalysisCompositional1986]. EVA and CoDA have been connected on several occasions: @colesModellingExtremeMultivariate1991 remark on the similarity between parametric models for CoDA and models for the angular measure; @decarvalhoStatisticsExtremesChallenges2016 sketch a possible approach to extremal PCA that involves applying "PCA for compositional data to the pseudo-angles" to "disentangle dependence into components of practical interest"; @serranoSemiparametricBivariateExtremevalue2022 construct bivariate extreme value copulas using compositional splines. Apart from these sporadic cases, the connection between these two disciplines remains unexplored in the current literature. This chapter aims to demonstrate this untapped potential. 
 
-Property (i) states that $\bm{\Theta}$ is a $d$-part *random composition* with non-negative components summing to unity. In his seminal paper, @aitchisonStatisticalAnalysisCompositional1982 contended that analysing such data using standard methodology designed for unconstrained vectors can lead to misleading inferences. Compositional data analysis (CoDA) subsequently emerged as a discipline for developing statistical theory and techniques tailored to account for the geometry of the simplex. Statement (ii) expresses that, in the limit, MRV random vectors satisfy a fundamental principle of CoDA called *scale invariance*: the distribution of the composition (angular component) of is independent of the absolute size (radial component). Finally, the moment constraint (iii) means that the centre of mass of any valid angular measure (with respect to $\|\cdot\|_1$) lies at the barycentre of the simplex.
-
-There is a clear connection between compositional data analysis and multivariate extreme value statistics. We are not the first to notice this link. @colesModellingExtremeMultivariate1991 remark that parametric CoDA models would be useful for modelling extremal dependence, were it not for the fact that they typically violate the moment constraint. In a paper outlining potential future avenues for research in extremes, @longin2016 suggests applying "PCA for compositional data \textellipsis to the pseudo-angles" to "disentangle dependence into components \ldots of practical interest". Finally, @serranoSemiparametricBivariateExtremevalue2022 leverage CoDA techniques (e.g. log-ratio transformations and compositional splines) to construct bivariate extreme value copulas. 
-
-This chapter aims to explore the link between these two statistical disciplines more thoroughly. In particular, we apply a CoDA lens to two statistical learning problems within multivariate extremes: tail dimension reduction via principal components analysis [@clemenconRegularVariationHilbert2024; @cooleyDecompositionsDependenceHighdimensional2019; @dreesPrincipalComponentAnalysis2021] and binary classification in extreme regions [@jalalzaiBinaryClassificationExtreme2018]. We demonstrate that off-the-shelf CoDA methods are readily applicable to these problems and compare their performance against existing state-of-the-art methods from the extremes literature.
+First, we will review the core CoDA principles and concepts and draw high-level connections to MEV analysis. Then, we provide some tangible examples that illustrate our point more concretely. Specifically, we apply a CoDA lens to two statistical learning problems within multivariate extremes: tail dimension reduction via principal components analysis [@clemenconRegularVariationHilbert2024; @cooleyDecompositionsDependenceHighdimensional2019; @dreesPrincipalComponentAnalysis2021] and binary classification in extreme regions [@jalalzaiBinaryClassificationExtreme2018]. We demonstrate that off-the-shelf CoDA methods are readily applicable to these problems and are competitive against the current state-of-the-art.
 
 ## Compositional data analysis
 
-@aitchisonStatisticalAnalysisCompositional1982 argues that standard multivariate data analysis techniques are inappropriate for modelling compositional data because they are designed for unconstrained data. Neglecting the compositional constraint causes an array of difficulties: spurious correlations [@pearsonMathematicalContributionsTheory1897; @aitchisonStatisticalAnalysisCompositional1982], a failure to capture the marked curvature characteristic of compositional data sets [@aitchisonPrincipalComponentAnalysis1983], or contradictory conclusions between analyses depending on which components are included in the composition [@aitchisonStatisticalAnalysisCompositional1986]. These issues are addressed by devising a statistical framework tailored to the algebraic-geometric structure of the underlying sample space: the unit simplex. This section reviews the basic concepts and principles of CoDA. 
+### Compositions and the Aitchison geometry
 
-### Compositions
-
-Compositional analysis concerns vectors with strictly positive components for which all relevant information is *relative*, i.e. conveyed by ratios between components.
-
-:::{#def-composition}
-Vectors $\bm{x},\bm{y}\in\R_+^d:=(0,\infty)^d$ are *compositionally equivalent*, denoted $\bm{x}\sim\bm{y}$, if there exists $c>0$ such that $\bm{y}=c\bm{x}$.
-:::
-
-The equivalence relation $\sim$ defines equivalence classes on $\R_+^d$. 
-
-:::{#def-closed-composition}
-For $\bm{x}\in\R_+^d$, the compositional class $[\bm{x}]:=\{c\bm{x}:c>0\}$ is represented on the $d$-part unitary simplex by its *closed composition* given by
+Compositional data analysis is a relatively modern statistical discipline that has been adopted across various fields including economics, geology, biology, political science, and many others [@alenaziReviewCompositionalData2023]. Its widespread applicability stems from the ubiquity of compositional data, i.e. data whose components represent parts of a whole and convey only relative information. For example, a geologist analysing the chemical composition of rock samples is interested in the relative abundances of its constituent elements rather than the absolute amounts (which ultimately depend on the size of the rock sample). Two vectors $\bm{x},\bm{y}\in\R_+^d:=(0,\infty)^d$ are compositionally equivalent, denoted $\bm{x}\sim\bm{y}$, if there exists $c>0$ such that $\bm{y}=c\bm{x}$. The equivalence relation $\sim$ defines equivalence classes on $\R_+^d$. For $\bm{x}\in\R_+^d$, the compositional class $[\bm{x}]:=\{c\bm{x}:c>0\}$ may be represented by a closed composition on the $d$-part unitary simplex,
 \begin{equation*}
-    \mathcal{C}\bm{x} := \frac{(x_1,\ldots,x_d)}{\sum_{i=1}^d x_i}.
+    \mathcal{C}\bm{x} := \frac{\bm{x}}{\|\bm{x}\|_1}\in\mathbb{S}_{+(1)}^{d-1}.
 \end{equation*}
-:::
+Thus the natural sample space of compositional random vectors is the $L_1$-simplex $\mathbb{S}_{+(1)}^{d-1}$. In his seminal paper, @aitchisonStatisticalAnalysisCompositional1982 contends that standard multivariate analysis techniques are inappropriate for modelling compositions because they are intended for unconstrained data. Neglecting the compositional constraint causes an array of difficulties, including detecting spurious correlations [@pearsonMathematicalContributionsTheory1897; @aitchisonStatisticalAnalysisCompositional1982], difficulties representing the structure of the data [@aitchisonPrincipalComponentAnalysis1983], and contradictory conclusions between analyses [@aitchisonStatisticalAnalysisCompositional1986]. The consensus solution is to work in a statistical framework that satisfies the core CoDA principles laid out by @aitchisonStatisticalAnalysisCompositional1986:
 
-### Aitchison geometry
+1. **(Scale invariance)** Analyses based on the raw observations $\bm{x}_1,\ldots,\bm{x}_n\in\R_+^d$ and on the closed compositions $\mathcal{C}\bm{x}_1,\ldots,\mathcal{C}\bm{x}_n\in\mathbb{S}_{+(1)}^{d-1}$ should yield the same results. In other words, the magnitudes of $\bm{x}_1,\ldots,\bm{x}_n$ are not relevant for inference. 
+2. **(Subcompositional coherence)** Analyses based on the full composition and any subcomposition should yield consistent conclusions.
+3. **(Permutation invariance)** Analyses should yield equivalent results when parts in the composition are permuted. 
 
-Adhering to the principles propounded by @aitchisonStatisticalAnalysisCompositional1986 necessitates introducing alternative notions of mean/variance, distance, projections, etc. that make sense for compositions. Formally, this involves constructing a Hilbert space structure on $\mathbb{S}_+^{d-1}$ [@aitchisonStatisticalAnalysisCompositional1986; @pawlowsky-glahnGeometricApproachStatistical2001]. This is achieved by defining a vector space structure on $\mathbb{S}_+^{d-1}$ and endowing it with a suitable inner product, norm and distance.
-
-:::{#def-aitchison-vector-space}
-Let $\bm{x},\bm{y}\in\mathbb{S}_+^{d-1}$ be closed compositions and $\alpha\in\R$ a scalar. The perturbation and power operations are defined by
+Adherence to the foundational CoDA principles is achieved by discarding Euclidean geometry and instead working in the so-called Aitchison geometry [@aitchisonStatisticalAnalysisCompositional1986]. Formally, this involves constructing a Hilbert space structure on the interior of $\mathbb{S}_{+(1)}^{d-1}$ [@pawlowsky-glahnGeometricApproachStatistical2001]. Suppose $\bm{x},\bm{y}\in\mathbb{S}_{+(1)}^{d-1}\setminus \partial\mathbb{S}_{+(1)}^{d-1}$, where
+\begin{equation*}
+\partial\mathbb{S}_{+(1)}^{d-1} := \{\bm{x}\in \mathbb{S}_{+(1)}^{d-1} : \exists i \, x_i=0\}
+\end{equation*}
+is the simplex boundary. For $\alpha\in\R$, the perturbation and power operations are defined by
 \begin{equation*}
     \bm{x} \oplus \bm{y} = \mathcal{C}(x_1y_1,\ldots,x_dy_d),\qquad \alpha \odot \bm{x} = \mathcal{C}(x_1^\alpha,\ldots,x_d^\alpha).
 \end{equation*}
-:::
-
-It is straightforward to show that $(\mathbb{S}_+^{d-1},\odot,\oplus$) is a real vector space. The additive identity and inverse elements are $\bm{e}_a:=\mathcal{C}(1,\ldots,1)$ and $\ominus \bm{x} := \mathcal{C}(x_1^{-1},\ldots,x_d^{-1})$, respectively.
-
-:::{#def-clr}
-The \textit{centred log-ratio (CLR) transformation} is
+The real vector space $(\mathbb{S}_{+(1)}^{d-1},\odot,\oplus$) has additive identity $\bm{e}_a:=\mathcal{C}(1,\ldots,1)$ and inverse elements $\ominus \bm{x} := \mathcal{C}(x_1^{-1},\ldots,x_d^{-1})$. Central to the Aitchison geometry is the centred log-ratio (CLR) transformation
 \begin{equation*}
-    \mathrm{clr}:\R^d\to \R^d,\qquad \bm{x}\mapsto \log\left(\frac{\bm{x}}{\bar{g}(\bm{x})}\right),
+    \mathrm{clr}:\mathbb{S}_{+(1)}^{d-1} \to \R^d,\qquad \bm{x}\mapsto \log\left(\frac{\bm{x}}{\bar{g}(\bm{x})}\right),
 \end{equation*}
-where $\bar{g}(\bm{x}):=(\prod_{i=1}^d x_i)^{1/d}$ denotes the geometric mean of the components of $\bm{x}$. 
-:::
-
-CLR-transformed vectors lie in the hyperplane $\mathcal{T}^{d-1}:=\{\bm{y}\in\R^d : y_1+\ldots+y_d=0 \}\subset\R^d$. The transformation can be inverted to recover the original (closed) composition via
+where $\bar{g}(\bm{x}):=(\prod_{i=1}^d x_i)^{1/d}$ denotes the geometric mean of the components of $\bm{x}$. The inverse transformation is $\mathrm{clr}^{-1}(\bm{v})=\mathcal{C}\exp(\bm{v})$. With this transformation, the inner product may be defined in terms of $\langle \cdot,\cdot\rangle_e$, the Euclidean inner product in $\R^d$, as
 \begin{equation*}
-    \mathrm{clr}^{-1} : \mathcal{T}^{d-1} \to \mathbb{S}_+^{d-1}, \qquad \bm{v} \mapsto \mathcal{C}\exp(\bm{v}).
+      \langle \bm{x},\bm{y}\rangle_a := \langle \mathrm{clr}(\bm{x}),\mathrm{clr}(\bm{y})\rangle_e,
 \end{equation*}
-
-:::{#def-aitchison-metric-space}
-Let $\bm{x},\bm{y}\in\mathbb{S}_+^{d-1}$ be closed compositions. Let $\langle \cdot,\cdot\rangle_e$ denote the Euclidean inner product in $\R^d$. The *Aitchison inner product* in $\mathbb{S}_+^{d-1}$ is
-\begin{equation*}
-      \langle \bm{x},\bm{y}\rangle_a := \langle \mathrm{clr}(\bm{x}),\mathrm{clr}(\bm{y})\rangle_e = \sum_{i=1}^d \log\left(\frac{x_i}{\bar{g}(\bm{x})}\right) \log\left(\frac{y_i}{\bar{g}(\bm{y})}\right).
-\end{equation*}
-The *Aitchison norm* and *Aitchison distance* are the metric elements induced by $\langle \cdot,\cdot \rangle_a$, that is
-\begin{equation}\label{eq-aitchison-metric}
-      \|\bm{x}\|_a := \langle \bm{x},\bm{x} \rangle_a^{1/2}, \qquad d_a(\bm{x},\bm{y}) := \|\bm{x} \ominus \bm{y}\|_a.
+The Aitchison norm and distance are the metric elements induced by $\langle \cdot,\cdot \rangle_a$, given by
+\begin{equation}
+      \|\bm{x}\|_a := \langle \bm{x},\bm{x} \rangle_a^{1/2} = \|\mathrm{clr}(\bm{x})\|_2, \qquad d_a(\bm{x},\bm{y}) := \|\bm{x} \ominus \bm{y}\|_a = \|\mathrm{clr}(\bm{x}) - \mathrm{clr}(\bm{y})\|_2.
 \end{equation} 
-:::
-
-The CLR-transformation is an isometry between $\mathcal{T}^{d-1}$ equipped with Euclidean geometry and $\mathbb{S}_+^{d-1}$ equipped with Aitchison geometry.
-
-:::{#def-composition-centre-variance}
-The centre and total variance of a random composition $\bm{X}$ are given by 
+The CLR transformation is an isometry between the Aitchison simplex and the Euclidean hyperplane
+\begin{equation*}
+  \mathcal{T}^{d-1}:=\{\bm{y}\in\R^d : y_1+\ldots+y_d=0 \}\subset\R^d
+\end{equation*}
+passing through the origin and parallel to the simplex in $\R^d$. Therefore CoDA methods can be formulated in two equivalent ways: in terms of compositions in the Aitchison geometry (the in-the-simplex approach) or based on the CLR-transformed vectors in the Euclidean geometry (the out-of-the-simplex approach). If one chooses the in-the-simplex route, statistical and probabilistic concepts must be appropriately generalised. For example, @pawlowsky-glahnGeometricApproachStatistical2001 define measures of central tendency and variability for compositions as
 \begin{align*}
-    \mathrm{cen}_a(\bm{X}) &:= \argmin_{y\in\mathbb{S}_+^{d-1}}\mathbb{E}[d_a^2(\bm{X},\bm{y})] = \mathcal{C}(\exp(\mathbb{E}[\log(\bm{X})]), \\
-        \mathrm{totVar}_a(\bm{X}) &:= \mathbb{E}[d_a^2(\bm{X},\mathrm{cen}_a(\bm{X}))] = \sum_{j=1}^d \mathrm{Var}([\mathrm{clr}(\bm{X})]_j).
+\mathrm{cen}_a(\bm{X}) &:= \argmin_{\bm{y}\in\mathbb{S}_+^{d-1}}\mathbb{E}[d_a^2(\bm{X},\bm{y})] = \mathcal{C}(\exp(\mathbb{E}[\log(\bm{X})]), \\
+\mathrm{totVar}_a(\bm{X}) &:= \mathbb{E}[d_a^2(\bm{X},\mathrm{cen}_a(\bm{X}))] = \sum_{j=1}^d \mathrm{Var}([\mathrm{clr}(\bm{X})]_j).
 \end{align*}
-:::
 
-### Compositional principal components analysis
+### Connections between CoDA and multivariate extremes
 
-Compositional principal component analysis (CoDA-PCA) aims at finding low-dimensional descriptions of compositional data which retain most of the variability in the original data [@aitchisonPrincipalComponentAnalysis1983]. Classical PCA based on Euclidean geometry is ill-suited to this task for two main reasons. First, PCA is typically used as an exploratory tool for understanding the correlation structure among a set of variables, but the compositional constraint places restrictions on this structure and spurious correlations arise when these are not properly accounted for [@aitchisonStatisticalAnalysisCompositional1982]. Second, the Hilbert space in which PCA is conducted should conform to the underlying sample space to facilitate a consistent and interpretable analysis. For example, compositional data often exhibit curvature that cannot be captured by Euclidean straight lines, and Euclidean projections of the data may lie outside of the simplex [@aitchisonPrincipalComponentAnalysis1983].
+Suppose $\bm{X}\in\mathcal{RV}_+^d(\alpha)$ and let $\bm{X}_1,\ldots,\bm{X}_n$ be independent copies of $\bm{X}$. Inference for $H$ is typically based on the extremal angles $\bm{\Theta}_{(1)},\ldots,\bm{\Theta}_{(k)}$ associated with radial threshold exceedances. This process is rigorously justified by the MRV property. Extreme events may be represented by their angles with zero loss of information since the radii $R_{(1)},\ldots,R_{(k)}$ are uninformative for $H$, except insofar as they must exceed a high threshold. Extremal dependence modelling therefore proceeds under an assumption of scale invariance, the first axiom of CoDA. Moreover, choosing the $L_1$-norm implies that $H$ is a distribution on $\mathbb{S}_{+(1)}^{d-1}$ and $\bm{\Theta}_{(1)},\ldots,\bm{\Theta}_{(k)}$ are random compositions in $\mathbb{S}_{+(1)}^{d-1}\setminus \partial\mathbb{S}_{+(1)}^{d-1}$ almost surely. Thus CoDA techniques are readily applicable to the kind of data that arise in such analyses. 
 
-Let $\bm{X}=(X_1,\ldots,X_d)$ denote a $d$-part centred random composition with finite second order moments, that is $\mathrm{cen}_a(\bm{X})=\bm{e}_a$ and $\mathbb{E}[\|\bm{X}\|_a^2]<\infty$. Let $\Gamma=\mathrm{Cov}(\mathrm{clr}(\bm{X}))$ denote the CLR-covariance matrix and $\Gamma=U\Lambda U^T$ its eigendecomposition, where $\Lambda$ is a diagonal matrix of eigenvalues $\lambda_1 \geq \lambda_2 \geq \ldots \geq \lambda_{d-1} \geq \lambda_d = 0$ and $U$ is an orthonormal $d\times d$ matrix whose columns are the eigenvectors $\bm{u}_1,\ldots,\bm{u}_{d-1}\in\mathcal{T}^{d-1}$ and $\bm{u}_d\propto\bm{1}_d$. CoDA-PCA consists in retaining the leading $p\leq d-1$ (back-transformed) eigenvectors to account for a desired proportion of the total variability of $\bm{X}$ [@wangPrincipalComponentAnalysis2015]. For any linear subspace $V\subset\mathbb{S}_+^{d-1}$, let $\Pi_V$ denote the orthogonal projection onto $V$. Then,
-\begin{equation*}
-    \mathcal{V}_p := \mathrm{span}_a(\mathrm{clr}^{-1}(\bm{u}_1),\ldots,\mathrm{clr}^{-1}(\bm{u}_p)) := \left\lbrace \bigoplus_{j=1}^p (\alpha_j \odot \mathrm{clr}^{-1}(\bm{u}_j)) : \alpha_1,\ldots,\alpha_p \in\R \right\rbrace
-\end{equation*}
-minimises the expected squared (Aitchison) reconstruction error among all $p$-dimensional linear simplicial subspaces. The low-dimensional approximation $\Pi_{\mathcal{V}_p}\bm{X}$ accounts for a proportion
-\begin{equation*}
-    \frac{\mathrm{totVar}(\Pi_{\mathcal{V}_p}\bm{X})}{\mathrm{totVar}(\bm{X})} = \frac{\sum_{j=1}^p \lambda_j}{\sum_{j=1}^{d-1}\lambda_j}
-\end{equation*}
-of the total variance. The compositional line $\{\tau \odot \mathrm{clr}^{-1}(\bm{v}_j) : \tau\in\R\}\subset\mathbb{S}_+^{d-1}$ represents the trend described by the $j$th principal component.
+### Comparison between Euclidean and Aitchison distances on the simplex
 
-### Compositional classification based on the $\alpha$-metric
+The Aitchison distance is a simplicial metric (i.e. satisfies the CoDA axioms) and is therefore an appropriate measure of distance between compositions [@aitchisonCriteriaMeasuresCompositional1992]. In general, the Aitchison dissimilarity $\|\bm{x}\ominus\bm{y}\|_a$ between two compositions $\bm{x},\bm{y}\in\mathbb{S}_{+(1)}^{d-1}\setminus \partial\mathbb{S}_{+(1)}^{d-1}$ behaves very differently to $\|\bm{x}-\bm{y}\|_2$. @fig-aitchison-distance provides further insight into this. Each ternary plot graphs the distance between $d_{\bullet}(\bm{x},\bm{y})$ as a function of $\bm{y}$ with respect to some fixed point $\bm{x}$, where $\bullet\in\{a,e\}$. The fixed points are $\bm{x}=(1/3,1/3,1/3)$ (top row) and $\bm{x}=(0.1, 0.45, 0.45)$ (bottom row). The left- and right-hand plots correspond to Euclidean and Aitchison distances, respectively. Consider the plots in the top row. The Euclidean distance is bounded by $\sqrt{2/3}\approx 0.82$, the distance between the centroid and any vertex, since the simplex is a bounded subspace of $\R^d$. In contrast, the Aitchison distance $d_{a}(\bm{x},\bm{y})$ is unbounded. CLR transforms are based on log-ratios and $\log y$ diverges to $\pm\infty$ as $y\to 0$ or $y\to\infty$. Thus, points close to the boundary should be regarded as being close to infinity [@parkKernelMethodsRadial2022]. In the top-left plot, distance decays in a concentric fashion. Consequently, the point labelled A, which may be interpreted as being arbitrarily close to its neighbouring edge, is deemed closer to the centre than point B. On the other hand, the Aitchison contours are decidedly non-concentric and the points C and D are approximately equidistant to the centre. In the bottom plots, the fixed point $\bm{x}=(0.1, 0.45, 0.45)$ is located at the 'hotspot' near the right-hand edge. Intuitively, the Euclidean metric (bottom left) says that point E is very close to $\bm{x}$, while F is much further away. However, in the Aitchison geometry (bottom right) the distance between G and $\bm{x}$ becomes arbitrarily large as G is nudged towards the boundary, so that eventually H is actually closer to $\bm{x}$ than G! 
 
-The $k$-nearest neighbours ($k$-NN) algorithm is a simple, popular non-parametric classifier [@hastieElementsStatisticalLearning2009]. Suppose we observe training samples $(\bm{x}_i,y_i),\ldots,(\bm{x}_n,y_n)$ of $(\bm{X},Y)$, where $Y\in\{0,1\}$ is the binary class label of $\bm{X}$. In the classification step, a new test observation $\bm{x}^\star$ is allocated to the majority class among its $k$ nearest neighbours, with ties broken randomly or according to some other pre-specified criterion. The tuning parameter $k\geq 1$ determines the flexibility of the classification boundaries and is usually selected by a cross-validation procedure.
+These examples demonstrate that, when analysing data on the simplex, the choice of distance metric is of huge practical importance and should not dismissed as merely a mathematical technicality. 
 
-The notion of neighbours implicitly assumes an underlying metric, which is typically taken to be the Euclidean distance. However, if $\bm{X}$ is a compositional random vector, then the CoDA philosophy dictates that a simplicial distance measure should be preferred. The Aitchison metric \eqref{eq-aitchison-metric} is an obvious choice. However, @greenacreChiPowerTransformationValid2024 argues that in the supervised setting, where an objective performance criterion (e.g. the out-of-sample classification error rate) is available, we should not be wedded to this choice. In this spirit, @tsagrisImprovedClassificationCompositional2016 propose a compositional classification algorithm called $\alpha$-transformed compositional $k$-nearest neighbours, henceforth denoted $k$-NN($\alpha$). The additional tuning parameter $\alpha\in\R$ relates to a Box-Cox-type data transformation upon which their proposed simplicial distance is based [@tsagrisDatabasedPowerTransformation2011].
+```{r make-fig-aitchison-distance}
+#| label: fig-aitchison-distance
+#| fig-cap: "Visualisation of the Euclidean distance (left) and Aitchison distance (right) between points on $\\mathbb{S}_{+(1)}^{d-1}$ and the reference points $(1/3, 1/3, 1/3)$ (top) and $(0.1, 0.45, 0.45)$ (bottom). The labelled points A-H are referred to in the body text."
+#| fig-scap: "Blah."
+#| fig-height: 5
+#| message: false
 
-:::{#def-alpha-transformation}
-For $\alpha \neq 0$, the $\alpha$-transformation of a composition $\bm{x}\in\mathbb{S}_+^{d-1}$ is 
-\begin{equation*}
-        \bm{z}_\alpha : \mathbb{S}_+^{d-1} \to \R^d, \qquad \bm{x} \mapsto H \cdot \left(\frac{d (\alpha\odot \bm{x}) - \bm{1}_d}{\alpha}\right),
-\end{equation*}
-where $H$ is any $(d-1)\times d$ real matrix with orthonormal rows. For $\alpha=0$, we define $\bm{z}_0(\bm{x}):=\lim_{\alpha\downarrow 0} \bm{z}_\alpha(\bm{x})$. 
-:::
+library(ggtern)
+res <- readRDS(file.path("scripts", "compositional", "results", "aitchison_distance.RDS"))
 
-Typically $H$ is chosen as the Helmert matrix with its first row removed, but in any case $k$-NN($\alpha$) is invariant to this choice. The $\alpha$-transformation induces a metric on $\mathbb{S}_+^{d-1}$ in a similar fashion to the CLR-transformation.
+fancy_scientific_long <- function(l) { 
+  l %>%
+    format(scientific = TRUE) %>%
+    gsub("^(.*)e", "'\\1'e", .) %>%
+    gsub("e", "%*%10^", .) %>%
+    parse(text = .) 
+}
 
-:::{#def-alpha-metric}
-Let $\bm{x},\bm{y}\in\mathbb{S}_+^{d-1}$ be closed compositions. For $\alpha\in\R$, the $\alpha$-metric is defined as
-\begin{equation*}
-  d_\alpha(\bm{x},\bm{y}) := \|\bm{z}_\alpha(\bm{x}) - \bm{z}_\alpha(\bm{y})\|_e
-\end{equation*}
-:::
+p1 <- ggtern(filter(res, distance_type == "euclidean_distance", ref_point == "centre"), aes(A, B, C)) +
+  geom_point(aes(color = distance), size = 2, alpha = 0.6) +
+  scale_color_gradientn(colors = sequential_hcl(100, palette = "Inferno", rev = TRUE),
+                        trans = "log10", breaks = breaks_log(n = 6), labels = fancy_scientific_long) +
+  geom_mask() +
+  annotate(geom = "text", x = 0.48, y = 0.48, z = 0.04, label = "A", colour = "white") +
+  annotate(geom = "text", x = 0.8, y = 0.1, z = 0.1, label = "B", colour = "white") +
+  labs(color = "") + xlab("") + ylab("") + Llab("") + Tlab("") + Rlab("") +
+  guides(color = guide_colorbar(barheight = unit(4, "cm"), barwidth = unit(0.6, "cm"))) +
+  theme_hidegrid() +
+  theme_hidelabels()
 
-The special cases $\alpha=0$ and $\alpha=1$ correspond to the Aitchison and Euclidean distances (up to a scalar multiple), respectively, that is $d_0(\bm{x},\bm{y})= d_a(\bm{x},\bm{y})$ and $d_1(\bm{x},\bm{y})= d \cdot d_e(\bm{x},\bm{y})$. This means that the family of $k$-NN($\alpha$) classifiers encompasses Euclidean- and Aitchison-based $k$-NN classifiers, but some alternative value of $\alpha$ may be selected if it achieves superior performance. One can easily devise analogues of other classifiers, such as $\alpha$-transformed support vector machines ($\alpha$-SVM) and $\alpha$-transformed random forests ($\alpha$-RF) [@tsagrisImprovedClassificationCompositional2016]. 
+p2 <- ggtern(filter(res, distance_type == "aitchison_distance", ref_point == "centre"), aes(A, B, C)) +
+  geom_point(aes(color = distance), size = 2, alpha = 0.6) +
+  scale_color_gradientn(colors = sequential_hcl(100, palette = "Inferno", rev = TRUE),
+                        trans = "log10", breaks = breaks_log(n = 6), labels = fancy_scientific_long) +
+  geom_mask() +
+  annotate(geom = "text", x = 0.46, y = 0.46, z = 0.08, label = "C", colour = "white") +
+  annotate(geom = "text", x = 0.8, y = 0.1, z = 0.1, label = "D", colour = "white") +
+  labs(color = "") + xlab("") + ylab("") + Llab("") + Tlab("") + Rlab("") +
+  guides(color = guide_colorbar(barheight = unit(4, "cm"), barwidth = unit(0.6, "cm"))) +
+  theme_hidegrid() +
+  theme_hidelabels()
+
+p3 <- ggtern(filter(res, distance_type == "euclidean_distance", ref_point == "off_centre"), aes(A, B, C)) +
+  geom_point(aes(color = distance), size = 2, alpha = 0.6) +
+  scale_color_gradientn(colors = sequential_hcl(100, palette = "Inferno", rev = TRUE),
+                        trans = "log10", breaks = breaks_log(n = 6), labels = fancy_scientific_long) +
+  geom_mask() +
+  annotate(geom = "text", x = 0.02, y = 0.49, z = 0.49, label = "E", colour = "white") +
+  annotate(geom = "text", x = 0.6, y = 0.2, z = 0.2, label = "F", colour = "white") +
+  labs(color = "") + xlab("") + ylab("") + Llab("") + Tlab("") + Rlab("") +
+  guides(color = guide_colorbar(barheight = unit(4, "cm"), barwidth = unit(0.6, "cm"))) +
+  theme_hidegrid() +
+  theme_hidelabels()
+
+p4 <- ggtern(filter(res, distance_type == "aitchison_distance", ref_point == "off_centre"), aes(A, B, C)) +
+  geom_point(aes(color = distance), size = 2, alpha = 0.6) +
+  scale_color_gradientn(colors = sequential_hcl(100, palette = "Inferno", rev = TRUE),
+                        trans = "log10", breaks = breaks_log(n = 6), labels = fancy_scientific_long) +
+  geom_mask() +
+  annotate(geom = "text", x = 0.02, y = 0.49, z = 0.49, label = "G", colour = "white") +
+  annotate(geom = "text", x = 0.6, y = 0.2, z = 0.2, label = "H", colour = "white") +
+  labs(color = "") + xlab("") + ylab("") + Llab("") + Tlab("") + Rlab("") +
+  guides(color = guide_colorbar(barheight = unit(4, "cm"), barwidth = unit(0.6, "cm"))) +
+  theme_hidegrid() +
+  theme_hidelabels()
+
+ggtern::grid.arrange(p1, p2, p3, p4, ncol = 2)
+detach(package:ggtern, unload = TRUE)
+```
 
 ## Compositional PCA for extremes
 
-### Framework and motivation
+### Motivation
 
-Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathrm{RV}_+^d$ is an $\R_+^d$-valued random vector with tail index $\alpha$. Let $H_{\bm{X}}$ denote the normalised angular measure of $\bm{X}$ when its radial and angular components are defined with respect to some norm $\|\cdot\|$, that is
+Compositional principal component analysis (CoDA-PCA) aims at finding low-dimensional representations of compositional data via projections onto linear subspaces of the Aitchison simplex [@aitchisonPrincipalComponentAnalysis1983]. It is inadvisable to apply classical PCA to compositions for three reasons. First, spurious correlations arising from the compositional constraint mean it is unreliable as an exploratory tool for analysing the correlation structure between variables [@aitchisonStatisticalAnalysisCompositional1982]. Second, compositional data often exhibit curvature that cannot be captured by traditional linear methods, leading to a loss of efficiency [@aitchisonPrincipalComponentAnalysis1983]. Third, interpretability is hindered by the fact that low-dimensional projections of the data are not guaranteed to lie in the simplex. These problems are solved by performing PCA in the Aitchison Hilbert space. 
+
+### Methodology
+
+Suppose $\bm{X}\in\mathcal{RV}_+^d(\alpha)$ and let $H$ be the angular measure with respect to the $L_1$-norm $\|\cdot\|_1$. Let $\bm{X}_1,\ldots,\bm{X}_n$ be independent random vectors with the same distribution as $\bm{X}$. Following the spirit of @dreesPrincipalComponentAnalysis2021, we seek to minimise the limiting mean-squared reconstruction error associated with the extremal angles $\bm{\Theta}_{(1)},\ldots,\bm{\Theta}_{(k)}$ upon projecting onto low-dimensional linear subspace. For any Aitchison subspace $\mathcal{S}\subset\mathbb{S}_{+(1)}^{d-1}$, let $\Pi_{\mathcal{S}}$ denote the orthogonal projection (matrix) onto $\mathcal{S}$ and define the true asymptotic risk
 \begin{equation*}
-\mathbb{P}(\bm{X}/\|\bm{X}\| \in \cdot \mid \|\bm{X}\| > t) \to H_{\bm{X}}(\cdot), \qquad (t\to\infty).
+    R(\mathcal{S}) := \mathbb{E}_{H}[\| \bm{\Theta} \ominus \Pi_{\mathcal{S}} \bm{\Theta} \|_a^2].
 \end{equation*}
-The goal is to find a (linear) subspace on which $H_{\bm{X}}$ is supported (or at least highly concentrated). Specifically, we assume that $H_{\bm{X}}$ is supported on a linear subspace $V^\star$ of dimension $p^\star < d$. 
+For some $1\leq p \leq d-1$, let $\mathcal{V}_p$ be the class of linear subspaces of dimension $p$ in $\mathbb{S}_{+(1)}^{d-1}$. As usual, the minimisers of $R(\mathcal{S})$ over $\mathcal{V}_p$ corresponds to the principal eigenspace of a covariance matrix. The following result explains how the CoDA-PCA procedure outlined by @aitchisonStatisticalAnalysisCompositional1982 applies to our setting. 
 
-The standard technique for identifying supporting (linear) subspaces, given iid observations of $\bm{X}$, is principal components analysis (PCA). If $\|\cdot\|=\|\cdot\|_1$, then $H_{\bm{X}}$ is a distribution on the unit simplex and correspondingly $\bm{X}/\|\bm{X}\|_1$ is a random composition. This opens up the possibility of employing CoDA-PCA for this task. On the other hand, taking $\|\cdot\|=\|\cdot\|_2$ results in a random vector $\bm{X}/\|\bm{X}\|_2$ and limiting distribution $H_{\bm{X}}$ that are not compositional, but rather circular/spherical. They are also restricted to the non-negative orthant, precluding the use of techniques fro the field of directional/spherical statistics [@fisherStatisticalAnalysisSpherical1987]. @dreesPrincipalComponentAnalysis2021 sweep this difficulty under the rug: they ignore the unit-norm constraint, and apply standard PCA to the the pseudo-angles as though they were points in $\R^d$. By grounding their method on Euclidean norms and distances they are able to derive statistical guarantees concerning reconstruction errors, i.e. the error incurred in representing an observation by its projection into a principal subspace. However, the utility of such guarantees may be called into question. First, for compositional data on the simplex, arbitrarily small Euclidean reconstruction errors can be arbitrarily large in the Aitchison metric. The discrepancy between the two metrics is most pronounced near the simplex boundary [@parkKernelMethodsRadial2022]. Accurate modelling of the angular measure in such regions is critical for risk assessment. Second, constrained data often exhibit curvature that cannot be described by standard linear dimension reduction techniques -- see Figure 1b in @aitchisonPrincipalComponentAnalysis1983 for an illustration of this phenomenon. Ultimately, this limits the dimension reducing capability of the method, since additional basis vectors are needed to reproduce the curvature. This leads us to suspect that, while the subspace detected by @dreesPrincipalComponentAnalysis2021 is optimal among a particular class of subspaces, it is not optimal with respect to a different (arguably more natural) class.
-
-### CoDA-PCA for extremes
-
-Fix $\|\cdot\|=\|\cdot\|_1$ and let $R:=\|\bm{X}\|_1$ and $\bm{\Theta}:=\bm{X}/\|\bm{X}\|_1$ denote the radial and angular components of $\bm{X}$. In this section, algebraic-geometric terms (e.g. linear, orthogonal, dimension, etc.) are to be interpreted in the Aitchison sense, unless stated otherwise. For any linear subspace $V\subset\mathbb{S}_+^{d-1}$, let $\Pi_V$ denote the orthogonal projection (matrix) onto $V$. In the spirit of @dreesPrincipalComponentAnalysis2021, we define the risk associated with $V$ by
+:::{#prp-coda-pca-true-risk-minimiser}
+Let $\tilde{\bm{\Theta}}\sim d^{-1}H$ be a random composition. Assume $\tilde{\bm{\Theta}}$ is centred (without loss of generality) and has finite total variance. Let $\Gamma=\mathrm{Cov}(\mathrm{clr}(\tilde{\bm{\Theta}}))$ be the CLR-covariance matrix of $\tilde{\bm{\Theta}}$ and $\Gamma=\Omega D\Omega^T$ its eigendecomposition, where $D$ is a diagonal matrix of eigenvalues $\lambda_1 \geq \lambda_2 \geq \ldots \geq \lambda_{d-1} \geq \lambda_d = 0$ and $\Omega$ is an orthonormal $d\times d$ matrix whose columns are the eigenvectors $\bm{\omega}_1,\ldots,\bm{\omega}_{d-1}\in\mathcal{T}^{d-1}$ and $\bm{\omega}_d\propto\bm{1}_d$. The back-transformed eigenvectors $\{\bm{u}_1,\ldots,\bm{u}_{d-1}\}:=\{\mathrm{clr}^{-1}(\bm{\omega}_1),\ldots,\mathrm{clr}^{-1}(\bm{\omega}_{d-1})\}$ form an orthonormal basis of $\mathbb{S}_{+(1)}^{d-1}$ and for any $1\leq p \leq d-1$, 
 \begin{equation*}
-    R_{\infty}(V) := \mathbb{E}_{\bm{\Theta}\sim H_{\bm{X}}}[\| \bm{\Theta} \ominus \Pi_V \bm{\Theta} \|_a^2].
+\mathcal{S}_p^\star := \mathrm{span}\{\bm{u}_1,\ldots,\bm{u}_{p}\} = \left\lbrace \bigoplus_{j=1}^p (\tau_j \odot \bm{u}_j) : \tau_1,\ldots,\tau_p \in\R \right\rbrace
 \end{equation*}
-The risk $R_{\infty}(V)$ represents the expected squared reconstruction error under the limit model when $\bm{\Theta}$ is approximated by its projection $\Pi_V\bm{\Theta}$. Our working assumption is that there exists a $p^\star$-dimensional subspace $V^\star\subset\mathbb{S}_+^{d-1}$ such that $R_{\infty}(V^\star)=0$ and $R_{\infty}(V)>0$ for any subspace $V$ with $\mathrm{dim}(V)<p^\star$. In applications this assumption is only likely to hold approximately, introducing the familiar trade-off between dimension reduction and reconstruction error. Of course, the limit model is unknown and we cannot access samples from it, so it is impossible to compute $V^\star$ by minimising $R_{\infty}$ directly. Instead, we introduce the conditional risk of $V$ at a finite threshold $t>0$, defined by
-\begin{equation*}
-    R_t(V) := \mathbb{E}[ \| \bm{\Theta} \ominus \Pi_V \bm{\Theta} \|_a^2 \mid R > t].
-\end{equation*}
-Since the angular measure represents the limiting conditional distribution of angles above high thresholds, we intuitively expect that a minimiser $V_t^\star$ of $R_t$ is close to a minimiser of $R_\infty$, provided $t$ is sufficiently large. We estimate $V_t^\star$ by empirical risk minimisation. Let $\bm{X}_1,\ldots,\bm{X}_n$ be independent copies of $\bm{X}$ and define $R_i=\|\bm{X}_i\|_1$ and $\bm{\Theta}_i=\bm{X}_i/\|\bm{X}_i\|_1$ for $i=1,\ldots,n$. The empirical (conditional) risk is defined by
-\begin{equation}\label{eq-pca-empirical-risk}
-    \hat{R}_t(V) := \frac{1}{\sum_{i=1}^n \ind\{R_i > t\}} \sum_{i=1}^n \| \bm{\Theta}_i \ominus \Pi_V \bm{\Theta}_i \|_a^2 \ind\{R_i > t\}.
-\end{equation}
-The following result explains how to compute minimisers of these risk functions.
-
-:::{#prp-coda-pca-extremes-risk-minimisers}
-Fix $t>0$. Without loss of generality, assume that $\bm{\xi}_t := \mathrm{cen}_a(\bm{\Theta} \mid R >t) = \bm{e}_a$, i.e. $\bm{\Theta}$ is conditionally compositionally centred given $R>t$. Finally, assume that $\mathbb{E}[\|\bm{\Theta}\|_a^2 \mid R > t]<\infty$. 
-\begin{enumerate}
-    \item Let $\Sigma_t = \mathrm{Cov}(\mathrm{clr}(\bm{\Theta}) \mid R >t)$ be the conditional CLR-covariance matrix of $\bm{\Theta}$ given $R>t$. Suppose $\Sigma_t$ has eigenvalues $\lambda_1 \geq \lambda_2 \geq \ldots \geq \lambda_{d-1}\geq \lambda_d =0$ and corresponding eigenvectors $\bm{u}_1,\ldots,\bm{u}_d\in\R^d$. Then $V_p=\mathrm{span}_a(\{\mathrm{clr}^{-1}(\bm{u}_j) : j=1,\ldots,p\})$ minimises $R_t(V)$ among all linear subspaces $V$ of dimension $p$. It is the unique minimiser if $\lambda_p > \lambda_{p+1}$.
-      \item Let $k=\sum_{i=1}^n \ind\{R_i > t\}$  and suppose the empirical conditional CLR-covariance matrix $\hat{\Sigma}_t = \frac{1}{k}\sum_{i=1}^k \mathrm{clr}(\bm{\Theta}_i)\mathrm{clr}(\bm{\Theta}_i)^T\ind\{R_i > t\}$ has eigenvalues $\hat{\lambda}_1 \geq \hat{\lambda}_2 \geq \ldots \geq \hat{\lambda}_{d-1}\geq \hat{\lambda}_d =0$ and corresponding eigenvectors $\hat{\bm{u}}_1,\ldots,\hat{\bm{u}}_d\in\R^d$. Then $\hat{V}_p=\mathrm{span}_a(\{\mathrm{clr}^{-1}(\hat{\bm{u}}_j) : j=1,\ldots,p\})$ minimises $\hat{R}_t(V)$ among all linear subspaces $V$ of dimension $p$. It is the unique minimiser if $\hat{\lambda}_p > \hat{\lambda}_{p+1}$.
-\end{enumerate}
+minimises $R$ over $\mathcal{V}_p$.
 :::
 
 ::: {.proof}
-Note that $\bm{Y}_t:=\mathrm{clr}(\bm{\Theta})\mid (R>t)$ is a random vector taking values in $\mathcal{T}^{d-1}\subset\R^d$ and 
+Let $\tilde{\bm{Y}}:=\mathrm{clr}(\tilde{\bm{\Theta}})$. By assumption, $\tilde{\bm{Y}}$ has zero mean and finite second order moments, since
 \begin{equation*}
-      \mathbb{E}[\|\bm{Y}_t\|_2^2] = \mathbb{E}[\|\mathrm{clr}(\bm{\Theta})\|_2^2\mid (R>t)] = \mathbb{E}[\|\bm{\Theta}\|_a^2 \mid R>t] < \infty,
+\mathbb{E}[\tilde{\bm{Y}}] 
+= \argmin_{\bm{\mu}}\mathbb{E}[d_e^2(\tilde{\bm{Y}},\bm{\mu})] 
+= \argmin_{\bm{\mu}}\mathbb{E}[d_a^2(\tilde{\bm{\Theta}},\mathrm{clr}^{-1}(\bm{\mu}))] 
+= \mathrm{clr}(\bm{e}_a) 
+= \bm{0}
 \end{equation*}
-by assumption. Thus $\bm{Y}_t$ satisfies the usual assumptions of unconstrained PCA in $\R^d$ and standard results, e.g. Theorem 5.3 in @seberMultivariateObservations1984, concerning minimiser(s) of $V\mapsto\mathbb{E}[\|\Pi_V \bm{Y}_t - \bm{Y}_t\|_2^2]$ yield (i). The argument follows analogously for (ii), except now $\bm{Y}_t$ following the empirical distribution of the CLR-transformed angular components associated with radial threshold exceedances.
+and 
+\begin{equation*}
+\mathrm{Var}(\tilde{Y}_j) = \mathrm{Var}([\mathrm{clr}(\tilde{\bm{\Theta}})]_j)) < \infty.
+\end{equation*}
+Using well-known results from classical PCA -- e.g. Theorem 5.3 in @seberMultivariateObservations1984 -- we have that 
+\begin{equation*}
+\{\bm{\omega}_1,\ldots,\bm{\omega}_p\} = \argmin_{\bm{v}_1,\ldots,\bm{v}_p\in\R^d} \mathbb{E}\left[\|\tilde{\bm{Y}} - \Pi_{\mathrm{span}\{\bm{v}_1,\ldots,\bm{v}_p\}}\tilde{\bm{Y}}\|_2^2\right].
+\end{equation*}
+Observe that for any scalar $a\in\R$ and compositional vectors $\bm{x},\bm{y}\in\mathbb{S}_{+(1)}^{d-1}$,
+\begin{equation*}
+\mathrm{clr}((a\odot\bm{x}) \oplus \bm{y}) = a\,\mathrm{clr}(\bm{x}) + \mathrm{clr}(\bm{y})
+\end{equation*}
+and therefore
+\begin{align*}
+\{\bm{\omega}_1,\ldots,\bm{\omega}_p\} 
+&=\argmin_{\bm{v}_1,\ldots,\bm{v}_p\in\R^d} \mathbb{E}\left[\|\tilde{\bm{Y}} - \Pi_{\mathrm{span}\{\bm{v}_1,\ldots,\bm{v}_p\}}\tilde{\bm{Y}}\|_2^2\right] \\
+&= \argmin_{\bm{v}_1,\ldots,\bm{v}_p\in\R^d} \mathbb{E}[d_e^2(\tilde{\bm{Y}},\Pi_{\mathrm{span}\{\bm{v}_1,\ldots,\bm{v}_p\}}\tilde{\bm{Y}})] \\
+&= \argmin_{\bm{v}_1,\ldots,\bm{v}_p\in\R^d} \mathbb{E}[d_a^2(\tilde{\bm{\Theta}},\mathrm{clr}^{-1}(\Pi_{\mathrm{span}\{\bm{v}_1,\ldots,\bm{v}_p\}}\tilde{\bm{Y}}))] \\
+&= \argmin_{\bm{v}_1,\ldots,\bm{v}_p\in\R^d} \mathbb{E}\left[d_a^2\left(\tilde{\bm{\Theta}},\mathrm{clr}^{-1}\left(\sum_{j=1}^p \langle \tilde{\bm{Y}},\bm{v}_j \rangle \bm{v}_j\right)\right)\right] \\
+&= \argmin_{\bm{v}_1,\ldots,\bm{v}_p\in\R^d} \mathbb{E}\left[d_a^2\left(\tilde{\bm{\Theta}},\bigoplus_{j=1}^p \langle \tilde{\bm{\Theta}},\mathrm{clr}^{-1}(\bm{v}_j) \rangle_a \odot \mathrm{clr}^{-1}(\bm{v}_j)\right)\right].
+\end{align*}
+This optimisation depends on each vector $\bm{v}_j$ only through $\mathrm{clr}^{-1}(\bm{v}_j)$, so can map the problem to the simplex, yielding
+\begin{align*}
+\{\mathrm{clr}^{-1}(\bm{\omega}_1),\ldots,\mathrm{clr}^{-1}(\bm{\omega}_p)\} 
+&= \argmin_{\bm{v}_1,\ldots,\bm{v}_p\in\mathbb{S}_{+(1)}^{d-1}} \mathbb{E}\left[d_a^2\left(\tilde{\bm{\Theta}},\bigoplus_{j=1}^p \langle \tilde{\bm{\Theta}},\bm{v}_j \rangle_a \odot \bm{v}_j\right)\right] \\
+&= \argmin_{\bm{v}_1,\ldots,\bm{v}_p\in\mathbb{S}_{+(1)}^{d-1}} R(\mathrm{span}\{\bm{v}_1,\ldots,\bm{v}_p\})
+\end{align*}
+Since $\mathcal{S}_p^\star = \mathrm{span}\{\mathrm{clr}^{-1}(\bm{\omega}_1),\ldots,\mathrm{clr}^{-1}(\bm{\omega}_p)\}$, this completes the proof.
 :::
 
-Minimising the expected angular reconstruction error is natural, but does not guarantee good performance in terms of estimation of the angular measure. Thus, we additionally consider the performance of the standard non-parametric estimator of the angular measure based on the compressed data versus the raw observations. For a given threshold $t>0$, the empirical angular measure is given by
-\begin{equation}\label{eq-pca-empirical-angular-measure-full}
-\hat{H}_{\bm{X}} = \frac{1}{\sum_{i=1}^n \ind\{R_i > t\}} \sum_{i=1}^n \delta_{\bm{\Theta}_i} \ind\{R_i > t\}.
-\end{equation}
-If the pseudo-angles are first projected onto a subspace $V$, then we obtain an alternative estimator
-\begin{equation}\label{eq-pca-empirical-angular-measure-V}
-\hat{H}_{\bm{X},V} = \frac{1}{\sum_{i=1}^n \ind\{R_i > t\}} \sum_{i=1}^n \delta_{\Pi_V\bm{\Theta}_i} \ind\{R_i > t\}.
-\end{equation}
-The probabilities associated with certain joint tail events can be expressed in terms of the angular measure, for example:
-\begin{align}
-\lim_{u\to\infty}\mathbb{P}(\min\bm{X} > u \mid \|\bm{X}\|_1 > u) &= \int_{\mathbb{S}_+^{d-1}}\left(\min_{j=1,\ldots,d}\theta_j\right)^\alpha \, H_{\bm{X}}(\dee\bm{\theta}), \label{eq-prob-min-H} \\
-\lim_{u\to\infty}\mathbb{P}(\max\bm{X} > u \mid \|\bm{X}\|_1 > u) &= \int_{\mathbb{S}_+^{d-1}}\left(\max_{j=1,\ldots,d}\theta_j\right)^\alpha \, H_{\bm{X}}(\dee\bm{\theta}). \label{eq-prob-max-H}
-\end{align}
-These probabilities indicate how the components' contribution to extreme events are spread. If the underlying data-generating process is known, then the true values can be computed analytically or via Monte Carlo simulation. Replacing $H_{\bm{X}}$ with $\hat{H}_{\bm{X}}$ or $\hat{H}_{\bm{X},V}$ yields empirical estimates of these probabilities, the errors in which can be used to quantify the performance of our low-dimensional models. If the generative process is unknown, then we can still use the $\hat{H}_{\bm{X}}$-based estimate as a benchmark (based on all available information) against which to compare estimates obtained via $\hat{H}_{\bm{X},V}$.
+The finite total variance condition prohibits the angular measure from placing mass on the simplex boundary and restricts how much mass may be concentrated near the boundary. A sufficient condition is $\mathrm{Var}_H(\log (\Theta_i/\Theta_j))<\infty$ for all $i\neq j$. No such condition is required by @dreesPrincipalComponentAnalysis2021 because finite variances are guaranteed by boundedness of the simplex in $\R^d$. The assumption that $\tilde{\bm{\Theta}}$ is centred at the simplex barycentre is not equivalent to the moment constraint \eqref{eq-H-mean-constraints} on $H$. Informally, the moment constraints dictate the arithmetic mean of $H$, whereas the compositional centre represents the geometric mean. Finally, we point out that $\mathrm{rank}(\Gamma)=d-1$ in accordance with the dimensions of $\mathbb{S}_{+(1)}^{d-1}$ and $\mathcal{T}^{d-1}$. For compositional PCA we need only consider reconstructions up to rank $d-1$, whereas @dreesPrincipalComponentAnalysis2021 and @cooleyDecompositionsDependenceHighdimensional2019 require all $d$ components to be retained to guarantee perfect reconstruction (in general).
+
+In practice $H$ is unknown, so we must resort to minimising an empirical risk based on the $k$ most extreme data points. The empirical risk is defined by
+\begin{equation*}
+    \hat{R}(\mathcal{S}) 
+    := \hat{\mathbb{E}}_{H}[\|\bm{\Theta}-\Pi_{\mathcal{S}}\bm{\Theta}\|_a^2] 
+    = \frac{d}{k}\sum_{i=1}^k \|\bm{\Theta}_{(i)}-\Pi_{\mathcal{S}}\bm{\Theta}_{(i)}\|_a^2.
+\end{equation*}
+By replacing $H$ with $\hat{H}$ in @prp-coda-pca-true-risk-minimiser, one can show that the minimiser of $\hat{R}$ in $\mathcal{V}_p$ is simply the principal subspace
+\begin{equation*}
+\hat{S}_p=\mathrm{span}\{\hat{\bm{u}}_1,\ldots,\hat{\bm{u}}_p\},
+\end{equation*}
+where $\hat{\bm{u}}_1,\ldots,\hat{\bm{u}}_{d-1}\in \mathbb{S}_{+(1)}^{d-1}$ are the back-transformed principal eigenvectors of the empirical CLR-covariance matrix [@egozcueModellingCompositionalData2018]
+\begin{equation*}
+\hat{\Gamma} = \frac{1}{k-1} \sum_{i=1}^k \mathrm{clr}(\bm{\Theta}_{(i)} \ominus \bar{\bm{\Theta}})\mathrm{clr}(\bm{\Theta}_{(i)} \ominus \bar{\bm{\Theta}})^T, \qquad \bar{\bm{\Theta}} = \frac{1}{k}\bigoplus_{i=1}^{k} \bm{\Theta}_{(i)}.
+\end{equation*}
+
+Our setup is identical to @dreesPrincipalComponentAnalysis2021, except that all algebraic-geometric concepts (linear, projection, orthogonal, etc.) are interpreted in the Aitchison sense. This subtle change fundamentally alters the problem in two different ways. While we still optimise over the class of linear subspaces, we refer to a different notion of linearity to @dreesPrincipalComponentAnalysis2021. Linear trends are now represented by compositional straight lines $\{\bm{a} \oplus (\tau \odot \bm{b}):\tau\in\R\}\subset\mathbb{S}_{+(1)}^{d-1}$ for some $\bm{a},\bm{b}\in\mathbb{S}_{+(1)}^{d-1}$. From a Euclidean perspective these 'lines' are curved, so compositional PCA is able to capture features of the data that appear non-linear -- see Figure 1b in @aitchisonPrincipalComponentAnalysis1983 for an illustration of this phenomenon. The second crucial difference is that our objective criterion perceives reconstruction errors in the Aitchison rather than Euclidean metric. Section XX showed that these two measures can produce wildly different assessments of how close two points are; in fact, for any $\epsilon>0$ and $\varepsilon>0$, there exists $\bm{x},\bm{y}\in\mathbb{S}_{+(1)}^{d-1}$ such that $d_e(\bm{x},\bm{y})<\epsilon$ and $d_a(\bm{x},\bm{y})>\epsilon$. The Aitchison loss is especially sensitive to reconstruction errors near the boundary, steering the optimiser to target these regions more closely.
 
 ### Simulation experiments
 
-We now perform a series of simulation experiments comparing CoDA-PCA against the procedure of @dreesPrincipalComponentAnalysis2021, herein referred to as DS-PCA for brevity. 
+We now compare the performance of our proposed procedure against @dreesPrincipalComponentAnalysis2021, Herein referred to as CoDA-PCA and DS-PCA, respectively. Let $\bm{X}\in\mathcal{RV}_+^{d}(1)$ be on 1-Fréchet margins with angular measure $H$. We generate independent realisations $\bm{x}_1,\ldots,\bm{x}_n$ of $\bm{X}$ and, for a fixed level $k$, compute the optimal linear subspaces $\hat{\mathcal{S}}_1,\ldots,\hat{\mathcal{S}}_{p-1}$ using CoDA-PCA and DS-PCA. 
 
-One complication that arises is that CoDA-PCA and DS-PCA define angles with respect to different norms, so the sets of reconstructions are not immediately comparable. We resolve this by performing DS-PCA in the usual way, but projecting all points onto the simplex via self-normalisation with respect to $\|\cdot\|_1$ before computing the performance metrics. This ensures that the metrics are well-defined, except for DS-PCA projections that lie outside of the positive orthant. In such instances, the projected vector cannot properly be called a composition and the Aitchison reconstruction error is undefined. One might consider projecting it to the nearest point on the simplex, but this would lie on the boundary resulting in infinite Aitchison distances. In the absence of better options, we elect to discard such points. Arguably we are being charitable to DS-PCA by not directly penalising its tendency to produce invalid angles.
+#### Performance metrics
 
-To guard against overfitting, we compute the empirical risk $\hat{R}_t$ across an unseen validation set, so that we are actually measuring out-of-sample reconstruction error. This ensures that the dimension reducing capabilities of the PCA model generalise to future observations. Specifically, for a fixed threshold $t>$, we detect the set of principal subspaces by applying @prp-coda-pca-extremes-risk-minimisers based on independent training samples $\bm{X}_1,\ldots,\bm{X}_n$, but compute the empirical risk \eqref{eq-pca-empirical-risk} on an unseen validation set $\bm{X}_1^\star,\ldots,\bm{X}_{n^\star}^\star$ of independent observations using the same threshold. The threshold $t$ is selected by specifying a desired number of extreme observations $k$ and setting $t:=R_{(k+1)}$, the $k+1$ order statistic of $\{R_1,\ldots,R_n\}$. Since we work in a simulation setting, the number of threshold exceedances in the validation set, roughly $n^\star k/n$, can be made arbitrarily large by increasing $n^\star$ accordingly.
+We assess performance in two ways: mean-squared reconstruction error (MSRE) and tail event probability estimation. To quantify reconstruction error we use the asymptotic risk of $\mathcal{S}$ under the Aitchison and Euclidean metrics, i.e.
+\begin{align*}
+\mathcal{L}_a(\mathcal{S}) &= \mathbb{E}_H[\|\bm{\Theta} \ominus \Pi_{\mathcal{S}}\bm{\Theta}\|_a^2 \ind\{\Pi_{\mathcal{S}}\bm{\Theta}\in(0,\infty)^d\}], \\
+\mathcal{L}_e(\mathcal{S}) &= \mathbb{E}_H[\|\bm{\Theta} - \Pi_{\mathcal{S}}\bm{\Theta}\|_2^2\}].
+\end{align*}
+These quantities can be computed to arbitrary precision using Monte Carlo estimation. To sample from the true angular measure we employ the \texttt{rmevspec} function in the \texttt{mev} package. The inclusion of $\ind\{\Pi_{\mathcal{S}}\bm{\Theta}\in(0,\infty)^d\}$ ensures that $\mathcal{L}_a$ is well-defined in cases where DS-PCA yields reconstructed vectors that lie outside of the positive orthant. In such cases, the Aitchison distance is undefined. Naively, one might consider projecting invalid reconstructions on to the positive orthant, but this does not really resolve the core issue. Naturally such points should be sent somewhere near the coordinate axes, but by adjusting *how close* you place the point the Aitchison loss can be made arbitrarily large. Instead, we simply ignore such points. Arguably this choice favours DS-PCA, since we do not penalise its failure to produce valid reconstructions. 
+
+Measuring reconstruction error gives a high-level summary of how closely the low-dimensional approximation of $H$ resembles the true measure over its entire support. The second class of performance metrics focusses on assessing performance in specific regions of the simplex that are relevant for estimating tail event probabilities. Consider the estimands
+\begin{align}
+p_{\min} &:= \lim_{u\to\infty}\mathbb{P}(\min\bm{X} > u \mid \|\bm{X}\|_1 > u) = \mathbb{E}_{H}\left[\min_{j=1,\ldots,d}\Theta_j\right], \label{eq-prob-min-H} \\
+p_{\max} &:= \lim_{u\to\infty}\mathbb{P}(\max\bm{X} > u \mid \|\bm{X}\|_1 > u) = \mathbb{E}_{H}\left[\max_{j=1,\ldots,d}\Theta_j\right]. \label{eq-prob-max-H}
+\end{align}
+These probabilities specify the minimal and maximal contributions of variable to the norm. The true probabilities may be computed via Monte Carlo simulation or analytically. To assess a principal subspace $\hat{\mathcal{S}}_p$, we compute estimates of $p_{\min}$ and $p_{\max}$ using the empirical angular measure *after* projecting the data onto $\hat{\mathcal{S}}_p$. Specifically, for any subspace $\mathcal{S}$ we define
+\begin{equation*}
+\hat{H}_{\mathcal{S}}(\cdot) := \frac{d}{\sum_{i=1}^k \ind\{\Pi_{\mathcal{S}}\bm{\Theta}_{(i)}\in(0,\infty)^d\}} \sum_{i=1}^k \delta_{\Pi_{\mathcal{S}}\bm{\Theta}_{(i)}}(\cdot)\ind\{\Pi_{\mathcal{S}}\bm{\Theta}_{(i)}\in(0,\infty)^d\}
+\end{equation*}
+and compute
+\begin{equation*}
+\hat{p}_{\min}(\mathcal{S}) := \mathbb{E}_{\hat{H}_{\mathcal{S}}}\left[\min_{j=1,\ldots,d}\Theta_j\right], \qquad
+\hat{p}_{\max}(\mathcal{S}) := \mathbb{E}_{\hat{H}_{\mathcal{S}}}\left[\max_{j=1,\ldots,d}\Theta_j\right]. 
+\end{equation*}
+The performance of each dimension reduction method is assessed by examining the sequence of estimates $\hat{p}_{\min}(\hat{\mathcal{S}}_1),\ldots,\hat{p}_{\min}(\hat{\mathcal{S}}_{p-1})$ and comparing against the true probability $p_{\min}$ and the (uncompressed) empirical estimate $\hat{p}_{\min}(\mathbb{S}_{+(1)}^{d-1})$. 
 
 #### Max-linear model with compositionally colinear factors
 
-Our first experiment is based on the max-linear model with a parameter matrix that is carefully constructed to favour CoDA-PCA. This example is somewhat contrived, but illustrates the many benefits of our proposed methodology. To facilitate visualisation we restrict ourselves to $d=3$ dimensions, but the construction and our findings extend to higher dimensions. 
+Our first experiment involves max-linear random vectors. The parameter matrix $A$ will be constructed in a particular way so as to nicely illustrates the benefits of our proposed approach. We stock the factor matrix $A\in\R_+^{d\times q}$ with power-perturbation combinations of linearly independent compositions $\bm{v}_1,\ldots,\bm{v}_s\in\mathbb{S}_{+(1)}^{d-1}$, that is $A=(\bm{a}_1,\ldots,\bm{a}_q)$ and for each $j=1,\ldots,q$,
+\begin{equation*}
+\mathcal{C}\bm{a}_j = \bigoplus_{l=1}^s (\beta_{jl}\odot \bm{v}_l) 
+\end{equation*}
+for some scalars $\beta_{j1},\ldots,\beta_{js}\in\R$. Then the angular measure of the associated max-linear random vector $\bm{X}\in\mathcal{RV}_+^d(1)$ is
+\begin{equation*}
+    H(\cdot) = \sum_{j=1}^q \|\bm{a}_j\|_1 \delta_{\bigoplus_{l=1}^s (\beta_{jl}\odot \bm{v}_l)}(\cdot)
+\end{equation*}
+The support of $H$ is spanned (in the Aitchison geometry) by $\bm{v}_1,\ldots,\bm{v}_s$. If $s<d-1$, then the angular measure may be represented by a low-dimensional object with no information loss incurred.
 
-Let $\bm{u}^\star\in\mathbb{S}_+^{d-1}$ be a composition and suppose $A=(\bm{a}_1,\ldots,\bm{a}_q)\in\R_+^{d\times q}$ is such that, for all $j=1,\ldots,d$, there exists $\beta_j\in\R$ such that $\mathcal{C}\bm{a}_j = \beta_j \odot \bm{u}^\star$. In other words, the $q\geq 1$ columns of $A$ lie on the compositional straight line through $\bm{e}_a$ in the direction $\bm{u}^\star$. Let $\bm{Z}=(Z_1,\ldots,Z_q)$ with $Z_1,\ldots,Z_q$ independent standard Fréchet random variables. Suppose $\bm{X}=(X_1,\ldots,X_d)$ is defined by either of the following:
-\begin{align}
-\bm{X} &= A \circ \bm{Z} := \tau(A \tau^{-1}(\bm{Z})), \label{eq-maxlin-rv} \\
-\bm{X} &= A \times_{\max} \bm{Z} := \left(\max_{j=1,\ldots,q}a_{1j}Z_j,\ldots,\max_{j=1,\ldots,q}a_{dj}Z_j\right), \label{eq-maxlin-ms}
-\end{align}
-where $\tau:\R\to(0,\infty)$ is the softplus function defined by
-\begin{equation*}
-\tau(y) := \log(1+\exp(y)).
-\end{equation*}
-Based on the discussion in Section 3 of @cooleyDecompositionsDependenceHighdimensional2019, we refer to random vectors generated by \eqref{eq-maxlin-rv} and \eqref{eq-maxlin-ms} as RV-max-linear and MS-max-linear, respectively. In either case, $\bm{X}$ is multivariate regularly varying with tail index $\alpha=1$ and common angular measure 
-\begin{equation*}
-    H_{\bm{X}}(\cdot) = \frac{\sum_{j=1}^q \|\beta_j \odot \bm{u}^\star\|_1 \delta_{\beta_j \odot \bm{u}^\star}(\cdot)}{\sum_{j=1}^q \|\beta_j \odot \bm{u}^\star\|_1} = \frac{1}{q}\sum_{j=1}^q \delta_{\beta_j \odot \bm{u}^\star}(\cdot).
-\end{equation*}
-This means that
-\begin{equation*}
-\mathrm{supp}(H_{\bm{X}}) = \{\beta_j \odot \bm{u}^\star : j=1,\ldots,q\} \subset \{\beta \odot \bm{u}^\star : \beta\in\R\}=\mathrm{span}_a(\bm{u}^\star),
-\end{equation*}
-a one-dimensional linear subspace of $\mathbb{S}_+^{d-1}$. The probabilities \eqref{eq-prob-min-H} and \eqref{eq-prob-max-H} are computed as
-\begin{align}
-\lim_{u\to\infty}\mathbb{P}(\min\bm{X} > u \mid \|\bm{X}\|_1 > u) &= \sum_{j=1}^q \min_{i=1,\ldots,d} a_{ij} \approx 0.636, \label{eq-prob-min-H-maxlinear-example}\\
-\lim_{u\to\infty}\mathbb{P}(\max\bm{X} > u \mid \|\bm{X}\|_1 > u) &= \sum_{j=1}^q \max_{i=1,\ldots,d} a_{ij} \approx 0.0679. \label{eq-prob-max-H-maxlinear-example}
-\end{align}
-The reason for introducing the two generative processes is that they differ in terms of their finite sample properties, allowing a more detailed exploration of the finite-sample performance of our methodology. The angular components associated with large realisations of the MS-max-linear process tend to lie exactly at the discrete locations in $\mathcal{C}\bm{a}_j$, whereas for the RV-type process extremal angles tend to lie close to, but not exactly, at these points.
+We start with a low-dimensional example to facilitate visualisation. Let $d=3$, $s=1$, $q=50$ and $\bm{v}_1=(0.12,0.58,0.3)$. The values $\beta_{11},\ldots,\beta_{q1}$ are sampled uniformly between -4 and 4. The resulting matrix is shown in @fig-sim-pca-example-data (left). Since the angular measure is discrete, the true probabilities \eqref{eq-prob-min-H} and \eqref{eq-prob-max-H} can be computed analytically as $p_{\min}\approx 0.636$ and $p_{\max}\approx 0.068$. Realisations of $\bm{X}$ are generated using the max-stable (MS) construction $\bm{X} = A \times_{\max} \bm{Z}$ and the transformed-linear (TL) construction $\bm{X} = A \otimes \bm{Z}$ defined in \eqref{eq-max-linear-X} and \eqref{eq-max-linear-X-cooley}. 
+For both processes, we generate 50 datasets of size $n=5\times 10^3$ and run the PCA methods with $k/n=0.01$. *The results for other values of $k$ and $n$ are very similar -- see Appendix XX.* 
 
-All simulations are based on $d=3$, $q=50$, $\bm{u}^\star=(0.12,0.58,0.3)$ and fixed values $\beta_1,\ldots\beta_{50}$ sampled uniformly between -4 and 4. We generate training sets of size $n\in\{5\times 10^3, 5\times 10^4\}$ and set $k/n\in\{1\%,5\%\}$. Reconstruction errors are based on validation sets of size $n^\star=n$. For each parameter combination, simulations are repreated 50 times.
+```{r make-fig-sim-pca-example-A}
+#| label: fig-sim-pca-example-A
+#| fig-cap: "Blah."
+#| fig-scap: "Blah."
+#| fig-height: 4.5
+#| warning: false
+
+A <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az-A-matrix.RDS"))
+p1 <- plot_tpdm(A, x_labels = FALSE, y_labels = FALSE) %>% update(aspect = 0.6)
+
+A <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az-highdim-A.RDS"))
+p2 <- plot_tpdm(A, x_labels = FALSE, y_labels = FALSE) %>% update(aspect = 0.6)
+
+ggarrange(p1, p2, ncol = 2)
+```
+
+The exploratory plots in @fig-sim-pca-example-data provides some insight into the data structure and the mechanics of the two procedures. In each plot, the support of the angular measure (i.e. the points $\mathcal{C}\bm{a}_1,\ldots,\mathcal{C}\bm{a}_{50}$) is represented by the green diamonds. By construction, these points exhibit a one-dimensional structure and lie on the compositional straight line $\{\tau\odot(0.12,0.58,0.3):\tau\in\R\}$. The black points are the extremal angles $\bm{\theta}_{(1)},\ldots,\bm{\theta}_{(k)}$ taken from one set of realisations from the TL max-linear random vector (left) and the MS max-linear random vector (middle and left). The TL data are noisier in the sense that the extremal angles do not tend to lie exactly on the green points, whereas the MS angles converge to the limiting distribution very quickly. The left and middle plots show the results of CoDA-PCA. The red and blue dashed lines represents the first and second (sample) principal axes, respectively. The method correctly identifies the true low-dimensional structure, though there is some estimation error visible in the TL case (left). The red crosses represent the rank-one reconstructions obtained by projecting the black points onto the red line. The rank-two reconstructions always have zero error since $\mathbb{S}_{+(1)}^{2}$ is a two-dimensional space. The right-hand plot depicts the results of DS-PCA for the same MS dataset. Now we add blue crosses showing the rank-two reconstructions. Clearly, there are several issues to discuss. The one-dimensional projections lie along a straight line (the process of visualising the line on a ternary plot distorts it slightly) and do a poor job of describing the data. Some points lie outside of the triangle; this means the projected vector had a negative component. The rank-two reconstructions do a much better job, but are still imperfect because DS-PCA treats the data as points in $\R^3$.  
 
 ```{r make-fig-sim-pca-example-data}
 #| label: fig-sim-pca-example-data
-#| fig-cap: "Examples of CoDA-PCA (left and middle) and DS-PCA (right) applied to RV- (left) and MS-max-linear (middle and right) data. The green diamonds represent the true angular measure. The black points are the angular components associated with the $k=50$ largest observations among a sample of size $n=5000$. The red and blue dashed lines represent the first and second principal axes, respectively. The red and blue crosses represent the projections onto the first and second principal subspaces, respectively."
+#| fig-cap: "Examples of CoDA-PCA (left and middle) and DS-PCA (right) applied to max-linear data from the TL construction (left) and MS construction (middle and right). The green diamonds represent the true angular measure. The black points are the angular components associated with the $k=50$ largest observations among a sample of size $n=5000$. The red and blue dashed lines represent the first and second principal axes, respectively. The red and blue crosses represent the projections onto the first and second principal subspaces, respectively."
 #| fig-scap: "Example of CoDA-PCA and DS-PCA on max-linear data."
 #| fig-height: 6
 #| warning: false
 
 A <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az-A-matrix.RDS"))
+
 set.seed(12)
 n <- 5000
 k_frac <- 0.01
@@ -261,13 +319,13 @@ par(mfrow = c(1, 3), mar = c(0, 0, 0, 0), omi = c(0, 0, 0, 0))
 tmp <- extreme_pca(X_train = rmaxlinearfactor(n = n, A = A, type = "cooley"),
                    X_test = rmaxlinearfactor(n = n, A = A, type = "cooley"), 
                    k = floor(n * k_frac),
-                   method = "coda", n_pcs = 1:2, plot = TRUE)
+                   method = "coda", n_pcs = 1, plot = TRUE)
 TernaryPoints(t(A), col = "green", cex = 1, pch = 5)
 # generate MS data
 X_tmp <- rmaxlinearfactor(n = n, A = A, type = "maxlin")
 # coda pca
 tmp <- extreme_pca(X_train = X_tmp, X_test = X_tmp, 
-                   k = floor(n * k_frac), method = "coda", n_pcs = 1:2, plot = TRUE)
+                   k = floor(n * k_frac), method = "coda", n_pcs = 1, plot = TRUE)
 TernaryPoints(t(A), col = "green", cex = 1, pch = 5)
 
 # ds pca
@@ -276,131 +334,202 @@ tmp <- extreme_pca(X_train = X_tmp, X_test = X_tmp,
 TernaryPoints(t(A), col = "green", cex = 1, pch = 5)
 ```
 
-Before diving in to the full simulation study, we invite the reader to examine @fig-sim-pca-example-data, which illustrates the example under consideration and will help provide some intuition for the results to follow. In each plot, the green diamonds represent the points $\mathcal{C}\bm{a}_j$ at which the angular measure places mass. These points follow a decidely curved pattern, but the essential structure is obviously one-dimensional. The black points represent the angular components of the threshold exceedances (here $k=50$ and $n=5000$). The left and middle ternary plots show the trends described by the first (red dashed line) and second (blue dashed line) compositional principal components. In the middle plot (MS-max-linear data), this red line follows the green points almost exactly, whereas the left-hand plot (RV-max-linear data) shows a degree of estimation error due to the weaker signal-to-noise ratio. The red crosses represent the rank-one reconstructions obtained by projecting the black points onto the red line. The second principal component describes all remaining variability in the data. In theory, one component is sufficient to describe the target distribution, but in finite sample settings an additional component is required (due to noise and the samples not coming directly from the limit model). The right-hand plot shows the results of DS-PCA applied to the MS-max-linear data. Now the first principal component is unable to capture the curvature of the data, yielding poor first-order projections (red crosses). (Note: these points lie on straight line in $\R^3$, but the process of visualising them on a ternary plot distorts the line slightly.) As discussed earlier, there are even a handful of projected points that lie outside of the ternary plot. Adding a second component improves the reconstructions significantly (blue crosses). Unlike CoDA-PCA, the two-dimensional approximations are still imperfect, because DS-PCA treats the angles as points in $\R^3$. 
+The full results are shown in @fig-sim-pca-max-linear-loss. The four sub-plots show the distributions of the four performance measures: the Aitchison MSRE $\mathcal{L}_a$ (top left), the Euclidean MSRE (top right), estimates $\hat{p}_{\min}$ (bottom left), and estimates $\hat{p}_{\max}$ (bottom right). Within each sub-plot, the two sub-panels are based on the two data generating processes. The horizontal axis indicates which PCA method is being used and the number of retained principal components, $p$. As expected from @fig-sim-pca-example-data, CoDA-PCA produces excellent reconstructions when $p=1$ under *both* the Aitchison and Euclidean loss. The picture for DS-PCA is more mixed. According to $\mathcal{L}_e$, adding a second component improves the reconstructions considerably. The Aitchison loss $\mathcal{L}_a$ disagrees, suggesting that the two-dimensional projections are poor approximations of points near the simplex boundary. This can be observed in @fig-sim-pca-example-data (right) near the upper and right-hand vertices. In terms of reconstruction error, there is not any noticeable difference between the MS and TL results. Now consider the tail probability estimates in the bottom row. The boxplots are the estimates $\hat{p}_{\bullet}(\hat{\mathcal{S}}_p)$ and the blue dashed line marks the true probability $p_{\bullet}$. CoDA-PCA with $p=1$ yields very good estimates in the sense of (i) being close to the true value and (ii) being as good as the $p=2$ estimate resulting from the uncompressed empirical angular measure. The estimates are slightly biased for the TL data, suggesting that the extremal angles converge to their limiting distribution in such a way that biases the principal eigenvector of the empirical CLR-covariance matrix. For DS-PCA, $\hat{p}_{\min}(\hat{\mathcal{S}}_1)$ and $\hat{p}_{\max}(\hat{\mathcal{S}}_1)$ show a large positive and negative bias, respectively. Adding a second component reduces the bias considerably but the uncertainty is quite large. Euclidean loss treats all errors equally irrespective of where they occur in the simplex, so the PCA solution finds a compromise between good fit near the centre and near the boundary. In contrast, the Aitchison loss prioritises good reconstruction of points near the boundary, resulting in more stable PCA solutions. Analogous plots based on samples of size $n=50,000$ are shown in Appendix XX. The results are virtually identical, confirming that errors are due to methodological deficiencies, not a lack of data. Even with infinite samples DS-PCA will fit a straight line to curved data!
 
-With this example in mind, we consider the methods' performance over repeated simulations, shown in @fig-sim-pca-maxlin-loss. Within each sub-plot, we plot the empirical distribution of a given performance metric for each PCA method (bar colour) with varying number of principal components (bar outline). The maximum number of components is two, as including a third component does not add any information to the plot (*does this need explaining?*). The panels within each sub-plot correspond to the different combinations of $n$ and $k/n$. First, consider the Aitchison MSREs in the top-left plot. As expected, CoDA-PCA is able to reconstruct the data almost perfect with a single principal component. In contrast, the DS-PCA projections are relatively poor, even with the inclusion of a second component. This is primarily caused by imperfect reconstructions near the simplex boundary (see @fig-sim-pca-example-data, right), which are heavily penalised by the Aitchison metric. The top-right plot shows the Euclidean reconstruction error, i.e. \eqref{eq-pca-empirical-risk} with $\|\cdot\|_a$ replaced with $\|\cdot\|_2$. The main difference with the previous sub-plot is that now the two-dimensional DS-PCA are judged much more favourably. This shows how measuring performance using Euclidean distances can mask errors. Nevertheless, the CoDA method is vastly superior. This does not contradict the fact DS-PCA produces optimal subspaces [@dreesPrincipalComponentAnalysis2021, Lemma 2.1(iii)]. That optimality pertains to the class of linear subspaces in $\R^d$, which does not preclude the existence of better subspaces outside of this class. The bottom sub-plots show the empirical estimates of \eqref{eq-prob-min-H-maxlinear-example} and \eqref{eq-prob-max-H-maxlinear-example} obtained via the models \eqref{eq-pca-empirical-angular-measure-V}, where $V$ is the one/two principal subspace detected by each algorithm. With MS-max-linear data, 1D CoDA-PCA yields almost perfect estimates of both probabilities. When the data are generated from the RV-type process, the min and max probabilities tend to be overestimated/underestimated. This is because the sub-asymptotic distribution of the data is such that the first sample eigenvector $\hat{\bm{u}}_1$ is slightly biased for $\bm{u}^\star$. This is evidenced in @fig-sim-pca-example-data (left), where the red line gets pulled to the right of the green diamonds. Retaining a second component helps correct this, and the remaining bias in the probability estimates can be attributed to the noisy samples. Generally speaking, increasing the sample size reduces variance but does not eliminate biases. This means that the errors (or a lack thereof) can be attributed to the statistical methodology, rather than a lack of available data. Even with infinite samples, DS-PCA will fit a straight line to curved data!
+```{r make-fig-sim-pca-max-linear-loss}
+#| label: fig-sim-pca-max-linear-loss
+#| fig-cap: "Blah."
+#| fig-scap: "Blah."
+#| fig-height: 7
+#| warning: false
 
-```{r make-fig-sim-pca-maxlin-loss}
-#| label: fig-sim-pca-maxlin-loss
-#| fig-cap: "PCA performance metrics based on trivariate max-linear data."
-#| fig-scap: "PCA performance metrics based on trivariate max-linear data."
-#| fig-height: 6
-
-res <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az.RDS"))
+res <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az.RDS")) %>%
+  filter(n_train == 5000, k_frac == 0.01)
 
 p1 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
+  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Transformed-linear",
                                   .default = "Max-stable")) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
   mutate(n_train = as.factor(n_train), k_frac = as.factor(label_percent()(k_frac))) %>%
   rename('n' = n_train, 'k/n' = k_frac) %>%
   pivot_longer(cols = c(test_loss_aitchison, test_loss_euclidean), names_to = "loss_type", values_to = "test_loss") %>%
   filter(loss_type == "test_loss_aitchison") %>%
-  ggplot(aes(x = maxlin_model, y = test_loss, fill = pca_method, linetype = as.factor(n_pcs))) +
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = test_loss)) +
   geom_boxplot() +
-  facet_grid(`k/n` ~ `n`, labeller = purrr::partial(label_both, sep = " = ")) +
-  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  scale_x_discrete(labels = c("MS", "RV")) +
+  facet_grid(. ~ maxlin_model) +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 4)) +
+  scale_x_discrete(guide = "axis_nested") +
   labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Generative model",
-       y = "MSRE (Aitchison)") +
+       x = "",
+       y = "Aitchison reconstruction error") +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 
 p2 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
+  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Transformed-linear",
                                   .default = "Max-stable")) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
   mutate(n_train = as.factor(n_train), k_frac = as.factor(label_percent()(k_frac))) %>%
   rename('n' = n_train, 'k/n' = k_frac) %>%
   pivot_longer(cols = c(test_loss_aitchison, test_loss_euclidean), names_to = "loss_type", values_to = "test_loss") %>%
   filter(loss_type == "test_loss_euclidean") %>%
-  ggplot(aes(x = maxlin_model, y = test_loss, fill = pca_method, linetype = as.factor(n_pcs))) +
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = test_loss)) +
   geom_boxplot() +
-  facet_grid(`k/n` ~ `n`, labeller = purrr::partial(label_both, sep = " = ")) +
-  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  scale_x_discrete(labels = c("MS", "RV")) +
+  facet_grid(. ~ maxlin_model) +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 4)) +
+  scale_x_discrete(guide = "axis_nested") +
   labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Generative model",
-       y = "MSRE (Euclidean)") +
+       x = "",
+       y = "Euclidean reconstruction error") +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 
 p3 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
+  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Transformed-linear",
                                   .default = "Max-stable")) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
   mutate(n_train = as.factor(n_train), k_frac = as.factor(label_percent()(k_frac))) %>%
   rename('n' = n_train, 'k/n' = k_frac) %>%
-  ggplot(aes(x = maxlin_model, y = p_min_hat / 3, fill = pca_method, linetype = as.factor(n_pcs))) +
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = p_min_hat / 3)) +
   geom_boxplot() +
-  geom_hline(aes(yintercept = p_min / 3), colour = "black", linetype = "dashed") +
-  facet_grid(`k/n` ~ `n`, labeller = purrr::partial(label_both, sep = " = ")) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  scale_x_discrete(labels = c("MS", "RV")) +
+  facet_grid(. ~ maxlin_model) +
+  geom_hline(aes(yintercept = p_min / 3), colour = "blue", linetype = "dashed") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 4)) +
+  scale_x_discrete(guide = "axis_nested") +
   labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Generative model",
-       y = expression(lim(P(min(bold(X)) > u ~ "|" ~ "||"* bold(X) * "||"[1] > u), u %->% infinity))) +
+       x = "",
+       y = expression(hat(p)[min])) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 
 p4 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
+  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Transformed-linear",
                                   .default = "Max-stable")) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
   mutate(n_train = as.factor(n_train), k_frac = as.factor(label_percent()(k_frac))) %>%
   rename('n' = n_train, 'k/n' = k_frac) %>%
-  ggplot(aes(x = maxlin_model, y = p_max_hat / 3, fill = pca_method, linetype = as.factor(n_pcs))) +
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = p_max_hat / 3)) +
   geom_boxplot() +
-  geom_hline(aes(yintercept = p_max / 3), colour = "black", linetype = "dashed") +
-  facet_grid(`k/n` ~ `n`, labeller = purrr::partial(label_both, sep = " = ")) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  scale_x_discrete(labels = c("MS", "RV")) +
+  facet_grid(. ~ maxlin_model) +
+  geom_hline(aes(yintercept = p_max / 3), colour = "blue", linetype = "dashed") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 4)) +
+  scale_x_discrete(guide = "axis_nested") +
   labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Generative model",
-       y = expression(lim(P(max(bold(X)) > u ~ "|" ~ "||"* bold(X) * "||"[1] > u), u %->% infinity))) +
+       x = "",
+       y = expression(hat(p)[max])) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank()) +
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
+
+ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
+```
+
+The three-dimensional example is instructive but limited in terms of comparing dimension reducing capabilities. Our next experiment is based on the same construction with $d=10$, $q=50$ and $s=2$. The vectors $\bm{v}_1,\bm{v}_2\in\mathbb{S}_{+(1)}^{9}$ and scalars $\{\beta_{jl}:j=1,\ldots,50,\,l=1,2\}$ are generated randomly producing the matrix in @fig-sim-pca-example-data (right). The results in @fig-sim-pca-az-highdim-loss are based on 25 repeated simulations from the MS construction with $n=10^4$ and $k/n=0.02$. The left-hand plot shows the average cumulative proportion of the total variance as a function of the number of retained components. These are computed as $\sum_{j\leq p}\hat{\lambda}_j/\sum_{j=1}^d \hat{\lambda}_j$, where $\{\hat{\lambda}_j:j=1,\ldots,10\}$ are the sample eigenvalues of the TPDM or CLR-covariance matrix. Note that for CoDA-PCA it is the total variance $\mathrm{totVar}_a(\Pi_{\hat{S}_p}\bm{\Theta})$ being measured. The dashed line represents the 95\% threshold. In PCA a common rule-of-thumb is to retain as many components as necessary to explain 95\% of the variance. Based on this criterion, CoDA-PCA correctly identifies that two components are sufficient, whereas DS-PCA requires one additional dimension. However, this only means that three components are adequate for capturing *Euclidean* variability in the angles. Hopefully the reader is by now persuaded that this is not sufficient for a good description of extremal dependence. The right-hand plot confirms our hypothesis. Here we see estimates $\hat{p}_{\max}(\hat{\mathcal{S}}_p)$ against $p$ for each PCA algorithm. CoDA-PCA estimates $p_{\max}$ very accurately with $p=2$. DS-PCA requires at least six or seven components. This stark contrast emphasises our point that diagnosing PCA performance using the Euclidean notions of reconstruction error or proportion of variance can be rather misleading. 
+
+```{r make-fig-sim-pca-az-highdim-loss}
+#| label: fig-sim-pca-az-highdim-loss
+#| fig-cap: "Blah."
+#| fig-scap: "Blah."
+#| fig-height: 4
+#| warning: false
+
+res <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az-highdim.RDS"))
+
+p1 <- res %>%
+  filter(maxlin_model == "maxlin") %>%
+  filter(n_pcs <= 6) %>%
+  group_by(n_pcs, pca_method) %>%
+  summarise(prop_var = median(prop_var)) %>%
+  ungroup() %>%
+  ggplot(aes(x = as.factor(n_pcs), y = prop_var, colour = pca_method, group = pca_method)) +
+  geom_point() +
+  geom_line() +
+  geom_hline(aes(yintercept = 0.95), colour = "black", linetype = "dashed") +
+  scale_colour_manual(labels = c("CoDA", "DS"), values = c("red", "blue")) +
+  scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.005)), labels = label_percent()) +
+  labs(x = "Number of PCs",
+       colour = "",
+       y = "Cumulative prop. of (total) variance") +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank()) +
+  theme_light() +
+  theme(legend.position = c(0.8, 0.2),
+        legend.background = element_rect(fill = "transparent"),
+        legend.key = element_rect(fill = "transparent"))
+
+p2 <- res %>%
+  filter(maxlin_model == "maxlin") %>%
+  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
+                                  .default = "Max-stable")) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
+  ggplot(aes(x = as.factor(n_pcs), y = p_max_hat / 10)) +
+  geom_boxplot() +
+  geom_hline(aes(yintercept = p_max / 10), colour = "blue", linetype = "dashed") +
+  facet_grid(pca_method ~ .) +
+  labs(fill = "",
+       x = "Number of PCs",
+       y = expression(hat(p)[max])) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
   theme_light()
 
-ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2, legend = "top", common.legend = TRUE)
+ggarrange(p1, p2, ncol = 2)
 ```
 
-#### Hüsler-Reiss model in low dimensions
 
-Now we consider examples where the data are generated from a Hüsler-Reiss model. To start with we shall stay in three dimensions to facilitate visualisation. The relevance of this experiment is that, unlike the previous example, the true limit model is not designed to favour a particular PCA method.
+```{r}
+Gamma_list <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-threedim-Gamma.RDS"))
+Lambda_threedim_latex <- lapply(seq_along(Gamma_list), function(ind) {
+  paste0("\\Lambda_",
+        ind,
+        "=\\begin{pmatrix}",
+        paste(apply(round(Gamma_list[[ind]]/4, 3), 1, paste, collapse = " & "), collapse = " \\\\ "),
+        "\\end{pmatrix}")
+}) %>%
+  paste(collapse = ",\\quad ")
+```
 
-Data are produced from three Hüsler-Reiss models parametrised by the following variograms (entries rounded to two decimal places):
-\begin{equation*}
-\Gamma_1 = 
-\begin{pmatrix}
-0.00 & 0.10 & 1.24 \\
-0.10 & 0.00 & 0.67 \\
-1.24 & 0.67 & 0.00
-\end{pmatrix}, \qquad
-\Gamma_2 = 
-\begin{pmatrix}
-0.00 & 0.14 & 0.04 \\
-0.14 & 0.00 & 0.10 \\
-0.04 & 0.10 & 0.00
-\end{pmatrix}, \qquad
-\Gamma_3 = 
-\begin{pmatrix}
-0.00 & 0.01 & 1.29 \\
-0.01 & 0.00 & 1.24 \\
-1.29 & 1.24 & 0.00
-\end{pmatrix}.
-\end{equation*}
-These randomly generated variograms induce qualitatively different dependence structures, as shown in @fig-sim-pca-hr-threedim-example-data. The left plot ($\Gamma_1$) exhibits a curved trend with little variability in the direction orthogonal to this curve. This is a similar paradigm to the previous example. The extremes in the middle plot ($\Gamma_2$) is concentrated in near the barycentre of the simplex, implying strong asymptotic dependence between the three variables. The (empirical) angular measure exhibits a very slight curvature but is two-dimensional. Under the model parametrised by $\Gamma_3$ (right), extremes tend to occur in $X_1$ and $X_2$ jointly or $X_3$ singly. The extremal angles concentrate along a straight line joining the edge and vertex associated with these groups of components. 
+#### Hüsler-Reiss
+
+Now we consider more realistic examples where the data are generated from four different Hüsler-Reiss models. For $i=1,\ldots,4$, suppose $\bm{X}_i\in\mathcal{RV}_+^d(1)$ follows a Hüsler-Reiss distribution parametrised by $\Lambda_i\in\R_+^{d\times d}$. For the first three examples we set $d=3$ and
+$$ `r Lambda_threedim_latex` $$
+The fourth model is 10-dimensional example with $\Lambda_4\in\R_+^{10\times 10}$ constructed in such a way that there are three clusters of asymptotically dependent variables -- see the corresponding pairwise tail dependence coefficients $\chi_{ij}$ in @fig-sim-pca-hr-highdim-param (left). The entries of $\Lambda_1,\ldots,\Lambda_4$ were randomly generated following the steps in Appendix B1 in @fomichovSphericalClusteringDetection2023. 
+
+The exploratory plots in @fig-sim-pca-hr-threedim-example-data show that $\Lambda_1,\Lambda_2,\Lambda_3$ induce qualitatively different dependence structures. The plots' interpretation is the same as in @fig-sim-pca-example-data. Each ternary plot displays $k=250$ extremal angles extracted from $n=10^4$ samples of $\bm{X}$ under the three models. For $\Lambda_1$ (left) and $\Lambda_3$ (right) the data variability is approximately one-dimensional with differing degrees of curvature. Under $\Lambda_2$ (middle) the data cloud is two-dimensional. The dependence structure corresponding pairwise tail dependence coefficients $\chi_{ij}$ is shown in @fig-sim-pca-hr-highdim-param (left). There are three clusters of asymptotically dependent variables. The pairwise dependencies are strong in clusters 1 and 3 and more variable in cluster 2. This structure can also be seen via the CLR-covariance matrix eigenvectors (@fig-sim-pca-hr-highdim-param, right). The leading eigenvectors $\bm{u}_1$ and $\bm{u}_2$ separate out the three clusters. The localised behaviour of cluster 2 is captured by eigenvectors $\bm{u}_3$, $\bm{u}_4$ and $\bm{u}_5$. The remaining four (non-zero) eigenvectors relate to fine-scale behaviour in clusters 1 and 3. 
+
+```{r make-fig-sim-pca-hr-highdim-param}
+#| label: fig-sim-pca-hr-highdim-param
+#| fig-cap: "Matrix of tail dependence coefficients $\\chi_{ij}=2\\bar{\\Phi}(\\Lambda)$."
+#| fig-scap: "Tail dependence coefficients and CoDA-PCA eigenvectors for 10-dimensional Hüsler-Reiss model."
+#| fig-height: 3.5
+
+d <- 10
+Gamma <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-highdim-Gamma.RDS"))
+Chi <- 2 * (1 - pnorm(sqrt(Gamma) / 2)) 
+rownames(Chi) <- paste0("X[", seq_len(ncol(Chi)), "]") %>% parse(text = .)
+colnames(Chi) <- paste0("X[", seq_len(ncol(Chi)), "]") %>% parse(text = .)
+p1 <- plot_tpdm(Chi)
+
+# compute matrix of CoDA eigenvectors
+pc <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-highdim-loadings.RDS"))
+U_coda <- pc$loadings[seq_len(d), seq_len(d-1)]
+colnames(U_coda) <- paste0("bold(u)[", seq_len(ncol(U_coda)), "]")
+p2 <- plot_tpdm_eigen(U_coda, n_col = 13, y_labels = FALSE)
+
+ggarrange(p1, p2, ncol = 2)
+```
 
 ```{r make-fig-sim-pca-hr-threedim-example-data}
 #| label: fig-sim-pca-hr-threedim-example-data
@@ -409,7 +538,6 @@ These randomly generated variograms induce qualitatively different dependence st
 #| fig-height: 5
 
 Gamma_list <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-threedim-Gamma.RDS"))
-
 par(mfrow = c(1, 3), mar = c(0, 0, 0, 0), oma = c(0, 0, 0, 0))
 for (i in 1:3) {
   mev::rmev(n = 10000, d = 3, sigma = Gamma_list[[i]], model = "hr") %>%
@@ -418,328 +546,153 @@ for (i in 1:3) {
                 X_test = ., 
                 k = 250, 
                 method = "coda", 
-                n_pcs = 1:2, 
+                n_pcs = 1, 
                 plot = TRUE)
 }
 ```
 
-Similar to before, we repeatedly generate samples ($n=5000$) from each model and perform PCA based on the largest $k=50$ observations in norm. The probabilities \eqref{eq-prob-min-H} and \eqref{eq-prob-min-H} are computed empirically from samples of size $n=10^6$ using $u=100$. To three decimal places, the true values of \eqref{eq-prob-min-H} (resp. \eqref{eq-prob-max-H}) under the three sub-models are found to be 0.089, 0.228, 0.081 (resp. 0.603, 0.456, 0.586). For each simulated data set, we compute the MSRE and the error in the probability estimates obtained using low-rank reconstructions via \eqref{eq-pca-empirical-angular-measure-full} and \eqref{eq-pca-empirical-angular-measure-V}. The results are displayed in @fig-sim-pca-hr-threedim-loss. For $\Gamma_1$, one compositional principal component is sufficient to explain the data and produce good estimates. @dreesPrincipalComponentAnalysis2021 requires at least two components due to the non-linear trend. The data generated by $\Gamma_2$ is approximately linear and distinctly two-dimensional. Thus, both PCA procedures perform similarly and there is no scope for dimension reduction. The angular measure associated with $\Gamma_3$ concentrates along a straight line, which both methods are able to captured relatively well with a single eigenvector. The upshot is that CoDA-PCA performs at least as well as DS-PCA across a range of scenarios and outperforms it by a significant margin in some cases. Whether there is a difference in the methods depends on whether the low-dimensional target subspace $V^\star$ can be well-approximated by a linear subspace. In low dimensions this can be gauged by simply inspecting the data. Of course this is not generally feasible in high-dimensional applications, which represent the typical use case of such techniques. 
- 
-```{r make-fig-sim-pca-hr-threedim-loss}
-#| label: fig-sim-pca-hr-threedim-loss
-#| fig-cap: "PCA performance metrics based on trivariate Hüsler-Reiss data."
-#| fig-scap: "PCA performance metrics based on trivariate Hüsler-Reiss data."
+
+Similar to before, we repeatedly generate $n$ samples of each random vector $\bm{X}_i$, $i=1,\ldots,4$ and perform PCA based on the $k$ largest observations in norm. We choose $n=5,000$ and $k=50$ when $d=3$ and $n=10^4$ and $k=200$ when $d=10$. The true probabilities $p_{\min}$ and $p_{\max}$ are computed empirically from $n=10^6$ samples based on $u=100$. To three decimal places, the true values of $p_{\min}$ (resp. $p_{\max}$) under the four sub-models are found to be 0.089, 0.228, 0.081 and 0.000 (resp. 0.603, 0.456, 0.586 and 0.385). 
+
+@fig-sim-pca-hr-aitchison-loss illustrates the Aitchison loss $\mathcal{L}_a$ for the first three models. As expected, models 1 and 3 permit an accurate one-dimensional representation, whereas model 2 requires both CoDA components. Under model 2, extremal dependence is strong and the angular measure is concentrated near the barycentre of the simplex, where the Euclidean and Aitchison geometries are most similar. Therefore both methods produce comparable outcomes. On the other hand, the extremal angles of $\bm{X}_1$ and $\bm{X}_3$ lie near the simplex boundary, so we expect the methods to diverge. It is obvious from @fig-sim-pca-hr-threedim-example-data (left) that DS-PCA with $p=1$ will fail for model 1; this is borne out in the results. Interestingly, it also performs poorly on model 3, despite the apparently linear structure of the data. This is because lines that are visually straight in a ternary diagram do not generally correspond to Euclidean straight lines. (Line segments that are visually straight and near the simplex centre may be well-approximated by a Euclidean line segment.)
+
+```{r make-fig-sim-pca-hr-aitchison-loss}
+#| label: fig-sim-pca-hr-aitchison-loss
+#| fig-cap: "Blah."
+#| fig-scap: "Blah."
 #| fig-height: 3.5
 
-res <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-threedim.RDS")) 
+res <- bind_rows(readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-threedim.RDS")),
+                 readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-highdim.RDS"))) %>%
+  mutate(vario_seed_index = case_when(is.na(vario_seed_index) ~ 4, .default = vario_seed_index))
 
-p1 <- res %>%
+res %>%
+  filter(vario_seed_index <= 3) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
+  mutate(vario_seed_index = paste0("Lambda[", vario_seed_index, "]")) %>%
   pivot_longer(cols = c(test_loss_aitchison, test_loss_euclidean), names_to = "loss_type", values_to = "test_loss") %>%
   filter(loss_type == "test_loss_aitchison") %>%
-  ggplot(aes(x = as.factor(vario_seed_index), y = test_loss, fill = pca_method, linetype = as.factor(n_pcs))) +
-  geom_boxplot() +
-  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  scale_x_discrete(labels = c(expression(Gamma[1]), expression(Gamma[2]), expression(Gamma[3]))) +
-  labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Variogram",
-       y = "MSRE (Aitchison)") +
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = test_loss)) +
+  geom_boxplot(outliers = FALSE) +
+  facet_wrap(. ~ as.factor(vario_seed_index), scales = "free", labeller = label_parsed) +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 6)) +
+  scale_x_discrete(guide = "axis_nested") +
+  labs(x = "",
+       y = "Aitchison reconstruction error") +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
-
-p2 <- res %>%
-  ggplot(aes(x = as.factor(vario_seed_index), y = p_min - (p_min_hat / 3), fill = pca_method, linetype = as.factor(n_pcs))) +
-  geom_boxplot() +
-  geom_hline(aes(yintercept = 0), colour = "black", linetype = "dashed") +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_x_discrete(labels = c(expression(Gamma[1]), expression(Gamma[2]), expression(Gamma[3]))) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Variogram",
-       y = expression(lim(P(min(bold(X)) > u ~ "|" ~ "||"* bold(X) * "||"[1] > u), u %->% infinity) ~ "error")) +
-  theme(panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank()) +
-  theme_light()
-
-p3 <- res %>%
-  ggplot(aes(x = as.factor(vario_seed_index), y = p_max - (p_max_hat / 3), fill = pca_method, linetype = as.factor(n_pcs))) +
-  geom_boxplot() +
-  geom_hline(aes(yintercept = 0), colour = "black", linetype = "dashed") +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_x_discrete(labels = c(expression(Gamma[1]), expression(Gamma[2]), expression(Gamma[3]))) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Variogram",
-       y = expression(lim(P(max(bold(X)) > u ~ "|" ~ "||"* bold(X) * "||"[1] > u), u %->% infinity) ~ "error")) +
-  theme(panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank()) +
-  theme_light()
-
-ggarrange(p1, p2, p3, nrow = 1, ncol = 3, legend = "top", common.legend = TRUE)
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 ```
 
-#### Hüsler-Reiss model in high dimensions
+Finally, we analyse the quality of the dimension reduction in terms of the tail event probabilities. The boxplots in @fig-sim-pca-hr-p-estimates represents the empirical distributions of $\hat{p}_{\min}$ (top two rows) and $\hat{p}_{\max}$ (top two rows) across the four test cases. The true probabilities are indicated by the blue dashed lines. For models 1-3, the results follow the same pattern as for the Aitchison loss: for models 1 and 3 one component is sufficient for CoDA but not for DS; for model 2 the PCA methods perform similarly. Recall that $p_{\min}\approx 0$ under model 4, owing to the fact that there are three clusters which act (almost) independently. DS-PCA is founded on the empirical TPDM, which tends to overestimate weak dependence -- recall the bias issue described in Section XX -- inducing a positive bias in the estimates of $p_{\min}$. The CoDA-based estimates do not suffer the same issue, suggesting the CLR-covariance matrix is more robust in such settings. Angles corresponding to events occurring in different clusters are mapped to very distant points in CLR-space. This creates large separation between clusters, enabling accurate detection of weakly dependent variables. Both methods perform similar in terms of $p_{\max}$, requiring three or four principal components to attain good estimates. However, our CoDA estimates have lower variance and are therefore superior in terms of mean squared error.
 
-For this experiment, the random vector $\bm{X}=(X_1,\ldots,X_{10})$ follows a Hüsler-Reiss distribution where the variogram $\Gamma\in\R_+^{10\times 10}$ is randomly generated according to the procedure of @fomichovSphericalClusteringDetection2023 (see Assumption A and Appendix B1 therein) with three clusters. The matrix of tail dependence coefficients associated with this variogram is given by $\chi_{ij}=2\bar{\Phi}(\sqrt{\Gamma_{ij}}/2)$. @fig-sim-pca-hr-highdim-param (left) provides a visual representation of this matrix. Recall that $\chi_{ij}=0$ if and only if $X_i$ and $X_j$ are asymptotically independent, and the magnitude of $\chi_{ij}$ indicates the extremal dependence strength between the corresponding pair of variables. We observe three groups/clusters and asymptotically dependent variables. Dependence is very strong among $\{X_1,\ldots,X_4\}$ and $\{X_9,X_{10}\}$, while the pairwise dependence strengths between the components in $\{X_5,\ldots,X_8\}$ is moderate and more variable. @fig-sim-pca-hr-highdim-param (right) shows the eigenvectors of the CLR-covariance matrix, estimated from a sample of size $n=10^6$ with $k=200$. The leading eigenvectors describe the extremal dependence structure with increasing resolution. The eigenvectors $\bm{u}_1,\bm{u}_2$ determine which cluster an extreme belong to, $\bm{u}_3,\bm{u}_4,\bm{u}_5$ capture the fine-scale behaviour within the second cluster. Subsequent eigenvectors account for patterns within the first and third clusters. We would speculate that retaining three to five principal components will be sufficient, depending on the complexity of the dependence in cluster two. This is borne out in @fig-sim-pca-hr-highdim-loss (top-right), which shows that first three components account for at least 95% of the total variability. In contrast, satisfying the same criterion (albeit with respect to a different notion of variance) under DS-PCA requires five components.  Compressing the data to three-dimensions yields no discernible deterioration in the probability estimates (bottom sub-plots). 
-
-```{r make-fig-sim-pca-hr-highdim-param}
-#| label: fig-sim-pca-hr-highdim-param
-#| fig-cap: "Matrix of tail dependence coefficients $\\chi_{ij}=2\\bar{\\Phi}(\\sqrt{\\Gamma_{ij}}/2)$ (left) and a matrix of CoDA-PCA sample eigenvectors (right)."
-#| fig-scap: "Tail dependence coefficients and CoDA-PCA eigenvectors for 10-dimensional Hüsler-Reiss model."
-#| fig-height: 3.5
-
-d <- 10
-Gamma <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-highdim-Gamma.RDS"))
-pc <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-highdim-loadings.RDS"))
-
-# compute matrix of tail dependence coefficients
-Chi <- 2 * (1 - pnorm(sqrt(Gamma) / 2)) 
-colnames(Chi) <- paste0("X[", seq_len(ncol(Chi)), "]") %>% parse(text = .)
-
-# compute matrix of eigenvectors
-U_emp <- pc$loadings[seq_len(d), seq_len(d-1)]
-rownames(U_emp) <- paste0("X[", seq_len(nrow(U_emp)), "]") %>% parse(text = .)
-colnames(U_emp) <- paste0("bold(u)[", seq_len(ncol(U_emp)), "]") %>% parse(text = .)
-
-# colour palette
-n_colpal <- 13
-colpal_seq <- colorspace::sequential_hcl(n = n_colpal, "Viridis")
-colpal_div <- colorspace::diverging_hcl(n = n_colpal, "Blue-Red")
-
-# plot Chi
-plot_Chi <- t(Chi[rev(seq_len(nrow(Chi))), ])
-p1 <- lattice::levelplot(plot_Chi, 
-                         col.regions = colorspace::sequential_hcl(n = 13, "Viridis"),
-                         at = lattice::do.breaks(c(0, 1), length(colpal_seq)),
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(cex = 0.8, labels = parse(text = rownames(plot_Chi))),
-                                       y = list(cex = 0.8, labels = parse(text = colnames(plot_Chi)))))
-# plot loadings
-plot_U_emp <- t(U_emp[rev(seq_len(nrow(U_emp))), ])
-p2 <- lattice::levelplot(plot_U_emp, 
-                         col.regions = colpal_div, 
-                         at = lattice::do.breaks(c(-max(abs(U_emp)), max(abs(U_emp))), length(colpal_div)),
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(cex = 0.8, labels = parse(text = rownames(plot_U_emp))),
-                                       y = list(cex = 0.8, labels = parse(text = colnames(plot_U_emp)))))
-
-ggarrange(p1, p2, ncol = 2)
-```
-
-
-
-```{r make-fig-sim-pca-hr-highdim-loss}
-#| label: fig-sim-pca-hr-highdim-loss
-#| fig-cap: "PCA performance metrics based on 10-dimensional Hüsler-Reiss data."
-#| fig-scap: "PCA performance metrics based on 10-dimensional Hüsler-Reiss data."
-#| fig-height: 6
-
-res <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-highdim.RDS"))
+```{r make-fig-sim-pca-hr-p-estimates}
+#| label: fig-sim-pca-hr-p-estimates
+#| fig-cap: "Blah."
+#| fig-scap: "Blah."
+#| fig-height: 9
 
 p1 <- res %>%
-  pivot_longer(cols = c(test_loss_aitchison, test_loss_euclidean), names_to = "loss_type", values_to = "test_loss") %>%
-  filter(loss_type == "test_loss_euclidean") %>%
-  ggplot(aes(x = as.factor(n_pcs), y = test_loss, fill = pca_method)) +
+  mutate(d = case_when(vario_seed_index <= 3 ~ 3, .default = 10)) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
+  mutate(vario_seed_index = paste0("Lambda[", vario_seed_index, "]")) %>%
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = p_min_hat / d)) +
   geom_boxplot() +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
-  labs(x = "Number of PCs",
-       fill = "PCA method",
-       y = "MSRE (Euclidean)") +
+  geom_hline(aes(yintercept = p_min), colour = "blue", linetype = "dashed") +
+  facet_wrap(. ~ as.factor(vario_seed_index), scales = "free", labeller = label_parsed) +
+  scale_x_discrete(guide = "axis_nested") +
+  labs(x = "",
+       y = expression(hat(p)[min])) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 
 p2 <- res %>%
-  filter(n_pcs <= 6) %>%
-  group_by(n_pcs, pca_method) %>%
-  summarise(prop_var = median(prop_var)) %>%
-  ungroup() %>%
-  ggplot(aes(x = n_pcs, y = prop_var, colour = pca_method)) +
-  geom_point() +
-  geom_line() +
-  geom_hline(aes(yintercept = 0.95), colour = "black", linetype = "dashed") +
-  scale_colour_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0), labels = label_percent()) +
-  labs(x = "Number of PCs",
-       colour = "PCA method",
-       y = "Cumulative prop. of (total) variance") +
-  theme(panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank()) +
-  theme_light()
-
-p3 <- res %>%
-  ggplot(aes(x = as.factor(n_pcs), y = p_min - (p_min_hat / 10), fill = pca_method)) +
+  mutate(d = case_when(vario_seed_index <= 3 ~ 3, .default = 10)) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
+  mutate(vario_seed_index = paste0("Lambda[", vario_seed_index, "]")) %>%
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = p_max_hat / d)) +
   geom_boxplot() +
-  geom_hline(aes(yintercept = 0), colour = "black", linetype = "dashed") +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  labs(x = "Number of PCs",
-       fill = "PCA method",
-       y = expression(lim(P(min(bold(X)) > u ~ "|" ~ "||"* bold(X) * "||"[1] > u), u %->% infinity) ~ "error")) +
+  geom_hline(aes(yintercept = p_max), colour = "blue", linetype = "dashed") +
+  facet_wrap(. ~ as.factor(vario_seed_index), scales = "free", labeller = label_parsed) +
+  scale_x_discrete(guide = "axis_nested") +
+  labs(x = "",
+       y = expression(hat(p)[max])) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 
-p4 <- res %>%
-  ggplot(aes(x = as.factor(n_pcs), y = p_max - (p_max_hat / 10), fill = pca_method)) +
-  geom_boxplot() +
-  geom_hline(aes(yintercept = 0), colour = "black", linetype = "dashed") +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  labs(x = "Number of PCs",
-       fill = "PCA method",
-       y = expression(lim(P(max(bold(X)) > u ~ "|" ~ "||"* bold(X) * "||"[1] > u), u %->% infinity) ~ "error")) +
-  theme(panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank()) +
-  theme_light()
-
-ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2, legend = "top", common.legend = TRUE)
+ggarrange(p1, p2, nrow = 2, ncol = 1)
 ```
-
-
-#### Max-linear model in high dimensions
-
-- Same structure as earlier example, but now $d=10$, $q=25$, and $\mathcal{C}\bm{a}_j = \beta_{j1}\odot\bm{u}_1^\star \oplus \beta_{j2}\odot\bm{u}_2^\star$
-- @fig-sim-pca-az-highdim-loss (left): Two/three components explain approx 95% of the total variance.
-- @fig-sim-pca-az-highdim-loss (right): For MS data, two/three components gives good estimates. For RV data, four components gives good performance (corrects for error in previous eigenvectors). In each case, DS-PCA needs at least six components.
-
-
-```{r make-fig-sim-pca-az-highdim-param}
-#| label: fig-sim-pca-az-highdim-param
-#| fig-cap: "Parameter matrix $A$ (left) and corresponding model TPDM (right) for 10-dimensional max-linear data."
-#| fig-scap: "Parameter matrix $A$ and corresponding model TPDM for 10-dimensional max-linear data."
-#| fig-height: 4
-
-d <- 10
-
-# A parameter matrix
-A <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az-highdim-A.RDS"))
-rownames(A) <- paste0("X[", seq_len(nrow(A)), "]") %>% parse(text = .)
-colnames(A) <- paste0("bold(a)[", seq_len(ncol(A)), "]") %>% parse(text = .)
-
-# TPDM
-Sigma <- A^(1/2) %*% t(A^(1/2))
-rownames(Sigma) <- paste0("X[", seq_len(nrow(Sigma)), "]") %>% parse(text = .)
-colnames(Sigma) <- paste0("X[", seq_len(ncol(Sigma)), "]") %>% parse(text = .)
-
-# colour palette
-n_colpal <- 13
-colpal_seq <- colorspace::sequential_hcl(n = n_colpal, "Viridis")
-colpal_div <- colorspace::diverging_hcl(n = n_colpal, "Blue-Red")
-
-# plot Chi
-plot_A <- t(A[rev(seq_len(nrow(A))), ])
-p1 <- lattice::levelplot(plot_A, 
-                         col.regions = colorspace::sequential_hcl(n = 13, "Viridis"),
-                         at = lattice::do.breaks(c(0, max(A)), length(colpal_seq)),
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(draw = FALSE),
-y = list(draw = FALSE))) %>%
-  update(aspect = 0.6)
-# plot loadings
-plot_Sigma <- t(Sigma[rev(seq_len(nrow(Sigma))), ])
-p2 <- lattice::levelplot(plot_Sigma, 
-                         col.regions = colpal_seq, 
-                         at = lattice::do.breaks(c(0, max(abs(Sigma))), length(colpal_div)),
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(cex = 0.8, labels = parse(text = rownames(plot_Sigma))),
- y = list(cex = 0.8, labels = parse(text = colnames(plot_Sigma)))))
-
-ggarrange(p1, p2, ncol = 2, widths = c(1, 0.8))
-```
-
-```{r make-fig-sim-pca-az-highdim-loss}
-#| label: fig-sim-pca-az-highdim-loss
-#| fig-cap: "PCA performance metrics based on 10-dimensional max-linear data."
-#| fig-scap: "PCA performance metrics based on 10-dimensional max-linear data."
-#| fig-height: 3
-
-res <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az-highdim.RDS"))
-
-p1 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
-                                  .default = "Max-stable")) %>%
-  filter(n_pcs <= 6) %>%
-  group_by(n_pcs, pca_method, maxlin_model) %>%
-  summarise(prop_var = median(prop_var)) %>%
-  ungroup() %>%
-  ggplot(aes(x = n_pcs, y = prop_var, colour = pca_method)) +
-  geom_point() +
-  geom_line() +
-  geom_hline(aes(yintercept = 0.95), colour = "black", linetype = "dashed") +
-  scale_colour_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0), labels = label_percent()) +
-  labs(x = "Number of PCs",
-       colour = "PCA method",
-       y = "Cumulative prop. of (total) variance") +
-  theme(panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank()) +
-  theme_light()
-
-p2 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
-                                  .default = "Max-stable")) %>%
-  ggplot(aes(x = as.factor(n_pcs), y = p_max_hat / 10, fill = pca_method)) +
-  geom_boxplot() +
-  geom_hline(aes(yintercept = p_max / 10), colour = "black", linetype = "dashed") +
-  facet_grid(~ maxlin_model) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  labs(fill = "PCA method",
-       x = "Number of PCs",
-       y = expression(lim(P(max(bold(X)) > u ~ "|" ~ "||"* bold(X) * "||"[1] > u), u %->% infinity))) +
-  theme(panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank()) +
-  theme_light()
-
-ggarrange(p1, p2, ncol = 2, legend = "top", common.legend = TRUE)
-```
-
-### Discussion
-
-*Discuss conclusions of CoDA PCA stuff here.*
 
 ## Compositional classification for extremes
 
-### Framework/motivation
+### Motivation and framework
 
-Let $(\bm{X},Y)$ be a random pair with unknown joint distribution $F_{(\bm{X},Y)}$, where $Y\in\{-1,+1\}$ is a binary class label and $\bm{X}=(X_1,\ldots,X_d)$ is an $\R_+^d$-valued random vector containing covariate information that is presumed to be useful for predicting $Y$. For $\sigma\in\{-,+\}$, assume $\bm{X}\mid Y=\sigma 1$ is multivariate regularly varying with tail index $\alpha=1$ and angular measure $H_\sigma$ (with respect to a fixed norm $\|\cdot\|$ on $\R^d$). Given a labelled training sample $(\bm{X}_1,Y_1),\ldots,(\bm{X}_n,Y_n)$ of independent copies of $(\bm{X},Y)$, the goal is to find a classifier $g:\R^d\to\{-1,+1\}$ that minimises the expected classification error rate 
-\begin{align*}
-    \mathcal{L}(g) 
-    &:= \mathbb{P}(Y\neq g(\bm{X})) \\
-    &= \mathbb{P}(Y\neq g(\bm{X}) \mid \|\bm{X}\| \leq t) \mathbb{P}(\|\bm{X}\| \leq t) + \mathbb{P}(Y\neq g(\bm{X}) \mid \|\bm{X}\| > t) \mathbb{P}(\|\bm{X}\| > t).
-\end{align*}
-Since $F_{(\bm{X},Y)}$ is unknown, the standard approach to this task is estimate the statistical risk $\mathcal{L}(g)$ by the empirical risk
+To lay out the framework for this section, we formulate the problem of binary classification in extreme regions as set out in @jalalzaiBinaryClassificationExtreme2018. Let $(\bm{X},Y)$ be a random pair with unknown joint distribution $F_{(\bm{X},Y)}$, where $Y\in\{-1,+1\}$ is a binary class label and $\bm{X}=(X_1,\ldots,X_d)$ is an $\R_+^d$-valued random vector containing covariate information that is presumed to be useful for predicting $Y$. For $\sigma\in\{-,+\}$, assume $\bm{X}\mid Y=\sigma 1$ is multivariate regularly varying with tail index $\alpha=1$ and angular measure $H_\sigma$ with respect to $\|\cdot\|_1$. Suppose $(\bm{X}_1,Y_1),\ldots,(\bm{X}_n,Y_n)$ is a labelled training set comprising independent copies of $(\bm{X},Y)$. In general classification settings, the goal is to learn a classifier $g:\R^d\to\{-1,+1\}$ that minimises the expected classification error rate 
 \begin{equation*}
-    \hat{\mathcal{L}}(g)=(1/n)\sum_{i=1}^n \ind\{Y_i\neq g(\bm{X}_i)\}
+    \mathcal{L}(g) := \mathbb{P}(Y\neq g(\bm{X})).
 \end{equation*}
-and choose $\hat{g}=\argmin_{g\in\mathcal{G}}\hat{L}(g)$ over a suitable class $\mathcal{G}$. 
-However, @jalalzaiBinaryClassificationExtreme2018 point out that the optimal classifier need not perform well in extreme regions of the predictor space, e.g. $\{\|\bm{X}\|>t\}$ for $t>0$ large, since such regions exert a negligible influence over the global prediction error. This motivates the idea of building a classifier that minimises the asymptotic risk in the extremes, defined as
+By the law of total probability, this decomposes as
+\begin{equation*}
+\mathcal{L}(g) = \mathbb{P}(Y\neq g(\bm{X}) \mid \|\bm{X}\| \leq t) \mathbb{P}(\|\bm{X}\| \leq t) + \mathbb{P}(Y\neq g(\bm{X}) \mid \|\bm{X}\| > t) \mathbb{P}(\|\bm{X}\| > t)
+\end{equation*}
+for some large $t>0$. @jalalzaiBinaryClassificationExtreme2018 point out that the optimal classifier need not perform well in extreme regions of the predictor space $\{\|\bm{X}\| >t\}$, since such regions exert a negligible influence over the global prediction error. They propose building a classifier that minimises the asymptotic risk in the extremes, defined as
 \begin{equation*}
     \mathcal{L}_{\infty}(g) := \lim_{t\to\infty}\mathbb{P}(Y\neq g(\bm{X}) \mid \|\bm{X}\| > t).
 \end{equation*}
-They prove that, under certain assumptions, the minimiser $g^\star := \argmin_{g\in\mathcal{G}}\mathcal{L}_{\infty}(g)$ is of the form $g^\star(\bm{x})=g^\star(\bm{x}/\|\bm{x}\|)$ [@jalalzaiBinaryClassificationExtreme2018, Theorem 1]. In practice, this suggests finding solutions of the minimisation problem
+They prove that, under certain assumptions and a certain class $\mathcal{G}$, the optimal tail classifier $g^\star := \argmin_{g\in\mathcal{G}}\mathcal{L}_{\infty}(g)$ is of the form $g^\star(\bm{x})=g^\star(\bm{x}/\|\bm{x}\|)$ [@jalalzaiBinaryClassificationExtreme2018, Theorem 1]. That is, the optimal classifier depends on $\bm{x}$ only through its angular component. In practice, they suggest estimating $g^\star$ by minimising the empirical risk 
 \begin{equation}\label{eq-extreme-classification-optimisation}
-    \min_{g\in\mathcal{G}_{\bm{\Theta}}}\hat{L}_t(g),\qquad \hat{\mathcal{L}}_t(g) = \frac{1}{\sum_{i=1}^n \ind\{\|\bm{X}\| > t\}} \sum_{i=1}^n \ind\left\lbrace Y_i \neq g\left(\frac{\bm{X}_i}{\|\bm{X}_i\| }\right), \|\bm{X}\| >t\right\rbrace.
+\hat{\mathcal{L}}_t(g) = \frac{1}{k} \sum_{i=1}^k \ind\{g(\bm{\Theta}_{(i)}) \neq Y_{(i)}\},
 \end{equation}
-for some high threshold $t>0$, where $\mathcal{G}_{\bm{\Theta}}$ denotes a family of classifiers $g:\mathbb{S}_+^{d-1}\to\{-1+1\}$. 
+where $Y_{(i)}$ is the class label associated with $\bm{X}_{(i)}$. The remainder of their paper is devoted to providing theoretical guarantees for this learning principle. They leave aside the practical issue of designing algorithms for solving \eqref{eq-extreme-classification-optimisation}, instead resorting to general-purpose classifiers such as $k$-NN and random forests. 
 
-The remainder of their paper is devoted to providing theoretical guarantees for this learning principle, leaving aside "the practical issue of designing efficient algorithms for solving \eqref{eq-extreme-classification-optimisation}". This is exemplified in their numerical experiments, where they simply resort to popular, general-purpose classifiers such as $k$-NN and random forests. These algorithms disregard the unit-norm constraint imposed on the input data. By now, we hope the reader is persuaded that this mismatch can have significant practical ramifications. Upon taking $\|\cdot\|=\|\cdot\|_1$, \eqref{eq-extreme-classification-optimisation} becomes a compositional binary classification problem. The CoDA community develops bespoke algorithms for such tasks. Implementations of these algorithms are readily available in packages such as \texttt{Compositional} and \texttt{CompositionalML}.
+Being familiar with CoDA, we may recognise \eqref{eq-extreme-classification-optimisation} as simply a compositional binary classification problem. The CoDA community has developed bespoke algorithms for classifying compositional data in a way that accounts for their unique geometry [@jooBinaryClassificationCompositional2021; @martin-fernandezCriticalApproachNonParametric1998; @tsagrisImprovedClassificationCompositional2016].  The contribution of this section is to showcase the use of off-the-shelf CoDA methods for extremal classification and demonstrate their superiority over traditional classifiers intended for unconstrained data.  
+
+### Compositional classifiers and the $\alpha$-metric
+
+Classifiers are intrinsically linked to the geometry of the sample space. Suppose we observe training samples $(\bm{x}_i,y_i),\ldots,(\bm{x}_n,y_n)$ of $(\bm{X},Y)$ and wish to classify a new, unseen data point $\bm{x}^\star$. Consider three popular classifiers: $k$-nearest neighbours ($k$-NN), support vector machines (SVM) and random forest (RF). We assume basic familiarity with these algorithms and refer the reader to @hastieElementsStatisticalLearning2009 for more details. The $k$-NN algorithm allocates $\bm{x}^\star$ to the majority class among its $k$ nearest neighbours. The notion of neighbours implicitly assumes an underlying distance metric. An SVM finds the optimal hyperplane that maximally separates data into different classes. The definition of a hyperplane is inherently dependent on the ambient space and speaking of maximal separation assumes a distance metric. Random forests are less dependent on the geometry, but it still influences the model in terms of how points are distributed over the feature space. If $\bm{X}$ is a compositional random vector, then the CoDA philosophy dictates that each algorithm should be tailored to the geometry of the simplex. The Aitchison Hilbert space is an obvious choice. Under this approach, the data undergo a CLR-transformation before being classified in the usual way. However, @greenacreChiPowerTransformationValid2024 argues that for supervised problems where an objective performance criterion (e.g. out-of-sample classification error rate) is available, we should not be wedded to the Aitchison geometry and might consider alternatives such as the $\alpha$-metric proposed by @tsagrisImprovedClassificationCompositional2016. The $\alpha$-metric is similar to the Aitchison matrix, except the CLR-transformation is substituted with a Box-Cox type transformation.
+
+:::{#def-alpha-transformation}
+For $\alpha \geq 0$, the $\alpha$-transformation is defined by
+\begin{equation*}
+        \bm{z}_\alpha : \mathbb{S}_{+(1)}^{d-1} \to \R^d, \qquad \bm{x} \mapsto H \cdot \left(\frac{d (\alpha\odot \bm{x}) - \bm{1}_d}{\alpha}\right),
+\end{equation*}
+where $H$ is any $(d-1)\times d$ real matrix with orthonormal rows and the $\alpha=0$ case is interpreted as $\bm{z}_0(\bm{x}):=\lim_{\alpha\downarrow 0} \bm{z}_\alpha(\bm{x})$. 
+:::
+
+Typically $H$ is chosen as the Helmert matrix with its first row removed, but the classification algorithms we consider are invariant to this choice. Note that $\alpha$ is completely unrelated to the tail index of $\bm{X}$, also denoted by $\alpha$, which we have fixed equal to 1 throughout this section. 
+
+:::{#def-alpha-metric}
+Let $\bm{x},\bm{y}\in\mathbb{S}_{+(1)}^{d-1}$ be closed compositions. For $\alpha\in\R$, the $\alpha$-metric is defined as
+\begin{equation*}
+  d_\alpha(\bm{x},\bm{y}) := \|\bm{z}_\alpha(\bm{x}) - \bm{z}_\alpha(\bm{y})\|_e
+\end{equation*}
+:::
+
+The special cases $\alpha=0$ and $\alpha=1$ are equivalent to the Aitchison and Euclidean distances, respectively. For any Euclidean classifier $g_e:\R^d\to\{-1,1\}$ and $\alpha\geq 0$, the $\alpha$-transformed compositional classifier is simply
+\begin{equation*}
+g_\alpha:\mathbb{S}_{+(1)}^{d-1}\to\{-1,1\}, \qquad \bm{\theta} \mapsto g_e(\bm{z}_\alpha(\bm{\theta})).
+\end{equation*}
+Adapting $k$-NN, SVM and RF in this way, @tsagrisImprovedClassificationCompositional2016 define three families of compositional classification algorithms, which we denote by $k$-NN($\alpha$), SVM($\alpha$) and RF($\alpha$). Each family encompasses a Euclidean- and Aitchison-based classifier corresponding to $g_0$ and $g_1$, respectively. The hyperparameter $\alpha$ may be selected by standard tuning procedures such as cross-validation and provides a way of comparing prediction error across different geometries. Crucially, if the classification error rate is lower for $\alpha=0$ than for $\alpha=1$, then it confirms that switching to a simplicial geometry is beneficial for performance.
 
 ### Simulation experiments
 
-For our simulation experiments, we generate realisations of $\bm{X}\mid Y=y$ on standard Fréchet margins from one of three MEV models: symmetric logistic, asymmetric logistic, and bilogistic. The negative ($y=-1$) and positive ($y=+1$) class instances are generated using different (scalar) dependence parameters, denoted $\vartheta_0$ and $\vartheta_1$, respectively. The classes are balanced globally and asymptotically, meaning
+For our simulation experiments, we generate realisations of $\bm{X}\mid Y=y$ in $d=3$ dimensions on 1-Fréchet margins from one of three MEV models: symmetric logistic (SL), negative symmetric logistic (NL), and bilogistic (BL). The classes are balanced globally and asymptotically, meaning
 \begin{equation*}
 p=\mathbb{P}(Y=+1)=0.5, \qquad p_{\infty}:=\lim_{t\to\infty}\mathbb{P}(Y=+1\mid\|\bm{X}\|_1>t)=0.5.
 \end{equation*}
-From each model, we simulate a labelled training set $(\bm{x}_1,y_1),\ldots,(\bm{x}_n,y_n)$ of size $n=5\times 10^3$. Each tail classifier is trained using the $k=500$ largest observations (in $L_1$-norm) among this set. @fig-sim-classification-ternary illustrates one realisation of this subset for each model. Each plot gives an indication of the two classes' tail dependence structures and the degree of difficulty in classifying them. The performance of each classifier will be assessed by its asymptotic risk. This is estimated empirically using a validation set comprising $10^5$ samples from the limit model, i.e. angles sampled from the angular measures $H_{-}$ and $H_{+}$ using the $\texttt{rmevspec}$ function from the $\texttt{mev}$ package. In practical scenarios where we cannot access unlimited samples from the limit model, we would instead assess the extrapolation capacity of the classifier by compute the empirical risk at a sequence of increasing thresholds on a hold-out validation set. All reported results are based on 100 repeated simulations. 
+The negative ($y=-1$) and positive ($y=+1$) class instances are generated using different (scalar) dependence parameters, denoted $\vartheta_{-1}$ and $\vartheta_1$, respectively. For the SL and NL models, $\vartheta_{\sigma}$ corresponds to the parameter $1/\gamma$ and $1/\gamma$ in @def-symmetric-logistic and @def-negative-symmetric-logistic. The BL model sets all of its parameters equal to $\vartheta_{\sigma}\in[0,1]$ -- see the documentation of the \texttt{mev} package for more details. 
+
+From each model, we simulate $n=5\times 10^3$ training samples $(\bm{x}_1,y_1),\ldots,(\bm{x}_n,y_n)$ and use $\{(\bm{\theta}_{(i)},y_{(i)}):i=1,\ldots,k\}$ with $k=500$ to train each tail classifier. The set of classifiers we consider is $k$-NN($\alpha$) and RF($\alpha$) for $\alpha\in\{0,0.1,\ldots,0.9,1\}$ and SVM($\alpha$) for $\alpha\in\{0,0.2,\ldots,0.8,1\}$. Implementations of these algorithms are readily available in the \texttt{Compositional} and \texttt{CompositionalML} R packages. The hyperparameters (e.g. the number of neighbours in $k$-NN($\alpha$)) are chosen by minimising the estimated out-of-sample classification error through 10-fold cross-validation. The use of cross-validation for estimating asymptotic classification risk is studied in more detail in @aghbalouCrossvalidationExtremeRegions2024. The cross-validated empirical risk is used as a measure of the training error of the optimal classifier. To assess its out-of-sample, asymptotic performance, we compute an approximation of the asymptotic risk $\mathcal{L}_{\infty}$ by measuring the error rate across $10^5$ realisations from the true limit model, i.e. angles sampled from $H_{-}$ and $H_{+}$ generated via the $\texttt{rmevspec}$ function from the $\texttt{mev}$ package. All reported results are based on 100 repeated simulations. 
+
+@fig-sim-classification-ternary illustrates one realisation of the extremal angles in the training set for each model and different combinations of $\vartheta_{-1},\vartheta_1$. In the top row, $\vartheta_1/\vartheta_{-1}=1.5$ and the classes' dependence structures are very similar, making prediction very challenging. For the bottom row, the ratio becomes $\vartheta_1/\vartheta_{-1}=3$ and the class separation becomes much greater. In general classification settings the classes may concentrate in different sub-regions of the feature space. Our setting is complicated by the fact the angular measures $H_{+}$ and $H_{-}$ are subject to the constraints \eqref{eq-H-mean-constraints}. It is impossible to encounter a scenario where, say, the red points are all near the bottom edge and the blue points are all near the opposing vertex. Instead, any class separation that occurs tends to relate to whether the points are close to the centre or near the boundary, as shown in the bottom middle and bottom right plots. For the other sub-models, the plots suggest that predictive performance will vary across the features space. For example, under the BL model with $\vartheta_{1}/\vartheta_{-1}=1.5$ (top left), points near the right-most edge can be classified as $Y=1$ with a reasonable degree of confidence, but points near the centre are near-impossible to classify.
 
 ```{r make-fig-sim-classification-ternary}
 #| label: fig-sim-classification-ternary
@@ -750,13 +703,16 @@ From each model, we simulate a labelled training set $(\bm{x}_1,y_1),\ldots,(\bm
 
 library(ggtern)
 readRDS(file = file.path("scripts", "compositional", "results", "classification-sim-ternary-data.RDS")) %>%
-  mutate(nice_model = paste0(nice_model, ": " , "vartheta[0] == ", param0)) %>%
-  mutate(param1_frac = paste0("vartheta[1]/vartheta[0] == ", param1_frac)) %>%
+  mutate(nice_model = case_when(nice_model == "Symmetric" ~ "SL",
+                                nice_model == "Bi" ~ "BL",
+                                nice_model == "Negative" ~ "NL",)) %>%
+  mutate(nice_model = paste0(nice_model, ": " , "vartheta[-1] == ", param0)) %>%
+  mutate(param1_frac = paste0("vartheta[1]/vartheta[-1] == ", param1_frac)) %>%
   ggtern(aes(X1, X2, X3, colour = class)) +
   geom_mask() +
   geom_point(shape = 4) +
   facet_grid(param1_frac ~ nice_model, labeller = label_parsed) +
-  scale_colour_manual(values = c("red", "blue"), labels = c(expression(vartheta[0]), expression(vartheta[1]))) +
+  scale_colour_manual(values = c("red", "blue"), labels = c(expression(vartheta[-1]), expression(vartheta[1]))) +
   xlab("") +
   ylab("") +
   labs(colour = "Class dependence parameter") +
@@ -765,21 +721,12 @@ readRDS(file = file.path("scripts", "compositional", "results", "classification-
   Rlab(expression(X[3])) +
   theme_hidegrid() +
   theme_hidelabels() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "top")
 detach(package:ggtern, unload = TRUE)
 ```
 
-The catalogue of classification algorithms is virtually limitless. For simplicity, we restrict ourselves to three types: $k$-nearest neighbours, support vector machines, and random forests. Since our primary goal is to compare CoDA-based classifiers to standard ones, we shall employ the $\alpha$-transformed classifiers described earlier. For fixed $\alpha\in\{0, 0.1, \ldots, 0.9, 1\}$, the classifiers' tuning parameters are selected by ten-fold cross-validation on the training set. The hyperparameters of the three classifiers considered here are described in XXX(A). The tuning procedure is summarised as follows:
 
-1. Let $\mathcal{G}_{\bm{\Theta}}=\{g_{\psi}:\psi\in\Psi\}$ be a family of simplicial classifiers $g_\psi:\mathbb{S}_+^{d-1}\to\{-1,+1\}$ parametrised by $\psi\in\Psi$. For example, if $\mathcal{G}_{\bm{\Theta}}$ represents the $k$-NN($\alpha$) class with fixed $\alpha$, then $\psi=k$ and $\Psi=\mathbb{N}$. 
-2. For a given training set $\{(\bm{x}_i, y_i) : i=1,\ldots,n\}$, let $\bm{\theta}_{(1)},\ldots,\bm{\theta}_{(k)}$ be the angular components of the $k$ largest observations and $y_{(1)},\ldots,y_{(k)}$ their associated classes. Let $t$ denote the implicit threshold, i.e. the $k+1$ order statistic of $\{\|\bm{x}_i\|_1 : i=1,\ldots,n\}$
-3. Partition $\bm{\theta}_{(1)},\ldots,\bm{\theta}_{(k)}$ into $J=10$ balanced folds by stratified sampling. 
-4. For $j=1,\ldots,J$ and $\psi\in\Psi$, predict the classes of the elements of fold $j$ by applying the classification rule $g_{\psi}$ trained on all the (labelled) data not in fold $j$. Denote the resulting classification error rate by $\hat{\mathcal{L}}_t^{(j)}(g_{\psi})$. 
-5. Estimate the risk of $g_{\psi}$ at level $t$ as $$\hat{\mathcal{L}}_t(g_{\psi}) = \frac{1}{J}\sum_{j=1}^J \hat{\mathcal{L}}_t^{(j)}(g_{\psi}).$$
-6. Select $\psi$ to minimise the empirical risk, that is $\hat{\psi}=\arg\min_{\psi\in\Psi} \hat{\mathcal{L}}_t(g_{\psi})$. The tuned classifier is $\hat{g}=g_{\hat{\psi}}$.
-7. Compute the asymptotic risk $\mathcal{L}_{\infty}(\hat{g})$ of $\hat{g}$ as the empirical classification error rate based on the samples from the true limit model. By taking sufficiently many Monte Carlo samples, the asymptotic risk can be computed to arbitrary precision.  
-
-@fig-sim-classification-asymptotic-risk presents the results of our experiment. Each sub-panel corresponds to a generative process, that is, the MEV model and the ratio between the dependence parameters. Within each sub-panel, we plot the asymptotic risk as a function of the data-transformation parameter $\alpha$. The solid lines represent the median risk (across the 100 repeats) while the bands depict the interquartile range. The colours indicate the classifier type. The ratio of the dependence parameters dictates the difficulty level of the learning task. The error rates are between 30-40% when $\vartheta_1/\vartheta_0=1.5$ and between 2-16% when $\vartheta_1/\vartheta_0=3$. Universally, the statistical risk is maximised when the underlying geometry is Euclidean ($\alpha=1$). For the bilogistic and symmetric logistic models, $\alpha=0$ appears optimal. For the negative logistic data, the minimal risk is attained at some intermediate value, say $\alpha\approx 0.3$. Thus the optimal classifiers fall somewhere under the CoDA umbrella, corresponding to either  the Aitchison metric ("quintessential CoDA") or the $\alpha$-metric with $\alpha\neq 1$ ("modern CoDA"), respectively. The choice of classifier is obviously a key determinant of performance, with $k$-NN($\alpha$) typically being the worst-performing and $\alpha$-SVM the best. Notwithstanding this, we highlight that $k$-NN($\alpha=0$) is usually fairly competitive against the Euclidean SVM/RF. This shows that a simple classifier in the 'correct' geometry can be as good as a sophisticated classifier in the 'wrong' geometry.
+@fig-sim-classification-asymptotic-risk plots the asymptotic risk as a function of $\alpha$ for each algorithm and generative process. The coloured lines are the median risk across the 100 simulations while the shaded regions demarcate the interquartile range. As expected, the ratio between the dependence parameters dictates the difficulty level of the learning task: the error rates are between 30-40% when $\vartheta_1/\vartheta_0=1.5$ and between 2-16% when $\vartheta_1/\vartheta_0=3$. Universally, the classifiers perform worst when $\alpha=1$, i.e. in the Euclidean geometry. This supports our main argument that traditional multivariate techniques are ill-suited to tasks of this nature. For the BL and SL data, the asymptotic risk is minimised by taking $\alpha=0$. For the NL data, the optimum occurs at some intermediate value, say $0.2 \leq \alpha \leq 0.4$. Thus the optimal classifiers fall somewhere under the CoDA umbrella and are significantly different from the naive Euclidean classifiers. The choice of classifier is obviously a key determinant of performance, with $k$-NN($\alpha$) typically being the worst-performing and $\alpha$-SVM the best. A full comparison of the relative merits of each classifier is beyond the scope of our investigation. However, it should be pointed out that for each $\vartheta_1/\vartheta_0=3$ sub-case (bottom row), the worst-performing Aitchison classifier is as good as the best-performing Euclidean classifier. Switching to a more appropriate geometry reaps similar performance benefits to utilising more sophisticated classifiers.
 
 ```{r make-fig-sim-classification-asymptotic-risk}
 #| label: fig-sim-classification-asymptotic-risk
@@ -788,18 +735,21 @@ The catalogue of classification algorithms is virtually limitless. For simplicit
 #| fig-height: 6
 
 readRDS(file = file.path("scripts", "compositional", "results", "classification-sim-results-knn-svm-rf.RDS")) %>%
+  mutate(nice_model = case_when(nice_model == "Symmetric" ~ "SL",
+                                nice_model == "Bi" ~ "BL",
+                                nice_model == "Negative" ~ "NL",)) %>%
   mutate(classifier = case_when(classifier == "knn" ~ 'k * "-NN" * (alpha)',
-                                classifier == "svm" ~ 'alpha * "-SVM"',
-                                classifier == "rf" ~ 'alpha * "-RF"')) %>%
+                                classifier == "svm" ~ '"SVM" * (alpha)',
+                                classifier == "rf" ~ '"RF" * (alpha)')) %>%
   mutate(param0 = paste0("vartheta[0] == ", param0),
-         param1_frac = paste0("vartheta[1]/vartheta[0] == ", param1_frac)) %>%
+         param1_frac = paste0("vartheta[1]/vartheta[-1] == ", param1_frac)) %>%
   ggplot(aes(x = alpha, y = test_error, colour = classifier, fill = classifier)) +
   stat_summary(geom = "line", fun = median, linewidth = 0.7) +
   stat_summary(geom = "ribbon", fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), alpha = 0.1, colour = NA) +
   facet_nested_wrap(param1_frac ~ nice_model, scales = "free", labeller = label_parsed, nrow = 2,
                     nest_line = element_line(colour = "white")) +
-  scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_pretty(n = 5)) +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.05)), breaks = breaks_pretty(n = 4), labels = label_percent()) +
+  scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 6)) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.05)), breaks = breaks_extended(n = 4), labels = label_percent()) +
   scale_colour_manual(values = c("red", "blue", "darkgreen"), labels = parse_format()) +
   scale_fill_manual(values = c("red", "blue", "darkgreen"), labels = parse_format()) +
   xlab(expression(alpha)) +
@@ -811,8 +761,7 @@ readRDS(file = file.path("scripts", "compositional", "results", "classification-
         panel.grid.major = element_blank())
 ```
 
-In practice, the asymptotic risk cannot form the basis for our choice of $\alpha$, since it is a non-observable quantity. Then, $\alpha$ becomes an additional hyperparameter in the model, which may be selected by cross-validation along with the other tuning parameters. The results of this approach are presented in @fig-sim-classification-cv-alpha. Roughly speaking, the selected values of $\alpha$ accord with our earlier findings, with $\alpha\approx 0.3$ being favoured in the negative logistic case and $\alpha=0$ in the other two. However, there is significant variation in the selected values. Moreover, $\alpha=1$ is chosen in a non-negligible proportion of runs, despite this being the worst choice according to the asymptotic risk criterion. This suggests that $\hat{L}_t(\cdot)$ and $\hat{L}_{\infty}(\cdot)$, when viewed as functions of $\alpha$, can exhibit differing profiles. 
-
+In practice, we cannot choose $\alpha$ by examining the asymptotic risk. Instead, $\alpha$ becomes an additional hyperparameter to be selected by minimising the cross-validation training error along with the other tuning parameters. Let $\hat{\alpha}$ denote the selected value of $\alpha$ (i.e. the $\alpha$ that attains the lowest training error) and $\alpha^\star$ the true optimum with respect to the asymptotic risk. @fig-sim-classification-cv-alpha depicts kernel density estimates of the distribution of $\hat{\alpha}$ across the 100 data sets. In accordance with @fig-sim-classification-asymptotic-risk, the mode of $\hat{\alpha}$ is close to $\alpha^\star = 0$ for SL and BL and $\alpha^\star \approx 0.3$ for the NL model. However, there is significant variation and even $\hat{\alpha}=1$ is selected in some instances. The profile of $\hat{\alpha}$ indicates the degree to which the difficulty of the classification task varies across geometries. For example, consider the BL model with $\vartheta_1/\vartheta_0=3$ (top left). Here, the large variation in $\hat{\alpha}$ can be attributed to the minimal separation between the classes (see @fig-sim-classification-ternary, top left). Adjusting the geometry does little to improve this predicament, so the error rate will be quite insensitive to the choice of $\alpha$. Noisy estimates of $\alpha^\star$ are the result. Another example can be seen in the SL data with $\vartheta_1/\vartheta_0=3$. In this case, classification is relatively easy (@fig-sim-classification-ternary, bottom right). However, the classes are so well separated that Euclidean nearest-neighbours are the same as Aitchison nearest-neighbours, so the performance of $k$-NN($\alpha$) does not change dramatically between $\alpha=0$ and $\alpha=1$. For SVM($\alpha$) and RF($\alpha$), adjusting the geometry affects the way they partition the feature space, so classification performance is sensitive to this choice and $hat{\alpha}$ concentrates near $\alpha^\star$.
 
 ```{r make-fig-sim-classification-cv-alpha}
 #| label: fig-sim-classification-cv-alpha
@@ -821,9 +770,12 @@ In practice, the asymptotic risk cannot form the basis for our choice of $\alpha
 #| fig-height: 6
 
 readRDS(file = file.path("scripts", "compositional", "results", "classification-sim-results-knn-svm-rf.RDS")) %>%
+  mutate(nice_model = case_when(nice_model == "Symmetric" ~ "SL",
+                                nice_model == "Bi" ~ "BL",
+                                nice_model == "Negative" ~ "NL",)) %>%
   mutate(classifier = case_when(classifier == "knn" ~ 'k * "-NN" * (alpha)',
-                                classifier == "svm" ~ 'alpha * "-SVM"',
-                                classifier == "rf" ~ 'alpha * "-RF"')) %>%
+                                classifier == "svm" ~ '"SVM" * (alpha)',
+                                classifier == "rf" ~ '"RF" * (alpha)')) %>%
   mutate(param0 = paste0("vartheta[0] == ", param0),
          param1_frac = paste0("vartheta[1]/vartheta[0] == ", param1_frac)) %>%
   group_by(nice_model, param0, param1_frac, classifier, rep) %>%
@@ -832,11 +784,11 @@ readRDS(file = file.path("scripts", "compositional", "results", "classification-
   geom_density(alpha = 0.7) +
   facet_nested_wrap(param1_frac ~ nice_model, scales = "free", labeller = label_parsed, nrow = 2,
                     nest_line = element_line(colour = "white")) +
-  scale_x_continuous(limits = c(0, 1), expand = c(0,0), breaks = breaks_pretty(n = 5)) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = breaks_pretty(n = 4)) +
+  scale_x_continuous(limits = c(0, 1), expand = c(0,0), breaks = breaks_extended(n = 6)) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 4)) +
   scale_fill_manual(values = c("red", "blue", "darkgreen"), labels = parse_format()) +
   xlab(expression(alpha)) +
-  ylab("Asymptotic classification risk") +
+  ylab("Density") +
   labs(fill = "Classifier") +
   theme_light() +
   theme(legend.position = "top", 
@@ -844,52 +796,15 @@ readRDS(file = file.path("scripts", "compositional", "results", "classification-
         panel.grid.major = element_blank()) 
 ```
 
-This hypothesis is borne out by @fig-sim-classification-train-test-risk, which plots the median values of the 'training loss' $\hat{L}_t$ (dashed lines) and 'test loss' $\hat{L}_{\infty}$ (solid lines) against $\alpha$. Indeed, for the negative logistic model with $\vartheta_1/\vartheta_0=3$, the training loss of $k$-NN($\alpha$) is almost flat, while the test loss exhibits a definite positive gradient. This explains why the optimal $\alpha$ values are almost uniformly distributed -- see the green kernel density estimate in bottom-middle panel of @fig-sim-classification-cv-alpha. *Speculate as to what is going on here, and give some concluding remarks. Influence of $n$ and $k$? More work needed on estimating asymptotic risk?* 
+### Discussion and outlook
 
-```{r make-fig-sim-classification-train-test-risk}
-#| label: fig-sim-classification-train-test-risk
-#| fig-cap: "Blah."
-#| fig-scap: "Blah."
-#| fig-height: 6
-
-readRDS(file = file.path("scripts", "compositional", "results", "classification-sim-results-knn-svm-rf.RDS")) %>%
-  mutate(classifier = case_when(classifier == "knn" ~ 'k * "-NN" * (alpha)',
-                                classifier == "svm" ~ 'alpha * "-SVM"',
-                                classifier == "rf" ~ 'alpha * "-RF"')) %>%
-  mutate(param0 = paste0("vartheta[0] == ", param0),
-         param1_frac = paste0("vartheta[1]/vartheta[0] == ", param1_frac)) %>%
-  pivot_longer(cols = c("train_error", "test_error"), names_to = "error_type", values_to = "error") %>%
-  ggplot(aes(x = alpha, y = error, colour = classifier,  linetype = error_type)) +
-  stat_summary(geom = "line", fun = median) +
-  facet_nested_wrap(param1_frac ~ nice_model, scales = "free", labeller = label_parsed, nrow = 2,
-                    nest_line = element_line(colour = "white")) +
-  scale_x_continuous(limits = c(0, 1), expand = c(0.01, 0.01), breaks = breaks_pretty(n = 5)) +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.05)), breaks = breaks_pretty(n = 4), labels = label_percent()) +
-  scale_colour_manual(values = c("red", "blue", "darkgreen"), labels = parse_format()) +
-  scale_fill_manual(values = c("red", "blue", "darkgreen"), labels = parse_format()) +
-  scale_linetype_manual(values = 1:2, labels = c("Asymptotic (test set)", "Empirical at level t (train set)")) +
-  xlab(expression(alpha)) +
-  ylab("Risk") +
-  labs(linetype = "Risk type", colour = "Classifier") +
-  theme_light() +
-  theme(legend.position = "top",
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank())
-```
-
-### Discussion
-
-*Discuss conclusions of CoDA classification stuff here.*
-
-## Appendix material
-
-### (A) Computational details regarding the $k$-NN($\alpha$), $\alpha$-SVM and $\alpha$-RF classifiers
-
-*List the hyperparameters of each method, describe what they mean, list the ranges of values used, and give any relevant computational details. Refer to $\texttt{Compositional}$ and $\texttt{CompositionalML}$ packages.*
+*Discuss conclusions of CoDA PCA classification stuff here.*
 
 
-
-
-
+TO DO:
+- Write captions and discussion section for Compositional.
+- Write future work section for ChangingExtDep. 
+- Check I have addressed all feedback points for Compositional and ChangingExtDep.
+- Quick proofread through Chapters 2-4 and address anything that comes up. 
 
 

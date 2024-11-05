@@ -69,7 +69,7 @@ The block-maxima and peaks-over-threshold methods as presented above assume that
 \begin{equation*}
 \mu(t)=\mu_0 + \mu_1 t,\qquad \sigma(t) = \exp(\sigma_0 + \sigma_1 t).
 \end{equation*}
-If the parameters $\mu_1$ and $\sigma_1$ are significantly different from zero, it suggests the data exhibit non-stationarity. In principle the shape parameter may be extended analogously. Often the shape parameter is assumed constant because is notoriously difficult to estimate accurately and results (quantiles, return periods, etc.) are very sensitive to changes in its sign. *CITE further papers or a review?* 
+If the parameters $\mu_1$ and $\sigma_1$ are significantly different from zero, it suggests the data exhibit non-stationarity. In principle the shape parameter may be extended analogously. Often the shape parameter is assumed constant because is notoriously difficult to estimate accurately and results (quantiles, return periods, etc.) are very sensitive to changes in its sign. *Mention and cite evgam.*
 
 ## Multivariate extreme value theory
 
@@ -209,7 +209,7 @@ The Brown-Resnick process is intimately related to the Hüsler-Reiss distributio
 \begin{equation*}
     \mathcal{D} := \left\lbrace M \in \R_+^{d\times d} \, : \, M=M^T,\, \mathrm{diag}(M)=\bm{0},\, \bm{x}^TM\bm{x} < 0 \,\forall \bm{x}\in\R^d\setminus\{\bm{0}\} \text{ such that } \sum_{j=1}^d x_j=0\right\rbrace.
 \end{equation*}
-The class of Hüsler-Reiss distributions is closed in the sense that if $\bm{X}=(X_1,\ldots,X_d)$ follows a Hüsler-Reiss distribution with parameter matrix $\Lambda$, then any random sub-vector $(X_i,X_j)$ is also Hüsler-Reiss distributed with parameter $\lambda_{ij}^2$. This permits very flexible control over the pairwise dependence structure. The dependence between any pair of variables $X_i$ and $X_j$ can be adjusted by modifying the corresponding parameter $\lambda_{ij}$, subject to the constraint $\Lambda\in\mathcal{D}$. The finite-dimensional distribution of a Brown-Resnick process at locations $\bm{s}_1,\ldots,\bm{s}_d$ is precisely the Hüsler-Reiss distribution with $\Lambda = (\gamma(\bm{s}_i,\bm{s}_j)/4)_{1\leq i,j \leq d}$ [@engelkeEstimationHuslerReissDistributions2015]. Due to this link, the Hüsler-Reiss distribution may be parametrised in terms of its variogram matrix $\Gamma:=4\Lambda\in\mathcal{D}$ [@engelkeSparseStructuresMultivariate2021; @fomichovSphericalClusteringDetection2023] and the exponent measure of $(X_i,X_j)$ is given by \eqref{eq-brown-resnick-V} with $a_{ij}$ replaced by $2\lambda_{ij}$.
+The class of Hüsler-Reiss distributions is closed in the sense that if $\bm{X}=(X_1,\ldots,X_d)$ follows a Hüsler-Reiss distribution with parameter matrix $\Lambda$, then any random sub-vector $(X_i,X_j)$ is also Hüsler-Reiss distributed with parameter $\lambda_{ij}^2$. This permits very flexible control over the pairwise dependence structure. The dependence between any pair of variables $X_i$ and $X_j$ can be adjusted by modifying the corresponding parameter $\lambda_{ij}$, subject to the constraint $\Lambda\in\mathcal{D}$. The finite-dimensional distribution of a Brown-Resnick process at locations $\bm{s}_1,\ldots,\bm{s}_d$ is precisely the Hüsler-Reiss distribution with $\Lambda = (\gamma(\bm{s}_i,\bm{s}_j)/4)_{1\leq i,j \leq d}$ [@engelkeEstimationHuslerReissDistributions2015]. Due to this link, the exponent measure of $(X_i,X_j)$ is given by \eqref{eq-brown-resnick-V} with $a_{ij}$ replaced by $2\lambda_{ij}$.
 
 #### The max-linear model
 
@@ -544,7 +544,7 @@ The rate condition \eqref{eq-clt-rate-condition} requires that the dependence be
 :::{#exm-edm-estimator}
 Let $\bm{X}_1,\ldots,\bm{X}_n$ be independent copies of $\bm{X}\in\mathcal{RV}_+^d(\alpha)$. The estimator for the EDM between $X_i$ and $X_j$ is
 \begin{equation*}
-\widehat{\mathrm{EDM}}_{ij} := \hat{\mathbb{E}}_{H} [\Theta_i\Theta_j] \frac{m}{k}\sum_{l=1}^k \Theta_{(l),i}\Theta_{(l),j}.
+\widehat{\mathrm{EDM}}_{ij} := \hat{\mathbb{E}}_{H} [\Theta_i\Theta_j] = \frac{m}{k}\sum_{l=1}^k \Theta_{(l),i}\Theta_{(l),j}.
 \end{equation*}
 Under the conditions of @thm-clt-extremes,
 \begin{equation*}

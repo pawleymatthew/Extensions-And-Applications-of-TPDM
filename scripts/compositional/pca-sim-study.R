@@ -83,6 +83,10 @@ Gamma_list <- lapply(seq_along(seed_vals), function(i) {
 })
 saveRDS(Gamma_list, file = file.path("scripts", "compositional", "results", "sim-pca-hr-threedim-Gamma.RDS"))
 
+# Gamma <- bdiag(Gamma_list) %>% as.matrix()
+# Gamma[Gamma == 0] <- 10
+# diag(Gamma) <- 0
+
 # compute failure probabilities based on u=50 empirically
 p_emp <- pbsapply(seq_along(seed_vals), function(i) {
   set.seed(seed_vals[i])
@@ -188,6 +192,7 @@ expand_grid(
   mutate(p_min = p_min_emp,
          p_max = p_max_emp) %>%
   saveRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-highdim.RDS"))
+
 
 
 saveRDS(pc, file = file.path("scripts", "compositional", "results", "sim-pca-hr-highdim-loadings.RDS"))

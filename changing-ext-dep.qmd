@@ -32,6 +32,8 @@ sapply(list.files(path = "R/changing-ext-dep", pattern = "*.R", full.names = TRU
 sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
 ```
 
+## Introduction
+
 Multivariate extreme value models typically assume that the data represent independent realisations from some fixed distribution. This requires that both the marginal distributions and the extremal dependence structure are constant throughout the observation period. As explained in Section XX with regards to univariate (marginal) modelling, this assumption is not always valid and non-stationary models are being developed to account for this. However, there is much less research on the topic of non-stationarity in the extremal dependence structure, even though the same problems apply. Anthropogenic climate change is driving changes in the spatial structure of climate extremes [@zhouGlobalConcurrentClimate2023] and regulatory changes can cause structural changes in the joint tail behaviour of financial asset prices [@poonModellingExtremeValueDependence2003]. Thus, a crucial step in the modelling process is to determine whether it is reasonable to assume stationary dependence or not. In this chapter, we present a formal procedure for testing this assumption.
 
 Before proceeding, we clarify an important distinction between *testing for* versus *modelling* non-stationary dependence. Both represent very challenging statistical problems: the underlying signal (e.g. climate change) may be very weak, perhaps only becoming apparent over very long observation periods. The latter task refers to the development of multivariate extreme value models that allow temporal non-stationarity in the dependence structure. For example, the regression model of @castro-camiloTimevaryingExtremeValue2018 and the spectral density ratio model of @decarvalhoSpectralDensityRatio2014 can incorporate covariate effects, including time. These models rely on parametric assumptions and are restricted to a small number of dimensions. To the best of our knowledge, the only existing work on *testing* for changing dependence is @dreesStatisticalInferenceChanging2023. Roughly speaking, their procedure involves partitioning the observation period into temporal blocks and testing for deviations in $\hat{H}$ between blocks. This is very computationally intensive and thus is restricted to $d\leq 5$ in practice. Our contribution is to devise a procedure that instead tests for changes in $\hat{\Sigma}$, the empirical TPDM. Considering pairwise dependencies instead of the full angular measure eases the computational burden significantly and enables testing even in high dimensions. Our test achieves superior power in many realistic scenarios (Section XX). The trade-off is that neglecting higher-order dependencies necessarily incurs some information loss and we lose power in certain circumstances (Section XX).  
@@ -49,7 +51,7 @@ Following @dreesStatisticalInferenceChanging2023, our working null and alternati
 \mathrm{H}_0 \, &: \,\, \forall t \in [0,1], \, H(\cdot \,; t) = H(\cdot \,; 1), \label{eq-changing-ext-dep-null-hyp} \\
 \mathrm{H}_1 \, &: \,\, \exists t,\, H(\cdot \,; t) \neq H(\cdot \,; 1). \label{eq-changing-ext-dep-alt-hyp}
 \end{align}
-Under the null hypothesis, the angular measure (extremal dependence structure) is constant/stationary. The alternative states that the angular measure is time-varying. The nature of the time-dependence is unspecified. This includes the possibility of instantaneous change-points, smooth gradual evolutions, or a mixture of both. Our goal is to devise a statistical procedure for testing \eqref{eq-changing-ext-dep-null-hyp} against \eqref{eq-changing-ext-dep-alt-hyp} based on a discretised sample path of $\{\bm{X}(t):t\in[0,1]\}$. This will be achieved by testing for deviations in a time-dependent version of the TPDM.
+Under the null hypothesis, the angular measure (extremal dependence structure) is constant/stationary. The alternative states that the angular measure is time-varying. The nature of the time-dependence is unspecified. This includes the possibility of instantaneous change-points, smooth gradual evolutions, or a mixture of both. Our goal is to devise a statistical procedure for testing \eqref{eq-changing-ext-dep-null-hyp} against \eqref{eq-changing-ext-dep-alt-hyp} based on a discretised sample path of $\{\bm{X}(t):t\in[0,1]\}$. This will be achieved by testing for deviations in a time-dependent version of the TPDM. In particular, we will work an integrated version of the TPDM. Since we work with an integrated quantity, the alternative hypothesis might be revised to instead say that there exists a set $\mathcal{T}\in[0,1]$ of non-zero measure such that $H(\cdot \,; t) \neq H(\cdot \,; 1)$ for all $t\in\mathcal{T}$.
 
 ## The local TPDM and integrated TPDM
 
@@ -105,7 +107,7 @@ Recall that the local TPDM possesses the properties of the TPDM.
 \begin{equation*}
 \int_{a}^b f(x) \,\dee x = 0
 \end{equation*}
-holds if and only if $f(x)=0$ for almost every $x\in[a,b]$ (*citation needed?*). Applying this fact to $f(t)=\sigma_{ij}(t)$ with $a=0$ and $b=t$ yields the result.
+holds if and only if $f(x)=0$ for almost every $x\in[a,b]$. Applying this fact to $f(t)=\sigma_{ij}(t)$ with $a=0$ and $b=t$ yields the result.
 
 3. Symmetry of $\Psi(t)$ is inherited from symmetry of the local TPDM. For any $\bm{y}\in\R^d\setminus\{\bm{0}\}$, we have
 \begin{equation*}
@@ -114,7 +116,7 @@ holds if and only if $f(x)=0$ for almost every $x\in[a,b]$ (*citation needed?*).
 Positive semi-definiteness of $\Sigma(t)$ guarantees the integrand is non-negative. Therefore $\bm{y}^T\Psi(t)\bm{y} \geq 0$.
 :::
 
-Due to properties (1) and (3) we may focus on vectorised forms of $\Sigma(t)$ and $\Psi(t)$ defined analogously to $\bm{\sigma}$ in \eqref{eq-vecu-sigma}, i.e. by row-wise flattening of the strictly upper-triangular elements of $\Sigma(t)$ and $\Psi(t)$:
+Due to properties in @lem-integrated-tpdm-properties we may focus on vectorised forms of $\Sigma(t)$ and $\Psi(t)$ defined analogously to $\bm{\sigma}$ in \eqref{eq-vecu-sigma}, i.e. by row-wise flattening of the strictly upper-triangular elements of $\Sigma(t)$ and $\Psi(t)$:
 \begin{align}
     \bm{\sigma}(t)
     &:= \mathrm{vecu}(\Sigma(t))
@@ -196,7 +198,7 @@ the index set of observations in a $h$-neighbourhood of $t$. Among the observati
 :::{#def-empirical-local-angular-measure}
 For any $t\in[0,1]$, the empirical local angular measure is the random measure on $\mathbb{S}_{+(2)}^{d-1}$ defined by
 \begin{equation}\label{eq-empirical-local-angular-measure}
-    \hat{H}(\cdot;t) := \frac{d}{k} \sum_{i\in\mathcal{I}(t)} \ind\{R(i/n)>\hat{u}(t),\bm{\Theta}(i/n)\in \cdot\}.
+    \hat{H}(\cdot;t) := \frac{d}{k} \sum_{l\in\mathcal{I}(t)} \ind\{R(l/n)>\hat{u}(t),\bm{\Theta}(l/n)\in \cdot\}.
 \end{equation}
 :::
 
@@ -207,11 +209,11 @@ For $t\in[0,1]$, the empirical local TPDM estimator is the $d\times d$ matrix $\
 \end{equation}
 :::
 
-We recognise $\hat{H}(\cdot;t$ and $\hat{\Sigma}(t)$ as simply time-localised versions of the empirical angular measure (@def-empirical-angular-measure) and empirical TPDM (@def-empirical-tpdm). It is easy to see that the empirical local TPDM possesses the same finite-sample properties as the empirical TPDM, such as positive semi-definiteness and complete positivity. Unlike the empirical TPDM, the performance of $\hat{\Sigma}(t)$ depends not only on $k$ but also on the additional tuning parameter $h$. Joint selection of $k$ and $h$ involves managing several trade-offs. A large effective sample size can be achieved by increasing $k$ and/or $h$. As we know, increasing $k$ risks bias due the inclusion of observations from the bulk. Increasing $h$ introduces the possibility of another kind of bias due to the influence *non-local* extreme observations, i.e. data that are not representative of the tail distribution *at time* $t$. These trade-offs will appear via modified rate conditions when describing the asymptotic properties of $\hat{\Sigma}(t)$ in Section XX.
+We recognise $\hat{H}(\cdot;t$ and $\hat{\Sigma}(t)$ as simply time-localised versions of the empirical angular measure (@def-empirical-angular-measure) and empirical TPDM (@def-empirical-tpdm). It is easy to see that the empirical local TPDM possesses the same finite-sample properties as the empirical TPDM, such as positive semi-definiteness and complete positivity. Unlike the empirical TPDM, the performance of $\hat{\Sigma}(t)$ depends not only on $k$ but also on the additional tuning parameter $h$. Joint selection of $k$ and $h$ involves managing several trade-offs. A large effective sample size can be achieved by increasing $k$ and/or $h$. As we know, increasing $k$ risks bias due the inclusion of observations from the bulk. Increasing $h$ introduces the possibility of another kind of bias due to the influence of non-local extreme observations, i.e. data that are not representative of the tail distribution *at time* $t$. These trade-offs will appear via modified rate conditions when describing the asymptotic properties of $\hat{\Sigma}(t)$ in Section XX.
 
 ### The empirical integrated TPDM
 
-The best approach for estimating the integrated TPDM is slightly less obvious. For computational and mathematical reasons, we elect for a block-based approach that involves performing estimation in a piecewise constant fashion over disjoint time intervals of width $2h$. For any $t\in[0,1]$ and $h>0$, by the additive property of the integral we have that 
+The best approach for estimating the integrated TPDM is slightly less obvious because $\Psi(t)$ depends on the entire history $\{\Sigma(s):s\in[0,t]\}$. For computational and mathematical reasons, we elect for a block-based approach that involves performing estimation in a piecewise constant fashion over disjoint time intervals of width $2h$. For any $t\in[0,1]$ and $h>0$, by the additive property of the integral we have that 
 \begin{align*}
 \psi_{ij}(t) 
 &= \int_0^t \sigma_{ij}(s) \,\dee s \\
@@ -231,18 +233,18 @@ For $t\in[0,1]$, the empirical integrated TPDM estimator is the $d\times d$ matr
 
 This construction permits efficient computation of the entire process $\{\hat{\Psi}(t):t\in[0,1]\}$. Note that the partition of the time-interval $[0,t]$ depends only on $h$, not on $t$. Hence, the estimates $\hat{\Sigma}(s)$ at the time points $s\in\{h, 3h, \ldots, 1-h\}$ are sufficient to estimate $\Psi(t)$ at any $t\in[0,1]$ via a simple weighted sum. The piecewise constant assumption on $\Sigma(t)$ implies that $\hat{\psi}_{ij}(t)$ is a piecewise linear function of $t$. Therefore, to compute the full path $\{\hat{\Psi}(t):t\in[0,1]\}$ one need only compute $\hat{\Psi}(s)$ at the interval endpoints $s\in\{2h,4h,\ldots,1\}$ and fill in the intermediate time points by linear interpolation. 
 
-Mathematically, the appeal of a block-based construction is that $\hat{\Psi}(t)$ is a weighted sum of independent random matrices $\hat{\Sigma}(h),\hat{\Sigma}(3h),\ldots,\hat{\Sigma}(1-h)$. Independence is due to the blocks being non-overlapping and our choosing the bandwidth as half the block width, so that dependence within each block is estimated using only observations contained in it. This independence is crucial in the elicitation of the asymptotic results to follow. 
+Mathematically, the appeal of a block-based construction is that $\hat{\Psi}(t)$ is a weighted sum of independent random matrices $\hat{\Sigma}(h),\hat{\Sigma}(3h),\ldots,\hat{\Sigma}(1-h)$. Independence is due to the blocks being non-overlapping and choosing the bandwidth as half the block width, so that dependence within each block is estimated using only observations contained in it. This independence is crucial in the elicitation of the asymptotic results to follow. 
 
 ### Asymptotic properties of $\hat{\Sigma}(t)$ and $\hat{\Psi}(t)$
 
-We now formulate the asymptotic properties of the estimators $\hat{\bm{\sigma}}(t):=\mathrm{vecu}(\hat{\Sigma}(t))$ and $\hat{\bm{\psi}}(t):=\mathrm{vecu}(\hat{\Psi}(t))$ of $\bm{\sigma}(t)$ and $\bm{\psi}(t)$ defined in \eqref{eq-vecu-sigma-t} and \eqref{eq-vecu-psi}. The main result is asymptotic normality of $\hat{\Sigma}(t)$, cf. @prp-empirical-tpdm-normality. 
+We now formulate the asymptotic properties of the estimators $\hat{\bm{\sigma}}(t):=\mathrm{vecu}(\hat{\Sigma}(t))$ and $\hat{\bm{\psi}}(t):=\mathrm{vecu}(\hat{\Psi}(t))$ of $\bm{\sigma}(t)$ and $\bm{\psi}(t)$ defined in \eqref{eq-vecu-sigma-t} and \eqref{eq-vecu-psi}. The main result is asymptotic normality of $\hat{\Sigma}(t)$.
 
-:::{#prp-empirical-local-tpdm-normality}
+:::{#lem-empirical-local-tpdm-normality}
 Assume $k(n)$ and $h(n)$ satisfy the rate conditions
 \begin{equation}\label{eq-k-h-rate-conditions}
 h(n) \to 0, \quad k(n) \to \infty, \quad nh(n) \to \infty, \quad \frac{k(n)}{nh(n)} \to 0
 \end{equation}
-as $n\to\infty$. Then, for any $t\in[0,1]$,
+as $n\to\infty$ and the null hypothesis \eqref{eq-changing-ext-dep-null-hyp} is true. Then, for any $t\in[0,1]$,
 \begin{equation}\label{eq-empirical-local-tpdm-normality}
     \sqrt{k}(\hat{\bm{\sigma}}(t) - \bm{\sigma}(t)) \to N(\bm{0}, V(t))
 \end{equation}
@@ -263,30 +265,44 @@ where
 :::
 
 ::: {.proof}
-Proof here.
+Fix $t\in[0,1]$. The random vectors $\{\bm{X}(l/n):l\in\mathcal{I}(t)\}$ are independent and identically distributed with distribution $H(\cdot;t)$. The modified \eqref{eq-k-h-rate-conditions} ensure that the original rate conditions \eqref{eq-k-rate-conditions} are satisfied on the sub-interval $(t-h,t+h]$: the number of local observations $2nh(n)\to\infty$ and the extreme sampling fraction $k(n)/2nh(n)\to 0$ as $n\to\infty$. Thus, we may invoke asymptotic normality of the empirical TPDM (@prp-empirical-local-tpdm-normality) and the result follows immediately. 
 :::
 
-We will always assume that $V(t)$ is invertible. (This would not be permissible if we had defined the $\mathrm{vecu}$ operator to include diagonal entries.) The above result means that, roughly speaking, the entries of $\hat{\Sigma}(t)$ behave like (correlated) normal random variables when $n$ is sufficiently large. Combining this with @def-empirical-integrated-tpdm, the implication is that each entry $\psi_{ij}(t)$ of $\hat{\Psi}(t)$ is the weighted sum of independent, asymptotically normal random variables. With this intuition, we can apply a functional central limit theorem type argument to derive the asymptotic behaviour of the stochastic process $\{\hat{\bm{\psi}}(t):t\in[0,1]\}$.
+We will always assume that $V(t)$ is invertible. (This would not be permissible if we had defined the $\mathrm{vecu}$ operator to include diagonal entries.) The above result means that, roughly speaking, the entries of $\hat{\Sigma}(t)$ behave like (correlated) normal random variables when $n$ is sufficiently large. The implication is that each entry $\psi_{ij}(t)$ of $\hat{\Psi}(t)$ is the weighted sum of independent, asymptotically normal random variables. With this intuition, we can apply a functional central limit theorem type argument to derive the asymptotic behaviour of the stochastic process $\{\hat{\bm{\psi}}(t):t\in[0,1]\}$.
 
-:::{#prp-empirical-integrated-tpdm-asymptotic}
-The $\mathcal{D}$-dimensional, continuous-time stochastic process
+:::{#lem-empirical-integrated-tpdm-asymptotic}
+Under the conditions of @lem-empirical-local-tpdm-normality, the $\mathcal{D}$-dimensional, continuous-time stochastic process
 \begin{equation}\label{eq-prelim-test-process}
-    \left\lbrace \sqrt{\frac{k}{h}} \left( \hat{\bm{\psi}}(t) - \bm{\psi}(t) \right) : t\in[0,1] \right\rbrace,
+    \left\lbrace \sqrt{\frac{k}{2h}} \left( \hat{\bm{\psi}}(t) - \bm{\psi}(t) \right) : t\in[0,1] \right\rbrace,
 \end{equation}
 converges to a $\mathcal{D}$-dimensional centred Gaussian process $\{\bm{Y}(t):t\in[0,1]\}$ with covariance function
 \begin{equation}\label{eq-prelim-test-process-cov-function}
-    \mathrm{Cov}(Y_{ij}(s),Y_{lm}(t)) = 2 \int_0^{\min(s,t)} v_{ij,lm}(\tau)\,\dee \tau.
+    \mathrm{Cov}(\bm{Y}(s),\bm{Y}(t)) = \min(s,t)V
 \end{equation}
 :::
 
 ::: {.proof}
-Proof here.
+Since dependence is constant, we may denote by $\bm{\sigma}$ and $V$ the true local TPDM and asymptotic covariance matrix for all $t\in[0,1]$. Let $N=1/(2h)$ be the number of blocks. For $i=1,\ldots,N$, let
+\begin{equation*}
+\bm{Y}_{i/N} := \sqrt{k}(\hat{\bm{\sigma}}((2i-1)h)-\bm{\sigma}).
+\end{equation*}
+Then $\{\bm{Y}_{i/N}:i=1,\ldots,N\}$ are independent, asymptotically normal random vectors with $\bm{Y}_{i/N} \to N(\bm{0},V)$ as $n\to\infty$. (Note that $N\to\infty$ as $n\to\infty$ due to the rate conditions.) Donsker's invariance principle states that the empirical process
+\begin{equation*}
+\{\bm{Y}_N(t):t\in[0,1]\}, \qquad \bm{Y}_N(t) := \frac{1}{\sqrt{N}}\sum_{i=1}^{\lfloor Nt \rfloor} \bm{Y}_{i/N},
+\end{equation*}
+converges to the process $\{\bm{Y}(t):t\in[0,1]\}$ defined in the statement of the lemma.  To complete the proof, observe that
+\begin{align*}
+\bm{Y}_N(t) 
+&= \sqrt{2h} \sum_{i=1}^{\lfloor t/(2h) \rfloor} \sqrt{k}(\hat{\bm{\sigma}}((2i-1)h)-\bm{\sigma}) \\
+&= \sqrt{2kh} \left(\frac{\hat{\psi}(t)}{2h} - \frac{t\bm{\sigma}}{2h}\right) \\
+&= \sqrt{\frac{k}{2h}} \left( \hat{\bm{\psi}}(t) - \bm{\psi}(t) \right).
+\end{align*}
 :::
 
-The drift and diffusion coefficients associated with each univariate process $\{Y_{ij}(t):t\in[0,1]\}$ are controlled by the cumulative dependence $\{\psi_{ij}(t):t\in[0,1]\}$ and asymptotic variance $\{\nu_{ij}^2(t):t\in[0,1]\}$, respectively. Meanwhile, the cross-correlation between $\{Y_{ij}(t):t\in[0,1]\}$ and $\{Y_{lm}(t):t\in[0,1]\}$ is determined by $\{\rho_{ij,lm}(t):t\in[0,1]\}$.
+The drift and diffusion coefficients associated with each univariate limiting process $\{Y_{ij}(t):t\in[0,1]\}$ are controlled by $\{\psi_{ij}(t):t\in[0,1]\}$ and $\{\nu_{ij}^2(t):t\in[0,1]\}$, respectively. Meanwhile, the cross-correlation between $\{Y_{ij}(t):t\in[0,1]\}$ and $\{Y_{lm}(t):t\in[0,1]\}$ is determined by $\{\rho_{ij,lm}(t):t\in[0,1]\}$.
 
-:::{#cor-empirical-integrated-tpdm-asymptotic}
-Suppose the conditions of @prp-empirical-integrated-tpdm-asymptotic hold and the null hypothesis \eqref{eq-changing-ext-dep-null-hyp} is true. Define
+:::{#thm-empirical-integrated-tpdm-asymptotic}
+Suppose the conditions of @lem-empirical-local-tpdm-normality hold. Define
 \begin{equation}\label{eq-test-process}
 \hat{\bm{Z}}(t) := \sqrt{\frac{k}{2h}} V(t)^{-1/2}(\hat{\bm{\psi}}(t) - t\hat{\bm{\psi}}(1)).
 \end{equation}
@@ -294,26 +310,26 @@ Then $\{\hat{\bm{Z}}(t) : t\in[0,1]\}$ converges to $\{\bm{B}(t):t\in[0,1]\}$, a
 :::
 
 :::{.proof}
-Under the null, the asymptotic covariance matrix does not depend on $t$, so we may write $V=V(t)$. Using @prp-empirical-integrated-tpdm-asymptotic and pre-multiplying the process \eqref{eq-prelim-test-process} by $(2V)^{-1/2}$, it follows that
+Using @lem-empirical-integrated-tpdm-asymptotic and pre-multiplying the process \eqref{eq-prelim-test-process} by $V^{-1/2}$, it follows that
 \begin{equation*}
 \left\lbrace \sqrt{\frac{k}{2h}} V^{-1/2} \left(\hat{\bm{\psi}}(t) - \bm{\psi}(t) \right) : t\in[0,1] \right\rbrace
 \end{equation*}
 converges to a $\mathcal{D}$-dimensional centred Gaussian process $\{\bm{Y}(t):t\in[0,1]\}$ with covariance function
 \begin{equation}
-    \mathrm{Cov}(Y_{ij}(s),Y_{lm}(t)) = \int_0^{\min(s,t)} \,\dee \tau = \min(s,t).
+    \mathrm{Cov}(\bm{Y}(s),\bm{Y}(t)) = \min(s,t),
 \end{equation}
-This is precisely the covariance function of a Brownian motion. By \eqref{eq-psi-null}, $\bm{\psi}(t)=t\bm{\psi}(1)$ under the null and therefore
+i.e. a $\mathcal{D}$-dimensional standard Brownian motion. By \eqref{eq-psi-null}, $\bm{\psi}(t)=t\bm{\psi}(1)$ under the null and therefore
 \begin{align*}
 \hat{\bm{Z}}(t) 
 &= \sqrt{\frac{k}{2h}} V^{-1/2}(\hat{\bm{\psi}}(t) - t\hat{\bm{\psi}}(1)) \\
 &= \sqrt{\frac{k}{2h}} V^{-1/2}\left[\hat{\bm{\psi}}(t) - \bm{\psi}(t) - t(\hat{\bm{\psi}}(1) - \bm{\psi}(1))\right] \\
 &= \sqrt{\frac{k}{2h}} V^{-1/2}\left(\hat{\bm{\psi}}(t) - \bm{\psi}(t)\right)  - t \left[ \sqrt{\frac{k}{2h}} V^{-1/2}\left(\hat{\bm{\psi}}(t) - \bm{\psi}(1)\right) \right] \\
-&\to \bm{W}(t) - t \bm{W}(1).
+&\to \bm{W}(t) - t \bm{W}(1),
 \end{align*}
-The process in the final line is equal in distribution to a Brownian bridge (*citation needed?*).
+which is equivalent to a $\mathcal{D}$-dimensional standard Brownian bridge.
 :::
 
-This main result provides the foundation for our test. The test statistics defined the following section will quantify whether the realised sample path of \eqref{eq-test-process} is consistent with a Brownian bridge. We are not the first to use Brownian bridges in hypothesis testing in extremes; @gadeikisEstimationChangepointTail2005 use the same principle to test for changes in the tail index. 
+This main result provides the foundation for our test. The test statistics defined in the following section will quantify whether the realised sample path of \eqref{eq-test-process} is consistent with a Brownian bridge. We are not the first to use Brownian bridges in hypothesis testing in extremes; @gadeikisEstimationChangepointTail2005 use the same principle to test for changes in the tail index. 
 
 ## Test statistics and critical values
 
@@ -322,7 +338,7 @@ From the test process \eqref{eq-test-process} we define Kolmogorov-Smirnov (KS) 
     T^{(KS)} &:= \sup_{t\in[0,1]}\left\lVert \hat{\bm{Z}}(t) \right\rVert_\infty = \sup_{\substack{t\in[0,1]\\ i<j}} |Z_{ij}(t)|, \label{eq-test-stat-ks} \\
     T^{(CM)} &:= \sup_{1\leq i<j\leq d} \left\lVert \hat{Z}_{ij}(t) \right\rVert_{L^2[0,1]}^2 = \sup_{i<j} \int_{0}^1 |\hat{Z}_{ij}(t)|^2 \,\dee t, \label{eq-test-stat-cm}
 \end{align}
-where $\|\bm{x}\|_\infty := \max\{ |x_i|:i=1,\ldots,\mathcal{D}\}$ denotes the sup-norm in $\R^\mathcal{D}$ and $\|Y(t)\|_{L^2[0,1]}^2:=\int_0^1 |Y(t)|^2\,\dee t$ denotes the $L^2$-norm of a stochastic process on $[0,1]$. Their asymptotic null distributions are given below.
+where $\|\bm{x}\|_\infty := \max\{ |x_i|:i=1,\ldots,\mathcal{D}\}$ denotes the sup-norm in $\R^\mathcal{D}$, $\mathcal{D}={d \choose 2}$ and $\|Y(t)\|_{L^2[0,1]}^2:=\int_0^1 |Y(t)|^2\,\dee t$ denotes the $L^2$-norm of a stochastic process on $[0,1]$. Their asymptotic null distributions are given below.
 
 :::{#prp-asymptotic-test-stat}
 Under the null hypothesis \eqref{eq-changing-ext-dep-null-hyp},
@@ -341,10 +357,10 @@ where $\bm{B}(t)=(B_{ij}(t) : i<j)$ denotes a standard $\mathcal{D}$-dimensional
 :::
 
 ::: {.proof}
-The asymptotic null distributions follows directly from @cor-empirical-integrated-tpdm-asymptotic. It is well known that $K_{ij}:=\sup_{t\in[0,1]} |B_{ij}(t)|$ follows a Kolmogorov distribution [@henzeAsymptoticStochasticsIntroduction2024, p. 328]. 
+The asymptotic null distributions follows directly from @thm-empirical-integrated-tpdm-asymptotic. It is well known that $K_{ij}:=\sup_{t\in[0,1]} |B_{ij}(t)|$ follows a Kolmogorov distribution [@henzeAsymptoticStochasticsIntroduction2024, p. 328]. 
 :::
 
-Each test statistic $T^{(KS)}$ and $T^{(CM)}$ may be used to define an asymptotic test for constant dependence. For the KS test, 
+Each test statistic $T^{(KS)}$ and $T^{(CM)}$ may be used to define an asymptotic test for constant dependence. For the KS test, the decision rule that rejects the null when
 \begin{equation}\label{eq-ks-test}
 \ind\{T^{(KS)}>c_\alpha\}, \qquad c_{\alpha} = F_K^{-1}((1-\alpha)^{1/\mathcal{D}})
 \end{equation}
@@ -399,10 +415,11 @@ The parametric models we consider are as follows:
 1. **Symmetric logistic (SL):** with $\gamma(t)=1/\vartheta(t)$ and $\Omega=[1,\infty)$. With this parametrisation, asymptotic independence occurs when $\vartheta(t)=1$ and complete asymptotic dependence as $\vartheta(t)\to\infty$.
 2. **Hüsler-Reiss (HR):** with $\Lambda(t)=\vartheta(t)\Lambda_0$ and $\Omega=(0,\infty)$, where $\Lambda_0\in\R_+^{d\times d}$ is a valid HR parameter matrix (see Section XX). The multiplicative scalar $\vartheta(t)$ has the effect of increasing ($0<\vartheta(t)<1$) or decreasing ($\vartheta(t)>1$) the strength of all pairwise dependencies relative to $\Lambda_0$. While not strictly necessary, we take $\vartheta_0=1$ so that $\Lambda(0)=\Lambda_0$. For each dimension $d$, the initial matrix $\Lambda_0$ is randomly generated using the procedure outlined in Appendix B1 in @fomichovSphericalClusteringDetection2023.
 
-The three dependence scenarios and two parametric distributions give six qualitatively different models. We refer to these as, e.g. SL-constant, HR-jump, and so on. When $d=2$, the test of @dreesStatisticalInferenceChanging2023 is included as a comparator. Results pertaining to their test are based on our own implementation with $\mathcal{A}=\{A_y:y=0.01,0.02,\ldots,0.99\}$, where 
+The three dependence scenarios and two parametric distributions give six qualitatively different models. We refer to these as, e.g. SL-constant, HR-jump, and so on. When $d=2$, the test of @dreesStatisticalInferenceChanging2023 is included as a comparator. Results pertaining to their test are based on our own implementation based on a family of Borel subsets $\mathcal{A}=\{A_y:y=0.01,0.02,\ldots,0.99\}$, where 
 \begin{equation}\label{eq-drees-Ay}
 A_y :=\{\bm{\theta}\in\mathbb{S}_{+(2)}^1: \theta_1 \leq y\}\subset \mathbb{S}_{+(2)}^1.
 \end{equation}
+For further details about the meaning and role of $\mathcal{A}$, see Appendix XX.
 
 ### Large sample performance
 
@@ -520,7 +537,7 @@ p4 <- sim_results %>%
 ggarrange(p1, p2, p3, p4, ncol = 2, nrow = 2, common.legend = TRUE)
 ```
 
-Next, we check that our procedure detects dependence changes with high probability when the number of samples is large. The experimental procedure is unchanged, except that data are now generated from the SL-jump model with $\vartheta_0=2$ and $\vartheta_1=2.5$. These values bring about relatively subtle shifts in the dependence strength, with $\sigma_{ij}(t)=0.85$ for $t<0.5$ and $\sigma_{ij}(t)=0.91$ for $t\geq 0.5$. All p-values are less than $10^{-15}$, meaning our method consistently and overwhelmingly identifies the dependence chang. Obviously we do not expect the test to maintain this performance level for samples of realistic size.
+Next, we check that our procedure detects dependence changes with high probability when the number of samples is large. The experimental procedure is unchanged, except that data are now generated from the SL-jump model with $\vartheta_0=2$ and $\vartheta_1=2.5$. These values bring about relatively subtle shifts in the dependence strength, with $\sigma_{ij}(t)=0.85$ for $t<0.5$ and $\sigma_{ij}(t)=0.91$ for $t\geq 0.5$. All p-values are less than $10^{-15}$, meaning our method consistently and overwhelmingly identifies the dependence change. To fully explore the asymptotic properties of the proposed methods, in the next sections we investigate how they perform for more moderate sample sizes.
 
 ```{r}
 #| eval: false
@@ -538,7 +555,7 @@ sim_results %>%
 
 ### Small sample performance
 
-In finite sample settings, the empirical size of an asymptotic test will generally differ from its nominal size. The only guarantee is that the correct level is attained as $n\to\infty$. The hope is that convergence occurs with sufficient rapidity that the difference between the prescribed and actual Type I error rates is acceptably small. To test this, we run simulations using the SL-constant ($\vartheta_0=2$) and HR-constant ($\vartheta_0=1$) models in dimensions $d\in\{2, 5, 10, 25\}$ with sample sizes $n\in\{2.5\times 10^3,5\times 10^3,10^4\}$. For each data set, we apply our method at the 5\% level. The number of blocks is $n/b\in\{25,50\}$ and the proportion of extreme observations within each block is $k/b\in\{0.05, 0.10, 0.15\}$. @tbl-type1 reports the empirical Type I error rates of these tests. Blank cells indicate that the corresponding combination of tuning parameters were excluded because they violate the rank condition \eqref{eq-rank-condition} or because $k\leq d$. Each value in the table is based on $N$ repeated simulations, where $N=10^3$ if $d\leq 5$ and $N=300$ otherwise. Results from the large sample experiments in dimensions $d\in\{2,5\}$ are included (bottom row) for completeness.
+In finite sample settings, the empirical size of an asymptotic test will generally differ from its nominal size. The only guarantee is that the correct level is attained as $n\to\infty$. The hope is that convergence occurs with sufficient rapidity so that the difference between the prescribed and actual Type I error rates is acceptably small. To test this, we run simulations using the SL-constant ($\vartheta_0=2$) and HR-constant ($\vartheta_0=1$) models in dimensions $d\in\{2, 5, 10, 25\}$ with sample sizes $n\in\{2.5\times 10^3,5\times 10^3,10^4\}$. For each data set, we apply our method at the 5\% level. The number of blocks is $n/b\in\{25,50\}$ and the proportion of extreme observations within each block is $k/b\in\{0.05, 0.10, 0.15\}$. @tbl-type1 reports the empirical Type I error rates of these tests. Blank cells indicate that the corresponding combination of tuning parameters were excluded because they violate the rank condition \eqref{eq-rank-condition} or because $k\leq d$. Each value in the table is based on $N$ repeated simulations, where $N=10^3$ if $d\leq 5$ and $N=300$ otherwise. Results from the large sample experiments in dimensions $d\in\{2,5\}$ are included (bottom row) for completeness.
 
 ```{r make-tbl-type1}
 #| label: tbl-type1
@@ -580,7 +597,7 @@ sim_results %>%
 
 First we review the results for $d=2$. Under our method and Drees' method, the rejection rate of the CM-based test is consistently around 5\% for almost any choice of $b$ and $k$, even when $n=2,500$. The KS-based tests are universally more conservative than the CM-based tests, particularly for larger block sizes. @dreesStatisticalInferenceChanging2023 attribute this to the fact that a coarsely discretised path may only attain its supremum at a small number of time points (integer multiples of $2h$), whereas the corresponding critical values arise from suprema of continuous processes. However, for any value of $n$, there exists a pair of tuning parameters such that the discrepancy between the empirical and nominal size is at most 0.7\%. 
 
-Now consider the columns for $d\geq 5$. It is not possible to include @dreesStatisticalInferenceChanging2023 as a comparator here because, by their own admission, the necessary computations become prohibitively expensive. We find that the KS-test remains rather conservative, so we shall focus on the CM-test instead. When $d=5$, our procedure works well for both models, even when $n$ is small. For $d=10$ and $d=25$, the rank conditions on $\hat{V}$ and $\hat{\Sigma}(t)$ take effect, drastically reducing the set of admissible tuning parameters when $n\leq 5,000$. Even in these high-dimensional settings, the test produces reasonable results, especially for symmetric logistic data. Performance deteriorates under the 25-dimensional Hüsler-Reiss model, suggesting there may be insufficient data for the asymptotic approximations to hold. 
+Now consider the columns for $d\geq 5$. It is not possible to include @dreesStatisticalInferenceChanging2023 as a comparator here because, by their own admission, the necessary computations become prohibitively expensive. We find that the KS-test remains rather conservative, so we shall focus on the CM-test instead. When $d=5$, our procedure works well for both models, even when $n$ is small. For $d=10$ and $d=25$, the rank conditions on $\hat{V}$ and $\hat{\Sigma}(t)$ take effect, drastically reducing the set of admissible tuning parameters when $n\leq 5,000$. Nevertheless, even in these high-dimensional settings, the test produces reasonable results, especially for symmetric logistic data. Performance deteriorates under the 25-dimensional Hüsler-Reiss model, suggesting there may be insufficient data for the asymptotic approximations to hold. 
 
 ```{r make-fig-bivariate-power}
 #| label: fig-bivariate-power
@@ -675,9 +692,9 @@ p4 <- sim_results %>%
 ggarrange(p1, p2, p3, p4, ncol = 2, nrow = 2, common.legend = TRUE)
 ```
 
-Our next experiment assesses the empirical power under alternatives. For this, we generate data from the SL-jump ($\vartheta_0=2$), SL-linear ($\vartheta_0=2$), HR-jump ($\vartheta_0=1$) and HR-linear ($\vartheta_0=1$) models. The dependence $\vartheta_1$ at time 1 is allowed to vary, allowing us to examine the relationship between the power and the magnitude of the dependence change. For each model and value of $\vartheta_1$, we simulate 1,000 data sets with $d=2$ and $n=2,500$. All tests are conducted at the 5\% level. 
+Our next experiment assesses the empirical power under alternatives. For this, we generate data from the SL-jump ($\vartheta_0=2$), SL-linear ($\vartheta_0=2$), HR-jump ($\vartheta_0=1$) and HR-linear ($\vartheta_0=1$) models. The parameter $\vartheta_1$ at time 1 is allowed to vary, permitting an examination of the relationship between the power and the magnitude of the dependence change. For each model and value of $\vartheta_1$, we simulate 1,000 data sets with $d=2$ and $n=2,500$. All tests are conducted at the 5\% level. 
 
-@fig-bivariate-power displays the results for $n/b=25$ and $k/b=0.1$; @fig-bivariate-power-vary-b-k in Appendix XX confirms that the conclusions are not overly sensitive to this choice. The plots show that our test achieves superior power compared to @dreesStatisticalInferenceChanging2023 in all scenarios. Note that when $\vartheta_1=\vartheta_0$, the null is true so power reverts to 5\%. All tests easily detect the largest SL-jump change, achieving near full power in this case. On the other hand, Drees' test is virtually powerless under the more challenging HR-linear scenario, while our procedure maintains a respectable level of performance. Here, the effect of focussing on bivariate summaries rather than the full angular measure becomes evident. Imposing additional structure/assumptions -- namely that the TPDM provides an adequate summary of dependence -- improves the signal-to-noise ratio, so that subtle dependence changes may be detected. In the case of both the symmetric logistic and Hüsler-Reiss models, this assumption is valid (and therefore helpful) due to the one-to-one correspondence between the model parameter and the TPDM. An example where this is not the case is given in Section XX. When dependence changes abruptly (SL-jump and HR-jump), the CM- and KS-based test perform equally well. Upon further investigation, we find that the path $\{\hat{Z}_{12}(t):t\in[0,1]$ is a $\wedge$-shaped curve attaining its maximum at $t=0.5$ (when the changepoint occurs). Thus $T^{KS}\approx \hat{Z}_{12}(0.5)$ and, upon approximating $\{|\hat{Z}_{12}(t)|^2:t\in[0,1]$ by a triangle, $T^{CM}\approx \hat{Z}_{12}^2(0.5)/2$. Both test statistics are determined by $\hat{Z}_{12}(t)$, so they invariably reach the same outcome. For gradual changes the CM-based test is superior, cf. Figures 1 and 2 in @dreesStatisticalInferenceChanging2023.
+@fig-bivariate-power displays the results for $n/b=25$ and $k/b=0.1$; @fig-bivariate-power-vary-b-k in Appendix XX confirms that the conclusions are not overly sensitive to this choice. The plots show that our test achieves superior power compared to @dreesStatisticalInferenceChanging2023 in all scenarios. When the null is true, $\vartheta_1=\vartheta_0$, the power of the test reverts to 5\%. Note that when $\vartheta_1=\vartheta_0$, the null is true so power reverts to 5\%. All tests easily detect the largest SL-jump change, achieving near full power in this case. On the other hand, Drees' test is virtually powerless under the more challenging HR-linear scenario, while our procedure maintains a respectable level of performance. Here, the effect of focusing on bivariate summaries rather than the full angular measure becomes evident. Imposing additional structure/assumptions -- namely that the TPDM provides an adequate summary of dependence -- improves the signal-to-noise ratio, so that subtle dependence changes may be detected. In the case of both the symmetric logistic and Hüsler-Reiss models, this assumption is valid (and therefore helpful) due to the one-to-one correspondence between the model parameter and the TPDM. An example where this is not the case is given in Section XX. When dependence changes abruptly (SL-jump and HR-jump), the CM- and KS-based test perform equally well. Upon further investigation, we find that the path $\{\hat{Z}_{12}(t):t\in[0,1]\}$ is a $\wedge$-shaped curve attaining its maximum at $t=0.5$ (when the changepoint occurs). Thus $T^{KS}\approx \hat{Z}_{12}(0.5)$ and, upon approximating $\{|\hat{Z}_{12}(t)|^2:t\in[0,1]$ by a triangle, $T^{CM}\approx \hat{Z}_{12}^2(0.5)/2$. Both test statistics are determined by $\hat{Z}_{12}(t)$, so they invariably reach the same outcome. For gradual changes the CM-based test is superior, cf. Figures 1 and 2 in @dreesStatisticalInferenceChanging2023.
 
 @fig-samplesize-power shows how the power of the KS test evolves as more data is acquired. The experimental procedure is the same as above, except the sample size is allowed to vary. The Q-Q plots depict the distribution of the p-values across 1,000 repeated tests for the HR-jump (left) and HR-linear (right) models based on different values of $\vartheta_1$ (line type) and $n$ (line colour). If a test is highly-powered, then the associated curve will lie below the diagonal. In both scenarios, the power improves as $n$ increases. The effect is more pronounced for the linear dependence change. Intuitively, for an instantaneous change the test only needs to learn the dependence strength before the change-point and after the change-point. This does not require a large amount of information. Detecting gradual changes places more emphasis on accurate local estimation, especially near the end-points of the time interval, so acquiring additional data has a greater effect.  
 
@@ -708,11 +725,11 @@ sim_results %>%
 
 ### Computation time
 
-A key advantage of our approach is that the computations are considerably less intensive than those required by @dreesStatisticalInferenceChanging2023. As explained earlier, this permits its application in moderate to high-dimensional settings. Another benefit is reduced run times, which may be an important consideration if the test is to be performed repeatedly (e.g. see the data application in Section XX). This prompts us to analyse the computation times for the simulation experiments in Section XX. The left-hand plot in @fig-computation-time shows the distribution of the total elapsed time (in seconds) against $n$. The number of blocks is $n/b=50$; the number of extremes per block is indicated by the bar colour. Our procedure is faster than Drees', though the difference is only a few hundredths of a second. The test remains fast even when $n=10^4$. This isn't particularly surprising, since discarding the non-extreme observations means the effective sample size is never actually very large. The right-hand plot shows average computation time as a function of $k_{\mathrm{total}}$ for different dimensions $d$. Dimension is clearly the key determinant of computation time. This is predominantly due to the inversion of the $\mathcal{D}\times\mathcal{D}$ matrix $\hat{V}$, which has $\mathcal{O}(\mathcal{D}^3)=\mathcal{O}(d^6)$ complexity. *More comments? Address it in future work e.g. ways to improve the efficiency of this step, or perhaps circumvent it altogether, would be welcome.* 
+A key advantage of our approach is that the computations are considerably less intensive than those required by @dreesStatisticalInferenceChanging2023. As explained earlier, this permits its application in moderate to high-dimensional settings. Another benefit is reduced run times, which may be an important consideration if the test is to be performed repeatedly (e.g. see the data application in Section XX). This prompts us to analyse the computation times for the simulation experiments in Section XX. The left-hand plot in @fig-computation-time shows the distribution of the total elapsed time (in seconds) against $n$. The number of blocks is $n/b=50$; the number of extremes per block is indicated by the bar colour. Our procedure is faster than Drees', though the difference is only a few hundredths of a second. The test remains fast even when $n=10^4$. This isn't particularly surprising, since discarding the non-extreme observations means the effective sample size is never actually very large. The right-hand plot shows average computation time to run the test as a function of $k_{\mathrm{total}}$ for different dimensions $d$. Dimension is clearly the key determinant of computation time. This is predominantly due to the inversion of the $\mathcal{D}\times\mathcal{D}$ matrix $\hat{V}$, which has $\mathcal{O}(\mathcal{D}^3)=\mathcal{O}(d^6)$ complexity.
 
 ```{r make-fig-computation-time}
 #| label: fig-computation-time
-#| fig-cap: "Analysis of computation times across the numerical experiments described in Section XX. Left: empirical distribution of run times when $d=2$, $n/b=50$, $k/b=0.1$. Right: median computation time as a function of the total number of threshold exceedances."
+#| fig-cap: "Analysis of computation times across the numerical experiments described in Section XX. Left: empirical distribution of run times when $d=2$, $n/b=50$, $k/b=0.1$. Right: median computation time for the test as a function of the total number of threshold exceedances."
 #| fig-scap: "Computation times versus $n$, $k_{\\mathrm{total}}$ and $d$."
 #| fig-height: 3.5
 #| warning: false
@@ -763,9 +780,9 @@ H(\cdot\,;t) = \sum_{j=1}^q \|\bm{a}_j(t)\|_2^2 \delta_{\bm{a}_j(t)/\|\bm{a}_j(t
 \end{equation*}
 By @exm-max-linear-tpdm, the local TPDM is given by $\Sigma(t) = A(t)A(t)^T$. A formula for the asymptotic asymptotic covariance $V(t)$ matrix is derived in Appendix XX. 
 
-Suppose $A_0 \neq A_1$ (including up to permutations of their columns) are such that $\Sigma(0)=\Sigma(1)$ and $V(0)=V(1)$. Then the alternative hypothesis \eqref{eq-changing-ext-dep-alt-hyp} is true but the asymptotic distributions of $T^{(KS)}$ and $T^{(CM)}$ are the null distributions in \eqref{eq-asymptotic-test-stat}. Clearly this presents an issue for our test. 
+Suppose $A_0$ and $A_1$, with $A_0 \neq A_1$ including up to permutations of their columns, are such that $\Sigma(0)=\Sigma(1)$ and $V(0)=V(1)$. Then the alternative hypothesis \eqref{eq-changing-ext-dep-alt-hyp} is true but the asymptotic distributions of $T^{(KS)}$ and $T^{(CM)}$ are the null distributions in \eqref{eq-asymptotic-test-stat}. Clearly this presents an issue for our test. 
 
-To illustrate this problem empirically, we seek a pair of matrices $A_0,A_1$ with a common TPDM and asymptotic covariance. Constructing a non-trivial (i.e. $q>2$) pair by hand would be extremely laborious. Instead, we generate a large set of valid candidate matrices $A\in\R_+^{d\times q}$ with $d=2$ and $q=20$ and search for a valid pair among these. This process yields the matrices shown in @fig-constant-tpdm-A. To emphasise that they parametrise different extreme value distributions, the matrices' columns are reordered so that $a_{11}<a_{12}<\ldots<a_{1q}$. Substituting these into \eqref{eq-time-dependent-max-linear} gives $\sigma_{12}(t)=0.100$ and $\nu_{12}^2=0.060(t)$ for all $t\in[0,1]$. 
+To illustrate this problem empirically, we seek a pair of matrices $A_0,A_1$ with a common TPDM and asymptotic covariance. Constructing a non-trivial (i.e. $q>2$) pair by hand would be extremely laborious. Instead, we generate a large set of valid candidate matrices $A\in\R_+^{d\times q}$ with $d=2$ and $q=20$ and search for a suitable pair among these. This process yields the matrices shown in @fig-constant-tpdm-A. To emphasise that they parametrise different extreme value distributions, the matrices' columns are reordered so that $a_{11}<a_{12}<\ldots<a_{1q}$. Substituting these into \eqref{eq-time-dependent-max-linear} gives $\sigma_{12}(t)=0.100$ and $\nu_{12}^2=0.060(t)$ for all $t\in[0,1]$. 
 
 ```{r make-fig-constant-tpdm-A}
 #| label: fig-constant-tpdm-A
@@ -812,9 +829,9 @@ readRDS(file = file.path("scripts", "changing-ext-dep", "results", "constant-tpd
 
 ## Application: extreme Red Sea surface temperatures
 
-We now apply our methodology to test for changing dependence in extreme Red Sea surface temperature anomalies. The dataset has been widely studied in the extremes community [@castro-camiloBayesianSpacetimeGap2021; @rohrbeckSpatiotemporalModelRed2021; @simpsonConditionalModellingSpatiotemporal2021] having been the subject of the EVA (2019) Data Challenge [@huserEditorialEVA20192021]. Further details about the data set and pre-processing can be found in @huserEditorialEVA20192021. *Mention removal of non-stationarity in the margins citing Castro-Camilo*.
+We now apply our methodology to test for changing dependence in extreme Red Sea surface temperature anomalies. The dataset has been widely studied in the extremes community [@castro-camiloBayesianSpacetimeGap2021; @rohrbeckSpatiotemporalModelRed2021; @simpsonConditionalModellingSpatiotemporal2021] having been the subject of the EVA (2019) Data Challenge [@huserEditorialEVA20192021]. Further details about the data set and pre-processing can be found in @huserEditorialEVA20192021. non-stationarity in the marginal distributions was handled using the approach in @castro-camiloBayesianSpacetimeGap2021.
 
-Detecting changes in extremal dependence in the Red Sea is of significant practical importance. Increase dependence could lead to prolonged periods of elevated sea temperatures, exacerbating ecological issues such as coral bleaching and reducing the resilience of marine biodiversity. Red Sea surface temperatures are influenced by broader climate drivers, including the El Niño–Southern Oscillation (ENSO) [@karnauskasInterannualVariabilitySea2018]. In a study of extreme precipitation, @jiangPrincipalComponentAnalysis2020 found evidence for a positive temporal trend coefficients associated to principal eigenvectors related with ENSO. Moreover, Figure 3 in @kakampakouSpatialExtremalModelling2024 shows increases in the tail dependence coefficient $\chi$ between pairs of sites based on data from the periods 1985-1989 and 2011-2015, especially in the north. These findings points towards the possibility of non-stationary tail dependence.
+Detecting changes in extremal dependence in the Red Sea is of significant practical importance. Increased spatial dependence could lead to prolonged periods of elevated sea temperatures, exacerbating ecological issues such as coral bleaching and reducing the resilience of marine biodiversity. Red Sea surface temperatures are influenced by broader climate drivers, including the El Niño–Southern Oscillation (ENSO) [@karnauskasInterannualVariabilitySea2018]. In a study of extreme precipitation, @jiangPrincipalComponentAnalysis2020 found evidence for a positive temporal trend coefficients associated to principal eigenvectors related with ENSO. Moreover, Figure 3 in @kakampakouSpatialExtremalModelling2024 shows increases in the tail dependence coefficient $\chi$ between pairs of sites based on data from the periods 1985-1989 and 2011-2015, especially in the north. These findings point towards the possibility of non-stationary tail dependence.
 
 ```{r make-fig-redsea-sites}
 #| label: fig-redsea-sites
@@ -887,7 +904,7 @@ data %>%
 ```{r}
 #| label: fig-redsea-test-example-north
 #| fig-cap: "Diagnostic plots for our test, based $b=107$ and $k=20$, applied to data from $d=5$ randomly selected northerly sites in the Red Sea. The interpretation of each plot is the same as in @fig-counterexample-maxlinear-pawley, except now there are $\\mathcal{D}=10$ curves, one for each component pair. The variable pairs are coloured light to dark with respect to their lexicographical ordering. In this example, there is sufficient evidence to reject the null at the 5\\% level."
-#| fig-scap: "Diagnostic plots for our test with $d=5$ southerly sites in the Red Sea."
+#| fig-scap: "Diagnostic plots for our test with $d=5$ northerly sites in the Red Sea."
 #| fig-height: 4.5
 
 set.seed(1)
@@ -926,26 +943,48 @@ redsea$X[1:1605, north_sites] %>%
   plot_test_pawley(variable_scheme = "colour")
 ```
 
-## Extensions and outlook
+## Future work
 
 ### Change-point detection
 
-In certain applications (e.g. finance), it may be more interesting to ask *when*, not if, dependence has changed. This is the realm of change-point detection. *How much should I say here? Mention that this is being actively pursued with colloborators?*
+In certain applications (e.g. finance), one is not only interested in whether dependence has changed, but also *when* dependence has changed. This is the realm of change-point detection. 
 
 ### Mitigating the bias issue 
 
-The bias issue means that the empirical TPDM struggles to discriminate between weak and very weak dependence (@fig-parametric-chi-tpdm-small-n). Therefore power probably worse when dependence is weak. Fix this by using bias-corrected estimator.
+*Christian: did you mean moving this to the future work section of the thesis, i.e. Chapter 7? Or move it to the future work section of Chapter 6 where the new estimator is defined?*
 
-### Alternative dependence measures
+The bias issue means that the empirical TPDM struggles to discriminate between differences in dependence strengths at weak levels (@fig-parametric-chi-tpdm-small-n). As a result, the power of our test is likely dependent on the underlying dependence strength. This phenomenon is illustrated in @fig-test-power-weak-dependence. The plots concern data generated from the SL-linear model with $d=3$. In the top plot, the dependence parameter $\gamma$ evolves linearly from $\gamma(0)=0.06$ ($\sigma_{ij}(0)=0.998$) to $\gamma(1)=0.10$ ($\sigma_{ij}(0)=0.996$). In the bottom plot, the corresponding values are $\gamma(0)=0.95$ ($\sigma_{ij}(0)=0.147$) to $\gamma(1)=0.99$ ($\sigma_{ij}(0)=0.031$). One might assume that the second dependence change is easier to detect, because the change in the TPDM is greater. However, the deficiencies of the empirical TPDM mean this is not the case. Indeed, the bottom-right sub-panels reveal that the null is only rejected for the first test. While we have not conducted a full study of the power, we expect this to replicate over repeated simulations. To address this shortcoming, one might consider employing a TPDM estimator with better finite-sample performance in weak dependence settings. Such an estimator is proposed in Chapter XX. In order to use this estimator in our test, one needs to undertake an asymptotic analysis analogous to Section XX. We conjecture that the results will follow identically, so in effect the new estimator may simply be plugged in to our testing framework. 
+
+```{r}
+#| label: fig-test-power-weak-dependence
+#| fig-cap: "Diagnostic plots for our test based on $n=5,000$ samples of SL-linear data in $d=3 dimensions. For the interpretation of the plot, see the caption of fig-counterexample-maxlinear-pawley. Top: a strong dependence scenario where $\\gamma(0)=0.06$ and $\\gamma(1)=0.10$. Bottom: a weak dependence scenario where $\\gamma(0)=0.95$ and $\\gamma(1)=0.99$."
+#| fig-scap: "Blah."
+#| fig-height: 7
+
+set.seed(1)
+p1 <- sim_X_changing_dep(n = 5000, d = 3, model = "log", param0 = 1 / 0.06, param1 = 1 / 0.1, change_type = "linear") %>%
+  set_colnames(paste0("X", 1:3)) %>%
+  test_pawley(b = 250, k = 25, return_all = TRUE) %>%
+  extract2("data") %>%
+  plot_test_pawley(variable_scheme = "colour")
+
+p2 <- sim_X_changing_dep(n = 5000, d = 3, model = "log", param0 = 1 / 0.95, param1 = 1 / 0.99, change_type = "linear") %>%
+  set_colnames(paste0("X", 1:3)) %>%
+  test_pawley(b = 250, k = 25, return_all = TRUE) %>%
+  extract2("data") %>%
+  plot_test_pawley(variable_scheme = "colour")
+  
+ggarrange(p1, p2, nrow = 2)
+```
+
+Therefore power probably worse when dependence is weak. Fix this by using bias-corrected estimator.
+
+### Improving computational complexity
 
 Our method considers the time-evolution of dependence between $X_i$ and $X_j$ according to the measure
 \begin{equation}\label{eq-tdpm-general-f}
 \sigma_{ij}(t)=\mathbb{E}_H(\cdot;t)[f(\bm{\Theta}(t))],
 \end{equation}
 where $f:\mathbb{S}_{+(2)}^{d-1}\to\R_+$ is set as $f(\bm{\theta})=\theta_i\theta_j$. However, alternative dependence measures generated by some other function $g:\mathbb{S}_+^{d-1}\to\R_+$ could be used instead, provided they are continuous and bounded so that the necessary asymptotic theory holds. *Speculate as to what would happen?*
-
-### Robustness to change in serial dependence
-
-*Test robustness to serial dependence. (e.g. simulation from AR process).*
 
 

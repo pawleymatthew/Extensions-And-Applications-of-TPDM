@@ -15,10 +15,12 @@ book:
     - background.qmd
     - changing-ext-dep.qmd
     - compositional.qmd
+    - shrinkage-tpdm.qmd
     - references.qmd
   appendices:
     - appendix-background.qmd
     - appendix-changing-ext-dep.qmd
+    - appendix-compositional.qmd
   search:
     location: navbar
     type: overlay
