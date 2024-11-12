@@ -10,6 +10,7 @@ library(dplyr)
 library(purrr)
 library(lattice)
 library(gridExtra)
+library(Matrix)
 
 # Directory -------------------------------------------------------------------------
 
@@ -181,6 +182,11 @@ res <- pblapply(k_frac_vals, function(k_frac) {
     group_by(cluster) %>%
     summarise(min_sigma = min(sigma), median_sigma = median(sigma), max_sigma = max(sigma)) 
   
+  if (k_frac == 0.025) {
+    saveRDS(as.matrix(bdiag(Sigma_hat_clusters)), "scripts/shrinkage-tpdm/results/eva-c4-Sigma-hat.RDS")
+    saveRDS(as.matrix(bdiag(Sigma_tilde_clusters)), "scripts/shrinkage-tpdm/results/eva-c4-Sigma-tilde.RDS")
+  }
+
   return(tibble("k_frac" = k_frac,
                 "empiricalstandard_p1" = p_u1_emp,
                 "empiricalstandard_p2" = p_u2_emp,
@@ -273,23 +279,23 @@ Sigma_hat_clusters %>%
 colpal <- colorspace::sequential_hcl(n = 100, "Viridis")
 breaks <- lattice::do.breaks(c(0, 1.3), length(colpal))
 
-library(Matrix)
-Sigma_hat_bdiag <- bdiag(Sigma_hat_clusters) %>% as.matrix()
-S1 <- t(Sigma_hat_bdiag[nrow(Sigma_hat_bdiag):1, ])
-p1 <- lattice::levelplot(S1, col.regions = colpal, at = breaks,
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(draw = FALSE),
-                                       y = list(draw = FALSE)))
-
-Sigma_tilde_bdiag <- bdiag(Sigma_tilde_clusters) %>% as.matrix()
-S2 <- t(Sigma_tilde_bdiag[nrow(Sigma_tilde_bdiag):1, ])
-p2 <- lattice::levelplot(S2, col.regions = colpal, at = breaks,
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(draw = FALSE),
-                                       y = list(draw = FALSE)))
-grid.arrange(p1, p2, ncol = 2)
+# library(Matrix)
+# Sigma_hat_bdiag <- bdiag(Sigma_hat_clusters) %>% as.matrix()
+# S1 <- t(Sigma_hat_bdiag[nrow(Sigma_hat_bdiag):1, ])
+# p1 <- lattice::levelplot(S1, col.regions = colpal, at = breaks,
+#                          xlab = "", ylab = "",
+#                          colorkey = TRUE,
+#                          scales = list(x = list(draw = FALSE),
+#                                        y = list(draw = FALSE)))
+# 
+# Sigma_tilde_bdiag <- bdiag(Sigma_tilde_clusters) %>% as.matrix()
+# S2 <- t(Sigma_tilde_bdiag[nrow(Sigma_tilde_bdiag):1, ])
+# p2 <- lattice::levelplot(S2, col.regions = colpal, at = breaks,
+#                          xlab = "", ylab = "",
+#                          colorkey = TRUE,
+#                          scales = list(x = list(draw = FALSE),
+#                                        y = list(draw = FALSE)))
+# grid.arrange(p1, p2, ncol = 2)
 
 # table of estimates and true values
 data.frame("method" = c("Truth", 

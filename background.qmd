@@ -836,9 +836,9 @@ For example, setting $n=10^4$ and $k=\sqrt{n}$ yields $\mathbb{P}(0.710 < \hat{\
 :::
 
 In practice, the asymptotic variance may be replaced with the plug-in estimator [@leePartialTailCorrelation2023]
-\begin{equation*}
+\begin{equation}\label{eq-asymptotic-variance-estimator}
 \hat{\nu}_{ij}^2 := \frac{1}{k-1} \sum_{l=1}^k \left(d \Theta_{(l),i}\Theta_{(l),j} - \hat{\sigma}_{ij} \right)^2.
-\end{equation*}
+\end{equation}
 
 The following result, proved by @kraliCausalityEstimationMultivariate2018 for $\alpha=2$, generalises asymptotic normality of the empirical TPDM to the entire matrix, rather than just individual entries. This is most simply expressed in terms of upper-half vectorisations of $\Sigma$ and $\hat{\Sigma}$, that is
 \begin{align}
@@ -1047,7 +1047,7 @@ Estimation error in the empirical TPDM was first studied by @cooleyDecomposition
 
 The first strategy for tackling the bias issue is found in @mhatreTransformedLinearModelsTime2021. Working in a time series context, they study serial dependence in extremes using the tail pairwise dependence function (TPDF) $\sigma(h)$, which summarises the tail dependence between $X_t$ and $X_{t+h}$ for a tail stationary time series $\{X_t:t=1\ldots,n\}$. Simulation experiments reveal that the empirical TPDF $\hat{\sigma}(h)$ is biased at higher lags where the true dependence is close to zero. To counteract this, they subtract the mean from the time series in pre-processing. The rationale for this is described in terms of the position of extreme points in a lag plot (i.e. a scatter plot of $(X_t, X_{t+h})$ for fixed $h$). Subtracting the mean has negligible effect on the angles corresponding to joint extremes, but points near a coordinate axis are shifted even closer to the axis. 
 
-@fixSimultaneousAutoregressiveModels2021 develop the first bias-corrected estimate of the TPDM. Recall from Section XX the problem of estimating the spatial dependence parameter $\rho$ of the extremal SAR model \eqref{eq-sar-model}. When the study domain is large or the modelled phenomenon is highly localised, the pairwise dependence between distant sites is weak and the empirical TPDM is prone to overestimation in the corresponding entries. This bias carries over to $\hat{\rho}$ defined in \eqref{eq-sar-rho-estimator}. Their bias-corrected estimate $\tilde{\Sigma}$ reduces the entries of $\hat{\Sigma}$ by element-wise application of the soft-thresholding operator [@rothmanGeneralizedThresholdingLarge2009], that is
+@fixSimultaneousAutoregressiveModels2021 develop the first bias-corrected estimate of the TPDM. Recall from Section XX the problem of estimating the spatial dependence parameter $\rho$ of the extremal SAR model. When the study domain is large or the modelled phenomenon is highly localised, the pairwise dependence between distant sites is weak and the empirical TPDM is prone to overestimation in the corresponding entries. This bias carries over to $\hat{\rho}$ defined in \eqref{eq-sar-rho-estimator}. Their bias-corrected estimate $\tilde{\Sigma}$ reduces the entries of $\hat{\Sigma}$ by element-wise application of the soft-thresholding operator [@rothmanGeneralizedThresholdingLarge2009], that is
 \begin{equation}\label{eq-fix-bias-corrected-tpdm}
     \tilde{\Sigma}=(\tilde{\sigma}_{ij}), \qquad \tilde{\sigma}_{ij} = \begin{cases}
         \hat{\sigma}_{ij}, & i=j, \\

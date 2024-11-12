@@ -19,62 +19,79 @@ options(dplyr.summarise.inform = FALSE)
 options(knitr.kable.NA = "")
 ```
 
+```{r shrinkage-tpdm-source-functions}
+#| include: false
+sapply(list.files(path = "R/shrinkage-tpdm", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
+sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
+```
 
 ## Introduction and motivation
 
-*To do*
+Section XX demonstrated a deficiency of the empirical TPDM estimator, which we termed the bias issue. Specifically, the empirical TPDM $\hat{\Sigma}$ has a tendency to overestimate weak pairwise dependence -- see \eqref{eq-empirical-tpdm-bias}. The bias issue has arisen at several subsequent points throughout the thesis: our test for time-varying dependence becomes less powerful when dependence is weak (@fig-test-power-weak-dependence); projections onto principal eigenspaces of $\hat{\Sigma}$ result in poor reconstructions near the simplex boundary (@fig-sim-pca-hr-p-estimates, second row and right column); tail probability estimates based on completely positive factorisations of $\hat{\Sigma}$ are biased (Figure XX). 
 
-## Regularised estimation: thresholding and shrinkage
+This chapter addresses the problem of reducing bias in the empirical TPDM. Bias reduction requires grappling with two interconnected problems. First, what *form* should a bias-corrected estimator take? The procedure proposed in @fixSimultaneousAutoregressiveModels2021 (see Section XX) shrinks all entries of $\hat{\Sigma}$ equally. We contend that this is not ideal, given that the bias is greatest for pairs of variables where dependence is weak. Inspired by @rothmanGeneralizedThresholdingLarge2009, a flexible extension based on the adaptive lasso is proposed. This permits control over whether shrinkage is applied equally to all entries or targeted towards smaller entries, at the cost of introducing an additional parameter. The second problem concerns *how much* bias correction should be applied. @fixSimultaneousAutoregressiveModels2021 solve this by assuming that dependence strength is a decreasing function of spatial distance and is approximately zero for the most distant pair(s) of sites in the study region. However, these assumptions are only meaningful (let alone satisfied) in spatial settings, precluding its use in general applications. While we were unable to find a general solution to this research problem, we made progress in a special case where bias-reduction is achieved via linear shrinkage techniques [@ledoitImprovedEstimationCovariance2003]. For this class, we are able to devise a theoretically justified, data-driven procedure for selecting the magnitude of the shrinkage. 
 
-In high-dimensional settings, where the number of variables is comparable to the number of observations, the empirical covariance matrix is noisy and poorly conditioned. Regularisation may be used to obtain more stable and accurate estimates. Shrinkage estimation achieves this by shrinking the empirical estimate towards a biased but highly structured target [@ledoitImprovedEstimationCovariance2003]. Thresholded estimators enforce sparsity by shrinking small values towards zero [@rothmanGeneralizedThresholdingLarge2009]. This improves stability and interpretability in cases where many variables are weakly correlated. We review these techniques before applying them for TPDM estimation.
+## Regularised TPDM estimators: thresholding and shrinkage
 
-### Thresholding
+In high-dimensional settings, where the number of variables is comparable to the number of observations, the empirical covariance matrix may be noisy and poorly conditioned. Regularisation may be applied to obtain more stable and accurate estimates. In particular, thresholding is used to enforce sparsity by shrinking small values towards zero, enhancing stability and interpretability in cases where many variables are weakly correlated [@rothmanGeneralizedThresholdingLarge2009]. On the other hand, shrinkage methods move the empirical estimate towards a biased but highly structured pre-specified target matrix [@ledoitImprovedEstimationCovariance2003]. In both cases, more accurate estimates are obtained by reducing the entries of the empirical estimator in some way. Thus, we may consider applying these techniques to the empirical TPDM to achieve bias-reduction. This may have the additional benefit of improving stability in cases where $d$ is comparable to the number of extremes $k$, but this aspect will not be explored. 
 
-Thresholded estimators are founded on an underlying thresholding operator. Since we are interested in later applying these techniques to TPDMs, we define the various function classes assuming non-negative inputs.
+### Thresholded TPDM estimators
+
+The core idea of thresholded estimation is to apply a thresholding operator to the raw, empirical estimate (in our case $\hat{\Sigma}$). The thresholding operator controls the nature of the regularisation and must satisfy certain properties. 
 
 :::{#def-thresholding-operator}
-For $\lambda\geq 0$, a function $s_\lambda:\R_+\to\R_+$ is called a thresholding operator if it satisfies the following conditions for all $x\in\R_+$:
-
-1. $s_{\lambda}(x)\leq x$;
-2. $x\leq\lambda \implies s_\lambda(x)=0$;
-3. $|s_\lambda(x)-x|\leq \lambda$.
+Let $\lambda\geq 0$ be a fixed threshold. A function $s_\lambda:\R_+\to\R_+$ is called a thresholding operator if, for all $x\in\R_+$,
+\begin{align}
+& s_{\lambda}(x)\leq x, \label{eq-threshold-operator-i} \\
+& x\leq\lambda \implies s_\lambda(x)=0, \label{eq-threshold-operator-ii} \\
+& |s_\lambda(x)-x|\leq \lambda. \label{eq-threshold-operator-iii}
+\end{align}
 :::
 
-The parameter $\lambda$ controls the amount of shrinkage/regularisation applied. In the two extremes case, we have $s_0(x)=x$ and $s_\infty(x)=0$ for all $x\in\R_+$. Condition (i) states that $s_\lambda$ should shrink $x$ towards zero. Condition (ii) enforces a threshold below which values are mapped to zero. This induces sparsity in the outputs. Condition (iii) bounds the maximal amount of shrinkage. For simplicity, we assume the threshold and maximal shrinkage are equal. This condition may be relaxed by introducing separate parameters $\lambda_1$ and $\lambda_2$ if desired [@antoniadisRegularizationWaveletApproximations2001]. Thresholding operators can be equivalent formulated as solutions to regularised optimisation problems of the form
+The tuning parameter $\lambda$ controls the strength of the regularisation. In the two extreme cases, we have $s_0(x)=x$ (no regularisation) and $s_\infty(x)=0$ for all $x\in\R_+$ (full shrinkage). Condition \eqref{eq-threshold-operator-i} states that $s_\lambda$ should push $x$ towards zero. Condition \eqref{eq-threshold-operator-ii} enforces a threshold below which values are mapped to zero, potentially inducing sparsity in the output. Condition \eqref{eq-threshold-operator-iii} limits the amount of shrinkage. For simplicity, we assume the threshold in \eqref{eq-threshold-operator-ii} and the maximal shrinkage in \eqref{eq-threshold-operator-iii} are identical. This could be relaxed by introducing separate parameters $\lambda_1$ and $\lambda_2$ if desired [@antoniadisRegularizationWaveletApproximations2001]. Thresholding operators may be equivalently formulated as solutions to regularised optimisation problems of the form
 \begin{equation}\label{eq-thresholding-regularisation-problem}
     s_\lambda(x) = \argmin_{y\in\R_+}\left[\frac{1}{2}(y-x)^2 + p_\lambda(y;x)\right]
 \end{equation}
-for some penalty function $p_\lambda$. Describing threshold operators in this way provides insight into their behaviour.
+for some penalty function $p_\lambda$. While we do not explicitly make use of this formulation, the penalty function is useful for providing insight into an operator's behaviour.
 
-We consider three popular thresholding operators: hard-thresholding, soft-thresholding, and adaptive lasso. The hard-thresholding rule 
+We will consider three popular thresholding operators: hard-thresholding, soft-thresholding, and adaptive lasso. For reference, the corresponding functions $x\mapsto s_{0.1}(x)$ are shown in @fig-threshold-operators. The hard-thresholding rule 
 \begin{equation}
     s_\lambda^H(x) = x\ind\{x > \lambda\}
 \end{equation}
-applies no shrinkage to values above $\lambda$. Its diametric opposite is the soft-thresholding operator
+applies no shrinkage to values above $\lambda$. The jump discontinuity in $s_\lambda^H(x)$ at $\lambda=x$ can be observed in @fig-threshold-operators. In the space of thresholding operators, it is diametrically opposed to the soft-thresholding operator
 \begin{equation}
     s_\lambda^S(x) = (x-\lambda)_+,
 \end{equation}
-which induces the maximal amount of shrinkage permitted by condition (iii). Soft-thresholding 
-corresponds to solving \eqref{eq-thresholding-regularisation-problem} with lasso penalty function $p_\lambda(y;x)=\lambda y$. Equal shrinkage is applied to large and small values (above the threshold) alike, since $p_\lambda(y;x)$ does not depend on $x$. Other thresholding operators offer a compromise between these two cases. We consider the adaptive lasso, whose penalty function $p_\lambda(y;x)=\lambda^{\eta+1}yx^{-\eta}$ is down-weighted for larger values. The thresholding rule is given by
+which induces the maximal amount of shrinkage permitted by \eqref{eq-threshold-operator-iii}. Soft-thresholding 
+corresponds to solving \eqref{eq-thresholding-regularisation-problem} with lasso penalty function $p_\lambda(y;x)=\lambda y$. Note that $p_\lambda(y;x)$ does not depend on $x$, reflecting the fact that equal shrinkage is applied to large and small values (exceeding $\lambda$) alike. Other thresholding operators offer some kind of compromise between these two cases. The adaptive lasso penalty function $p_\lambda(y;x)=\lambda^{\eta+1}yx^{-\eta}$ down-weights larger values, leading to the thresholding rule
 \begin{equation}\label{eq-adaptive-lasso}
     s_{\lambda,\eta}^{AL}(x) = (x-\lambda^{\eta+1}x^{-\eta})_+, \qquad (\eta \geq 0).
 \end{equation}
-The degree of down-weighting is controlled by the tuning parameter $\eta\geq 0$. Setting $\eta=0$ results in no down-weighting, i.e. $s_{\lambda,0}^{AL}(x)=s_\lambda^S(x)$. On the other hand, $s_{\lambda,\eta}^{AL}(x)\to s_\lambda^H(x)$ as $\eta\to\infty$. Thus, adaptive lasso is sandwiched between soft- and hard-thresholding. The clipped $L_1$-penalty and the smoothly clipped absolute deviations (SCAD) penalty are other alternatives that work in a similar way [@antoniadisRegularizationWaveletApproximations2001].
+The degree of down-weighting is controlled by the tuning parameter $\eta\geq 0$. Setting $\eta=0$ results in no down-weighting, yielding the soft-thresholding operator $s_{\lambda,0}^{AL}(x)=s_\lambda^S(x)$. On the other hand, $s_{\lambda,\eta}^{AL}(x)\to s_\lambda^H(x)$ as $\eta\to\infty$. Thus, soft- and hard-thresholding are special (limiting) cases of adaptive lasso. The clipped $L_1$-penalty and the smoothly clipped absolute deviations (SCAD) penalty behave in a similar fashion [@antoniadisRegularizationWaveletApproximations2001]. 
 
-Let $A=(a_{ij})\in\R_+^{m\times n}$ be a non-negative matrix and $s_\lambda:\R_+\to\R_+$ a thresholding operator. The thresholded matrix $s_\lambda(A):=(s_\lambda(a_{ij}))$ is simply the result of element-wise application of $s_\lambda$ to $A$. Thresholded matrices can be computed very efficiently. Note that thresholding does not preserve certain properties, including positive semi-definiteness.
+```{r make-fig-threshold-operators}
+#| label: fig-threshold-operators
+#| fig-cap: "Illustration of popular thresholding operators $s_{\\lambda}(x)$ with $\\lambda=0.1$."
+#| fig-scap: "Illustration of popular thresholding operators $s_{\\lambda}(x)$ with $\\lambda=0.1$."
+#| fig-height: 3.5
 
-@rothmanGeneralizedThresholdingLarge2009 analyse the properties of the thresholded empirical covariance matrix $s_\lambda(\hat{\Sigma})$. (Here the thresholding rule is suitably extended to cater for negative inputs.) Under certain assumptions, they prove that $s_\lambda(\hat{\Sigma})$ is `sparsistent'. This means that, as well as being consistent for the covariance matrix $\Sigma$, it identifies true (non-)zeros as (non-)zeros with probability tending to one.
+ggplot(data.frame(x = c(0, 0.3)), aes(x = x)) +
+  stat_function(aes(colour = "Hard"), fun = s_hard, args = list(lambda = 0.1)) +
+  stat_function(aes(colour = "Soft"), fun = s_soft, args = list(lambda = 0.1)) +
+  stat_function(aes(colour = "Adaptive lasso", linetype = "1"), fun = s_adlasso, args = list(lambda = 0.1, eta = 1)) +
+  stat_function(aes(colour = "Adaptive lasso", linetype = "2"), fun = s_adlasso, args = list(lambda = 0.1, eta = 2)) +
+  scale_x_continuous(limits = c(0, 0.3), expand = c(0, 0), breaks = breaks_extended(n = 5)) +
+  scale_y_continuous(limits = c(0, 0.3), expand = c(0, 0), breaks = breaks_extended(n = 5)) +
+  scale_colour_manual(values = c("darkgreen", "red", "blue")) +
+  scale_linetype_manual(values = c("solid", "dashed"), labels = c(1, 2)) +
+  labs(x = expression(x), y = expression(s[lambda](x)), colour = "Threshold operator", linetype = expression(eta)) +
+  theme_light()
+```
 
-### Ledoit-Wolf shrinkage
-
-The simplest shrinkage method is Ledoit-Wolf linear shrinkage [@ledoitImprovedEstimationCovariance2003]. The key idea is to bias the sample covariance matrix $\hat{\Sigma}$ towards some pre-specified target matrix $T$. This is achieved by forming a convex linear combination $\lambda T + (1-\lambda)\hat{\Sigma}$ of $T$ and $\hat{\Sigma}$. The shrinkage intensity $\lambda\in[0,1]$ determines the weight allocated to each matrix. If $\lambda=0$, then no shrinkage occurs. In the context of covariance matrix estimation, the resulting matrix is noisy but unbiased. If $\lambda=1$, then the estimator reverts to $T$. This is biased but perfectly stable. The choice of target depends on the context at hand. 
-
-## Regularised TPDM estimators
-
-We are now ready to apply thresholding and shrinkage to the TPDM. Our objective is multiple: we wish to mitigate against variability/instability and reduce the bias. The importance of the former objective should not be disregarded, since in multivariate extremes the effective sample size $k$ is often of comparable size to $d$. However, we focus our discussion on tackling the bias. Let $\hat{\Sigma}$ be an empirical estimate of some TPDM $\Sigma$. Our regularised TPDM estimators are defined as follows.
+We now proceed to apply thresholding to the empirical TPDM to define our first class of bias-reduced estimators. Let $A=(a_{ij})\in\R_+^{m\times n}$ be a non-negative matrix and $s_\lambda:\R_+\to\R_+$ a thresholding operator. The thresholded matrix $s_\lambda(A):=(s_\lambda(a_{ij}))$ is defined by element-wise application of $s_\lambda$ to $A$. Clearly this is very simple and fast to compute.  
 
 :::{#def-thresholded-tpdm}
-Let $s_\lambda$ be a thresholding operator. For $\lambda\geq 0$, the thresholded TPDM is
+Let $s_\lambda$ be a thresholding operator. The thresholded TPDM estimator is the $d\times d$ matrix 
 \begin{equation}\label{eq-thresholded-empirical-tpdm}
   \tilde{\Sigma}(\lambda) = (\tilde{\sigma}_{ij}(\lambda)), \qquad 
     \tilde{\sigma}_{ij} = 
@@ -85,23 +102,77 @@ Let $s_\lambda$ be a thresholding operator. For $\lambda\geq 0$, the thresholded
 \end{equation}
 :::
 
+Note that we do not shrink the diagonal entries, but in any case the performance of estimators will be evaluated using the off-diagonal entries only. The soft-thresholded TPDM $s_{\lambda}^S (\hat{\Sigma})$ coincides with estimator proposed by @fixSimultaneousAutoregressiveModels2021. However, @def-thresholded-tpdm includes a much broader class of estimators with more flexible behaviours. In particular, the adaptive lasso TPDM $s_{\lambda,\eta}^{AL}(\hat{\Sigma})$ allows us to concentrate shrinkage towards small entries in $\hat{\Sigma}$, where the bias is presumed to be greater. @fig-red-sea-tpdm provides a visual comparison between the three thresholding methods using the Red Sea surface temperature data from Section XX. Each matrix represents a regularised TPDM $\tilde{\Sigma}$ of the random vector $\bm{X}$, where $X_i$ corresponds to the $i$th site in @fig-redsea-sites (ordered by longitude and then by latitude) for $i=1,\ldots,200$. The figure shows how the hard-thresholded, soft-thresholded and adaptive lasso ($\eta=2$) estimates vary with the regularisation parameter $\lambda\in\{0,0.1,\ldots,0.5\}$. The empirical TPDM is estimated from the proportion $k/n=0.15$ of largest observations; this matrix is shown in the sub-panels where $\lambda=0$. Since the components of $\bm{X}$ are ordered according to the spatial locations, $\hat{\Sigma}$ generally exhibits stronger dependencies among variable pairs closer to the diagonal and weaker dependencies for those farther away. Hard-thresholding (top left) has no effect when $\lambda<\min\{\hat{\sigma}_{ij}:i\neq j\}\approx 0.249$. Increasing the threshold introduces abrupt shifts, resulting in a non-smooth sequence of solutions. In contrast, soft-thresholding yields smoother solutions because all off-diagonal entries receive some shrinkage when $\lambda>0$. However, the regularisation acts indiscriminately by applying an equal penalty to all entries. Consequently, as $\lambda$ increases the dependence strength is close to zero for all pairs of sites, including neighbouring ones. The adaptive lasso (bottom left) combines the advantages of hard- and soft-thresholding, yielding smooth solution paths but prioritising shrinkage of entries that are close to zero.
+
+```{r make-fig-red-sea-tpdm}
+#| label: fig-red-sea-tpdm
+#| fig-cap: "Regularised TPDM estimates $\\tilde{\\Sigma}(\\lambda)$ based on the Red Sea surface temperature data from Section XX. The $d=200$ sites in @fig-redsea-sites are ordered by longitude and then latitude and $\\hat{\\Sigma}$ is estimated with $k/n=0.15$. The values at the top of each sub-panel represent the regularisation parameter $\\lambda\\in\\{0,0.1,\\ldots,0.5\\}$. For the adaptive lasso estimates we take $\\eta=2$."
+#| fig-scap: "Regularised TPDM estimates corresponding to the Red Sea surface temperature data."
+#| fig-height: 6
+
+red_sea_Sigma <- readRDS("scripts/shrinkage-tpdm/results/red-sea-tpdm.RDS")
+
+p1 <- plot_tpdm(red_sea_Sigma$hard_Sigma, x_labels = FALSE, y_labels = FALSE, n_col = 21, main = "Hard-threshold")
+p2 <- plot_tpdm(red_sea_Sigma$soft_Sigma, x_labels = FALSE, y_labels = FALSE, n_col = 21, main = "Soft-threshold")
+p3 <- plot_tpdm(red_sea_Sigma$adlasso_Sigma, x_labels = FALSE, y_labels = FALSE, n_col = 21, main = "Adaptive lasso")
+p4 <- plot_tpdm(red_sea_Sigma$lw_Sigma, x_labels = FALSE, y_labels = FALSE, n_col = 21, main = "Ledoit-Wolf")
+ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
+```
+
+A drawback of these estimators is that thresholding fails to preserve certain matrix properties, including positive semi-definiteness and complete positivity. Evidence of this is provided in @fig-red-sea-tpdm-eigenvalues, which depicts the eigenvalues of the hard-thresholded TPDMs $\tilde{\Sigma}(\lambda)$ from @fig-red-sea-tpdm. Specifically, the plot shows the absolute value of the eigenvalues, with positive eigenvalues in black and negative eigenvalues in red. As $\lambda$ increases and the thresholding takes effect, the eigenvalues of $\tilde{\Sigma}(\lambda)$ get shrunk, occasionally causing them to become negative. Thus, $\tilde{\Sigma}$ may need to undergo pre-processing before it can be incorporated into existing TPDM-based modelling tools such as PCA. This motivates us to propose an alternative approach to bias-reduction based on linear shrinkage methods. While this class is less flexible than thresholded TPDMs, its simplicity ensures estimates possess nice properties and are more amenable to mathematical analysis.
+
+```{r make-fig-red-sea-tpdm}
+#| label: fig-red-sea-tpdm-eigenvalues
+#| fig-cap: "Absolute values of the eigenvalues of the hard-thresholded TPDM estimates $\\tilde{\\Sigma}(\\lambda)$ from @fig-red-sea-tpdm (top left) for $\\lambda\\in\\{0.2, 0.3, 0.4, 0.5\\}$. Positive and negative eigenvalues are coloured black and red, respectively."
+#| fig-scap: "Eigenvalues of the hard-thresholded TPDMs corresponding to the Red Sea surface temperature data."
+#| fig-height: 3.5
+
+fancy_scientific_short <- function(l) {
+  l %>%
+    format(scientific = TRUE) %>%
+    gsub("^(.*)e", "e", .) %>%
+    gsub("e", "10^", .) %>%
+    parse(text = .)
+}
+
+lapply(red_sea_Sigma$hard_Sigma, function(S) eigen(S)$values) %>%
+  Reduce(cbind, .) %>%
+  set_colnames(names(red_sea_Sigma$hard_Sigma)) %>%
+  as.data.frame() %>%
+  mutate(index = seq_len(nrow(.))) %>%
+  pivot_longer(cols = -index, names_to = "reg_lambda", values_to = "eigenvalue") %>%
+  filter(reg_lambda >= 0.2) %>%
+  ggplot(aes(x = index, y = abs(eigenvalue), colour = as.factor(sign(eigenvalue)), shape = as.factor(sign(eigenvalue)))) +
+  geom_point(size = 0.7) +
+  facet_grid(. ~ reg_lambda) +
+  scale_x_continuous(limits = c(0, 200), expand = c(0.02, 0.02), breaks = breaks_extended(n = 5)) +
+  scale_y_continuous(trans = log10_trans(), labels = fancy_scientific_short, breaks = breaks_log(n = 6)) +
+  scale_shape_manual(values = c(5, 10), labels = c("Negative", "Non-negative")) +
+  scale_colour_manual(values = c("red", "black"), labels = c("Negative", "Non-negative")) +
+  labs(x = "Index", y = "Absolute value of eigenvalue", colour = "Sign of eigenvalue", shape = "Sign of eigenvalue") +
+  theme_light() +
+  theme(legend.position = "none")
+```
+
+### The Ledoit-Wolf TPDM estimator
+
+Shrinkage is a regularisation technique dating back to @steinInadmissibilityUsualEstimator1956, whereby a sample estimate is shrunk towards some pre-specified target. The simplest shrinkage method is Ledoit-Wolf linear shrinkage [@ledoitImprovedEstimationCovariance2003]. Their approach to regularising the sample covariance matrix transfers easily to the TPDM. 
+
 :::{#def-lw-tpdm}
-For $\lambda\in[0,1]$, the Ledoit-Wolf TPDM is
-\begin{equation}\label{eq-thresholded-lw-tpdm}
-  \tilde{\Sigma}(\lambda) = \lambda I + (1-\lambda)\hat{\Sigma}.
+Let $T$ be a $d\times d$ target matrix. For $\lambda\in[0,1]$, the Ledoit-Wolf TPDM is the $d\times d$ matrix
+\begin{equation}\label{eq-lw-tpdm}
+  \tilde{\Sigma}(\lambda) = \lambda T + (1-\lambda)\hat{\Sigma}.
 \end{equation}
 :::
 
-Both estimators are defined so as to target regularisation towards the off-diagonal entries. The thresholded estimator is explicitly instructed to leave the diagonal elements unaltered. For the Ledoit-Wolf estimator this occurs more organically. The diagonal elements are pushes towards the diagonal elements of the identity, i.e. one. Assuming as we do that the margins are standardised, this is a sensible choice. In any case, the performance of TPDM estimators will be measured with respect to the strictly upper-triangular entries only. Thus we will refer to the TPDM $\Sigma$ (resp. $\hat{\Sigma}$, $\tilde{\Sigma}(\lambda)$) and its upper-half vectorised counterpart $\bm{\sigma}$ (resp. $\hat{\bm{\sigma}}$, $\tilde{\bm{\sigma}}(\lambda)$) interchangeably.
-
-Choosing between thresholding or shrinkage involves practical and mathematical considerations. The threshold-based estimators afford more flexibility via the specification of the thresholding rule. Ledoit-Wolf is very crude in contrast, reducing each entry by the same multiplicative factor $1-\lambda$. However, this simplicity admits nice properties and permits a more detailed study into its mathematical behaviour.
+The key idea is to bias the empirical TPDM $\hat{\Sigma}$ towards a highly structure target $T$ by forming a convex linear combination between the two. The shrinkage intensity $\lambda\in[0,1]$ determines the weight allocated to each matrix. No shrinkage occurs when $\lambda=0$. If $\lambda=1$ the estimator returns $T$, which is biased but perfectly stable (it has zero variance). The choice of target depends on the context at hand. We will always choose $T=I_d$, the $d\times d$ identity matrix. This means the off-diagonal entries are shrunk towards zero and the diagonal entries are left unaltered. Similar to soft-thresholding, the Ledoit-Wolf TPDM counters the bias by applying equal shrinkage to all entries. A slight difference is that the Ledoit-Wolf shrinkage intensity is applied multiplicatively, i.e. $\tilde{\sigma}_{ij}=(1-\lambda)\hat{\sigma}_{ij}$, whereas thresholding works additively. @fig-red-sea-tpdm (bottom right) shows the sequence of Ledoit-Wolf TPDMs for the Red Sea data, as described earlier. We observe that linear shrinkage behaves quite differently to any of the thresholding estimators; the general structure of the matrix does not change all that much as $\lambda$ increases. While this behaviour is not necessarily desirable from a modelling perspective, it explains why the Ledoit-Wolf TPDM retains many of the mathematical properties of the empirical TPDM. 
 
 :::{#prp-lw-tpdm-properties}
 The Ledoit-Wolf TPDM $\tilde{\Sigma}(\lambda)$ is symmetric, positive semi-definite, and completely positive.
 :::
 
 :::{.proof}
-For brevity, we suppress dependence on $\lambda$. Symmetry is obvious: for any $i,j$,
+For brevity, we suppress dependence on $\lambda$. Symmetry follows immediately because for any $i,j$,
 \begin{equation*}
     \tilde{\sigma}_{ij} = \lambda \ind\{i=j\} + (1-\lambda)\hat{\sigma}_{ij} = \lambda \ind\{j=i\} + (1-\lambda) \hat{\sigma}_{ji} = \tilde{\sigma}_{ji}.
 \end{equation*}
@@ -109,32 +180,54 @@ For positive semi-definiteness, recall that $\hat{\Sigma}$ is positive semi-defi
 \begin{equation*}
   \bm{y}^T\tilde{\Sigma}\bm{y} = \lambda \bm{y}^T\bm{y} + (1-\lambda)\bm{y}^T\hat{\Sigma}\bm{y} = \lambda \|\bm{y}\|_2^2 + (1-\lambda)\bm{y}^T\hat{\Sigma}\bm{y} \geq 0.
 \end{equation*}
-The class of completely positive matrices is a convex cone (CITE Berman \& Shaked-Monderer (2003)), so complete positivity is preserved under convex combinations. The identity matrix is trivially completely positive since $I=II^T$ and the empirical TPDM is completely positive by @prp-empirical-tpdm-completely-positive.
+The identity matrix is trivially completely positive since $I_d=I_dI_d^T$ and $\hat{\Sigma}$ is completely positive by @prp-empirical-tpdm-completely-positive. The class of completely positive matrices is a convex cone [@bermanCompletelyPositiveMatrices2003], so complete positivity is preserved under convex combinations. 
 :::
 
-This result says that the Ledoit-Wolf estimator possesses the properties of a TPDM. In particular, complete positivity implies that there exists a max-linear random vector whose TPDM is $\tilde{\Sigma}$. The same cannot be said of threshold estimators. For example, positive semi-definiteness is not preserved under thresholding.
+Positive semi-definiteness means the Ledoit-Wolf estimator may replace $\hat{\Sigma}$ in PCA techniques. Complete positivity implies that there exists a max-linear random vector $\bm{X}_{\lambda}$ whose TPDM is $\tilde{\Sigma}(\lambda)$. Therefore the Ledoit-Wolf TPDM is more straightforward to use in practice compared to the thresholded estimators. 
 
 ## Selecting the regularisation parameter
 
-Statistically, the main challenge is to select the regularisation parameter $\lambda$. A natural criterion is to choose $\lambda$ to minimise the discrepancy between the true TPDM $\Sigma$ and the estimate. For a given class of regularised estimators, the risk associated with the parameter $\lambda$ is defined as
+### Frobenius risk minimisation
+
+Statistically, the main challenge is to select the regularisation parameter $\lambda$. A natural criterion is to choose $\lambda$ so as to minimise the discrepancy between the true TPDM $\Sigma$ and the regularised estimate $\tilde{\Sigma}(\lambda)$. We are generally only interested in the error in the off-diagonal entries, so we will tend to refer to the upper-half vectorised quantities 
+\begin{equation*}
+\bm{\sigma}=\mathrm{vecu}(\Sigma), \quad \hat{\bm{\sigma}}=\mathrm{vecu}(\hat{\Sigma}), \quad \tilde{\bm{\sigma}}(\lambda)=\mathrm{vecu}(\tilde{\Sigma}(\lambda)),
+\end{equation*}
+where the $\mathrm{vecu}$ operator was defined in \eqref{eq-vecu-sigma}. For a given class $\{\tilde{\Sigma}(\lambda):\lambda\geq 0\}$, the risk associated with $\lambda$ is defined as
 \begin{equation}\label{eq-regularisation-frobenius-loss}
     \mathcal{R}(\lambda):=
     \mathbb{E}[\|\tilde{\bm{\sigma}}(\lambda) - \bm{\sigma}\|_2^2]
     =\mathbb{E}\left[\sum_{i<j}\left( \tilde{\sigma}_{ij}(\lambda) - \sigma_{ij} \right)^2\right].
 \end{equation}
-We call this the Frobenius risk. It is related to $\mathbb{E}[\|\tilde{\Sigma}(\lambda)-\Sigma \|_F^2]$ but restricted to the strictly upper-triangular entries. Minimising the Frobenius risk enforces that estimates are close to the truth in mean-squared error. This metric seems appropriate in general contexts where `accurate' TPDM estimates are sought. 
-
-The ground truth is never known in practice, so the risk $\mathcal{R}(\lambda)$ cannot be evaluated or minimised directly. We emphasise that naively replacing $\Sigma$ with the known matrix $\hat{\Sigma}$ in \eqref{eq-regularisation-frobenius-loss} does not mitigate this issue: the minimiser would always be $\lambda=0$. We refer to
+We refer to $\mathcal{R}(\lambda)$ as the Frobenius risk. The minimiser 
 \begin{equation*}
     \lambda^\star := \argmin_{\lambda}\mathcal{R}(\lambda)
 \end{equation*}
-as the oracle parameter. The name signifies that it is the value that would be selected by an oracle with access to the ground truth. The goal is to devise statistical procedures for selecting $\lambda$, i.e. estimators $\hat{\lambda}$ of $\lambda^\star$.
+corresponds to the regularisation parameter which gives the TDPM estimate closest to the true TPDM in terms of the mean-square error. Of course, the true TPDM is always unknown in practice, so the risk $\mathcal{R}(\lambda)$ cannot be evaluated or minimised directly. We call $\lambda^\star$ the oracle parameter to signify that it is the value that would be chosen by an oracle with knowledge of the underlying true TPDM. Our goal is to devise a statistical procedure for estimating $\lambda^\star$.
 
-The problem becomes much simpler if we are privy to additional information about the data-generating process. For example, @fixSimultaneousAutoregressiveModels2021 infer the soft-thresholding parameter $\lambda=\beta_2$ in \eqref{eq-fix-bias-corrected-tpdm} by exploiting prior information about the configuration of the spatial locations and the `range' of the modelled phenomenon. Clearly, this is only viable in spatial contexts. A similar argument can be made for supervised learning problems. With labelled training data and an objective loss function, we may resort to standard hyperparameter tuning procedures such as $k$-fold cross validation. We address the problem in its most general, challenging form, where no additional structure/information is available.
+```{r make-fig-frob-risk-example}
+#| label: fig-frob-risk-example
+#| fig-cap: "Blah."
+#| fig-scap: "Blah."
+#| fig-height: 3.5
+#| eval: false
 
-### Why are standard Frobenius risk minimisation approaches not viable?
+# @fig-frob-risk-example depicts the Frobenius risk function $\mathcal{R}(\lambda)$ in the case where $\bm{X}$ is five-dimensional Hüsler-Reiss random vector with a fixed parameter matrix and the empirical TPDM is estimated from $k=500$ extremes out of $n=5,000$ independent realisations of $\bm{X}$. The true TPDM is computed using @exm-husler-reiss-tpdm. The best estimator is the adaptive lasso, for which the associated oracle and risk are $\lambda^\star\approx 0.12$ and $\mathcal{R}(\lambda^\star)= 4.2\times 10^{-4}$. The Ledoit-Wolf is worst performing with $\mathcal{R}(\lambda^\star)=0.015$ attained at $\lambda^\star=0.70$. 
 
-For covariance matrices, a standard strategy for selecting the regularisation parameter is to minimise an empirical estimate of the Frobenius loss function, i.e. an approximation of $\mathcal{R}(\lambda)$ constructed using the data [@yiSUREtunedTaperingEstimation2013]. Unfortunately, this strategy does not transfer easily to the TPDM context. Let $\tilde{\Sigma}(\lambda)$ be an arbitrary regularised TPDM estimator. Using Stein's identity (CITE)
+res <- readRDS("scripts/shrinkage-tpdm/results/frob-risk-example.RDS")
+ggplot(res, aes(x = lambda, y = risk, colour = method)) +
+  geom_line() +
+  geom_point(aes(x = lambda_star, y = min_risk, colour = method)) +
+  scale_x_continuous(limits = c(0, 1), expand = c(0, 0), breaks = breaks_extended(n = 5)) +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.02)), breaks = breaks_extended(n = 5)) +
+  scale_colour_manual(values = c("red", "blue", "black", "darkgreen"), labels = c("Adaptive lasso", "Hard", "Ledoit-Wolf", "Soft")) +
+  labs(x = expression(lambda), y = "Frobenius risk", colour = "Method") +
+  theme_light()
+```
+
+The task of estimating $\lambda^\star$ becomes much simpler if we are privy to additional information about the data-generating process. For example, @fixSimultaneousAutoregressiveModels2021 infer a reasonable soft-thresholding parameter $\lambda=\beta_2$ in \eqref{eq-fix-bias-corrected-tpdm} by exploiting prior information about the spatial configuration and the spatial extent of the modelled phenomenon. Similarly, in supervised learning settings where an objective loss function and labelled training data are available, one may resort to standard hyperparameter tuning procedures such as cross validation. We study the problem in its most general, challenging form, where no additional structure/information is available.
+
+For covariance matrices, a standard strategy for selecting the regularisation parameter is to minimise an empirical estimate of $\mathcal{R}$, i.e. an approximation of the risk function constructed from the data [@yiSUREtunedTaperingEstimation2013]. Unfortunately, this strategy does not transfer easily to the TPDM context. Upon noting that
 \begin{equation*}
 (\tilde{\sigma}_{ij}(\lambda) - \sigma_{ij})^2 = (\tilde{\sigma}_{ij}(\lambda) - \hat{\sigma}_{ij})^2 + 2 (\tilde{\sigma}_{ij}(\lambda) - \sigma_{ij})(\hat{\sigma}_{ij}(\lambda) - \sigma_{ij}) - (\hat{\sigma}_{ij} - \sigma_{ij})^2
 \end{equation*}
@@ -142,13 +235,11 @@ the risk function \eqref{eq-regularisation-frobenius-loss} can be equivalently e
 \begin{equation}
     \mathcal{R}(\lambda) = \mathbb{E}[\|\tilde{\bm{\sigma}}(\lambda) - \hat{\bm{\sigma}}\|_2^2] + 2\sum_{i<j}\mathbb{E}[(\tilde{\sigma}_{ij}(\lambda) - \sigma_{ij})(\hat{\sigma}_{ij} - \sigma_{ij})] - \mathbb{E}[\|\hat{\bm{\sigma}} - \bm{\sigma}\|_2^2]
 \end{equation}
-These three terms are called apparent error, optimism, and constant. The apparent error acts as a penalty against departing too far away from the empirical TPDM. It can be estimated using the unbiased estimator $\|\tilde{\bm{\sigma}}(\lambda) - \hat{\bm{\sigma}}\|_2^2$. The constant term does not depend on $\lambda$. It is irrelevant for risk minimisation and may be ignored. Ironically, the fundamental issue stems from the optimism term. The empirical covariance matrix is unbiased, so the summand may be replaced with $\mathrm{Cov}(\tilde{\sigma}_{ij}(\lambda),\hat{\sigma}_{ij})$. This quantity may be estimated using bootstrap methods [@fangTuningparameterSelectionRegularized2016]. Bias in the empirical TPDM precludes us from taking a similar course. 
+These three terms are called apparent error, optimism, and constant [@yiSUREtunedTaperingEstimation2013]. The apparent error acts as a penalty against departing too far away from the empirical TPDM. This term can be estimated using the unbiased estimator $\|\tilde{\bm{\sigma}}(\lambda) - \hat{\bm{\sigma}}\|_2^2$. The constant term is irrelevant and can be ignored for the risk minimization as it does not depend on $\lambda$. The fundamental issue stems from the optimism term. For covariance matrices, the empirical estimator is unbiased and the summand may be replaced with $\mathrm{Cov}(\tilde{\sigma}_{ij}(\lambda),\hat{\sigma}_{ij})$, which may be estimated via bootstrapping [@fangTuningparameterSelectionRegularized2016]. This approach cannot be replicated for TPDMs, because the empirical estimator is biased. This impediment prevented us from finding a solution to the general problem of tuning arbitrary regularised TPDMs. However, we were able to devise a procedure for optimising Ledoit-Wolf estimators by taking a completely different approach to the one sketched above. 
 
-Overcome this problem would enable tuning of any regularised estimator. Sadly, a solution eluded us. Admittedly, this somewhat restricts the scope of our study: without automated tuning procedures, it becomes difficult to perform meaningful analyses. However, we were to able to make progress in the special case of the Ledoit-Wolf estimator. Our approach is described in the following section and the Ledoit-Wolf TPDM becomes our primary focus.
+### The optimal Ledoit-Wolf shrinkage intensity
 
-### The asymptotically optimal Ledoit-Wolf shrinkage
-
-@ledoitImprovedEstimationCovariance2003 derive a formula for the optimal Ledoit-Wolf shrinkage for covariance matrices. Optimality of their estimator holds with respect to the Frobenius risk and as $n\to\infty$. We are able to a similar result for TPDM shrinkage. Let $\tilde{\Sigma}(\lambda)$ be the Ledoit-Wolf estimator of the TPDM. The associated Frobenius risk is
+@ledoitImprovedEstimationCovariance2003 provide a formula for the asymptotically optimal Ledoit-Wolf shrinkage intensity for covariance matrices. Inspired by their approach, we are able to obtain an analogous result for TPDMs. Suppose $\bm{X}_1,\bm{X}_2,\ldots$ is a sequence of independent copies of $\bm{X}$ and let $\tilde{\Sigma}(\lambda)$ denote a Ledoit-Wolf estimator of the TPDM. For any $\lambda\in[0,1]$, the associated Frobenius risk is
 \begin{align*}
     \mathcal{R}(\lambda) 
     &= \mathbb{E}[\|(1-\lambda)\hat{\bm{\sigma}} - \bm{\sigma}\|_2^2] \\
@@ -161,73 +252,77 @@ The first-order optimality condition gives
     \implies \sum_{i<j} 2(\lambda-1)\mathbb{E}[\hat{\sigma}_{ij}^2] + 2\sigma_{ij}\mathbb{E}[\hat{\sigma}_{ij}] = 0 
     \implies \lambda^\star := \frac{\sum_{i<j}\left\lbrace\mathbb{E}[\hat{\sigma}_{ij}^2] - \sigma_{ij}\mathbb{E}[\hat{\sigma}_{ij}]\right\rbrace}{\mathbb{E}[\|\hat{\bm{\sigma}}\|_2^2]}.
 \end{equation*}
-It is simple to check that this is indeed a minimiser, since $\mathcal{R}''(\lambda)=\sum_{i<j}2\mathbb{E}[\hat{\sigma}_{ij}^2]>0$. As always, the oracle $\lambda^\star$ still depends on the true TPDM, so it cannot be computed directly. However, we may recognise the numerator of $\lambda^\star$ as being related to the variance of $\hat{\sigma}_{ij}$ and recall from @prp-empirical-tpdm-normality-entries that the asymptotic variance of $k\hat{\sigma}_{ij}$ is $\nu_{ij}^2$. For clarity, we now include dependence on $n$ explicitly. Under the conditions of @prp-empirical-tpdm-normality-entries, we have that
-\begin{equation}\label{eq-lambda-lw-limit}
-    \lim_{n\to\infty} k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n) = \lim_{n\to\infty} \sum_{i<j}k(n)\left\lbrace \mathbb{E}[\hat{\sigma}_{ij}(n)^2] - \sigma_{ij}\mathbb{E}[\hat{\sigma}_{ij}(n)]\right\rbrace = \sum_{i<j}\nu_{ij}^2.
-\end{equation}
-Since $\sum_{i<j}\nu_{ij}^2>0$ and $\|\hat{\bm{\sigma}}(n)\|_2^2>0$ almost surely, it follows that $\lambda^\star(n)>0$ for sufficiently large $n$. Equation \eqref{eq-lambda-lw-limit} says that, asymptotically, the optimal shrinkage behaves as a constant divided by $k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]$. The asymptotic constant is unknown. Naively, we might try estimating the asymptotic variances $\nu_{ij}^2$. A consistent estimator is given (and used) in Chapter XX. However, with finite samples $\hat{\nu}_{ij}^2$ is biased in a way that directly reflects the bias in the empirical TPDM. Therefore this is not a workable solution. (In the context of covariance matrices, the asymptotic constant can be estimated without bias, which greatly simplifies matters.)
-
-Estimation of the asymptotic constant may be circumvented by taking ratios of the left-hand side in \eqref{eq-lambda-lw-limit} at different values of $n$. Fix a proportion $\kappa\in (0,1)$. Then by \eqref{eq-lambda-lw-limit},
+It is simple to check that $\mathcal{R}''(\lambda)=\sum_{i<j}2\mathbb{E}[\hat{\sigma}_{ij}^2]>0$, confirming that $\lambda^\star$ is indeed the risk minimiser. The formula for $\lambda^\star$ still depends on the true TPDM, so this is not helpful by itself. However, we may recognise the numerator of $\lambda^\star$ as being related to the variance of $\hat{\sigma}_{ij}$ and recall from @prp-empirical-tpdm-normality-entries that the asymptotic variance of $\sqrt{k}\hat{\sigma}_{ij}$ is $\nu_{ij}^2$. For clarity, we now include dependence on the sample size $n$ explicitly. Under the conditions of @prp-empirical-tpdm-normality-entries, we have that
+\begin{align*}
+    \lim_{n\to\infty} & k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n) \\
+    &= \lim_{n\to\infty} \sum_{i<j}k(n)\left\lbrace \mathbb{E}[\hat{\sigma}_{ij}(n)^2] - \sigma_{ij}\mathbb{E}[\hat{\sigma}_{ij}(n)]\right\rbrace \\
+    &= \lim_{n\to\infty} \sum_{i<j}k(n)\left\lbrace \mathbb{E}[\hat{\sigma}_{ij}(n)^2] - \mathbb{E}[\hat{\sigma}_{ij}(n)]^2\right\rbrace \\
+    &= \lim_{n\to\infty} \sum_{i<j}k(n)\mathrm{Var}(\hat{\sigma}_{ij}(n) \\
+    &= \sum_{i<j}\nu_{ij}^2.
+\end{align*}
+**What's the best way of doing Line 2 to line 3? Am just using the fact that $\mathbb{E}[\hat{\sigma}_{ij}]\to\sigma_{ij}$.** Since $\sum_{i<j}\nu_{ij}^2>0$ and $\|\hat{\bm{\sigma}}(n)\|_2^2>0$ almost surely, it follows that $\lambda^\star(n)>0$ for sufficiently large $n$. The above result gives that, asymptotically, the optimal shrinkage behaves as a constant divided by $k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]$. As the asymptotic constant is unknown, we might naively try estimating the asymptotic variances $\nu_{ij}^2$. Indeed, this is the approach taken in the context of covariance matrices and a consistent estimator $\hat{\nu}_{ij}^2$ of $\nu_{ij}^2$ is given in \eqref{eq-asymptotic-variance-estimator} and used in Chapter XX. However, for a finite sample size $\hat{\nu}_{ij}^2$ is biased in a way that mirrors the bias in the empirical TPDM, so this approach is not viable. Instead, we are forced to circumvent estimation of $\sum_{i<j}\nu_{ij}^2$. To eliminate the asymptotic constant, we take ratios at different values of $n$. Given a fixed proportion $\kappa \in (0,1)$, it is easy to see that
 \begin{equation*}
     \lim_{n\to\infty} k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n) = \sum_{i<j}\nu_{ij}^2 =
     \lim_{n\to\infty} k(\left\lfloor \kappa n \right\rfloor)\mathbb{E}[\|\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\|_2^2]\lambda^\star(\left\lfloor \kappa n \right\rfloor).
 \end{equation*}
-The algebra of limits yields
+and the algebra of limits then yields
 \begin{equation*}
     \lim_{n\to\infty} \frac{k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n)}{k(\left\lfloor \kappa n \right\rfloor)\mathbb{E}[\|\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\|_2^2]\lambda^\star(\left\lfloor \kappa n \right\rfloor)}=1.
 \end{equation*}
-Note that all quantities in the denominator are non-zero for sufficiently large $n$, so the limit is well-defined. For sufficiently large $n$, it holds that
+For sufficiently large $n$ all quantities in the denominator are non-zero, so the limit is well-defined. Moreover it holds that
 \begin{equation*}
-    \frac{\lambda^\star(\left\lfloor \kappa n \right\rfloor)}{\lambda^\star(n)} \simeq \frac{k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]}{k(\left\lfloor \kappa n \right\rfloor)\mathbb{E}[\|\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\|_2^2]}=:\zeta(n;\kappa).
+    \frac{\lambda^\star(\left\lfloor \kappa n \right\rfloor)}{\lambda^\star(n)} \approx \frac{k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]}{k(\left\lfloor \kappa n \right\rfloor)\mathbb{E}[\|\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\|_2^2]}=:\zeta(n;\kappa).
 \end{equation*}
-This implies that the optimal shrinkage intensities at sample sizes $n$ and $\left\lfloor \kappa n \right\rfloor$ are $\lambda^\star(n)$ and $\zeta(n;\kappa)\lambda^\star(n)$, respectively. The ratio $\zeta(n;\kappa)$ describes the rate of decay of the optimal shrinkage as more data becomes available. It is easy to see that $\zeta(n,\kappa)\to 1$ when $\kappa\to 1$. Additionally $\zeta(n;\kappa)\to k(n)/k(\left\lfloor \kappa n \right\rfloor)$ as $n\to\infty$ due to consistency of $\hat{\bm{\sigma}}$. This limit will usually be some function of $\kappa$, e.g. choosing $k(n)\propto \sqrt{n}$ gives $\zeta(n;\kappa)\to \kappa^{-1/2}$ as $n\to\infty$. Crucially, $\zeta(n;\kappa)$ is defined in terms of quantities that are known or may be estimated without bias. Let $\hat{\zeta}=\hat{\zeta}(n;\kappa)$ be an estimate of $\zeta=\zeta(n;\kappa)$ (to be defined later).
+In other words, the optimal shrinkage intensities at sample sizes $n$ and $\left\lfloor \kappa n \right\rfloor$ are $\lambda^\star(n)$ and $\zeta(n;\kappa)\lambda^\star(n)$, respectively. The ratio $\zeta(n;\kappa)$ describes the rate of decay of the optimal shrinkage as more data becomes available. It is easy to see that $\zeta(n,\kappa)\to 1$ when $\kappa\to 1$. Additionally $\zeta(n;\kappa)\to k(n)/k(\left\lfloor \kappa n \right\rfloor)$ as $n\to\infty$ due to consistency of $\hat{\bm{\sigma}}$. This limit will usually be some function of $\kappa$, e.g. choosing $k(n)\propto \sqrt{n}$ gives $\zeta(n;\kappa)\to \kappa^{-1/2}$ as $n\to\infty$. Crucially, $\zeta(n;\kappa)$ is defined in terms of quantities that are known or may be estimated without bias. Let $\hat{\zeta}=\hat{\zeta}(n;\kappa)$ be an estimate of $\zeta=\zeta(n;\kappa)$ to be defined later.
 
-Knowing its rate of decay is not sufficient to infer $\lambda^\star$. The missing piece is information about its magnitude. Consider the empirical TPDMs $\hat{\Sigma}(n)$ and $\hat{\Sigma}(\left\lfloor \kappa n \right\rfloor)$ based on samples of sizes $n$ and $\left\lfloor \kappa n \right\rfloor$, respectively. The difference between these matrices provides some information about the difference between $\lambda^\star(n)$ and $\lambda^\star(\left\lfloor \kappa n \right\rfloor)$. Intuitively, if these matrices are very similar (resp. different), then the absolute difference between $\lambda^\star(n)$ and $\lambda^\star(\left\lfloor \kappa n \right\rfloor)$ is probably small (resp. large). For any $\lambda\in[0,\min\{1,\zeta^{-1}\}]$, the corresponding regularised estimates of $\bm{\sigma}$ are $(1-\lambda)\hat{\bm{\sigma}}(n)$ and $(1-\zeta \lambda)\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)$. If $\lambda$ is well-selected, then both estimates should be close to $\bm{\sigma}$, and therefore close to each other. (Accounting for misspecification error, it is perhaps more accurate to say that both estimates should be close the best representation of $\bm{\sigma}$ among the class of Ledoit-Wolf estimators, and therefore close to each other.) It suggests itself to estimate $\lambda^\star(n)$ by minimising the discrepancy between the two estimates:
+Knowing its asymptotic rate of decay is not sufficient to deduce $\lambda^\star(n)$. The missing piece of information is its magnitude. Consider the empirical TPDMs $\hat{\Sigma}(n)$ and $\hat{\Sigma}(\left\lfloor \kappa n \right\rfloor)$ based on samples of sizes $n$ and $\left\lfloor \kappa n \right\rfloor$, respectively. If these matrices are very similar (resp. different), then intuitively the absolute difference between $\lambda^\star(n)$ and $\lambda^\star(\left\lfloor \kappa n \right\rfloor)$ should be small (resp. large). Now, our large sample theory tells us that our best estimates of $\bm{\sigma}$ are of the form $(1-\lambda^\star(n))\hat{\bm{\sigma}}(n)$ and $(1-\hat{\zeta}\lambda^\star(n))\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)$. This hints at estimating $\lambda^\star(n)$ by minimising the discrepancy between these two estimates:
 \begin{equation}\label{eq-lambda-lw-hat-initial}
-    \hat{\lambda} := \argmin_{\lambda\in[0,\min\{1,\zeta^{-1}\}]} \left\lVert (1-\lambda)\hat{\bm{\sigma}}(n) -  (1-\hat{\zeta} \lambda)\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\right\rVert_2^2
+    \hat{\lambda}(n) := \argmin_{\lambda\in[0,\min(1,\zeta^{-1})]} \left\lVert (1-\lambda)\hat{\bm{\sigma}}(n) -  (1-\hat{\zeta} \lambda)\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\right\rVert_2^2.
 \end{equation}
-Having outlined the general approach, we fill in some missing details regarding inference. First we address estimation of $\zeta$. To estimate $\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]$ and $\mathbb{E}[\|\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\|_2^2]$, we create a collection of bootstrapped samples $\mathcal{X}_n^{(b)}=\{\bm{X}_1^{(b)},\ldots,\bm{X}_n^{(b)}\}$ and $\mathcal{X}_{\left\lfloor \kappa n \right\rfloor}^{(b)}=\{\bm{X}_1^{(b)},\ldots,\bm{X}_{\left\lfloor \kappa n \right\rfloor}^{(b)}\}$ from $\bm{X}_1,\ldots,\bm{X}_n$, for $b=1,\ldots,B$. Next, we compute empirical TPDMs $\hat{\Sigma}^{(1)}(n),\ldots,\hat{\Sigma}^{(B)}(n)$ and $\hat{\Sigma}^{(1)}(\left\lfloor \kappa n \right\rfloor),\ldots,\hat{\Sigma}^{(B)}(\left\lfloor \kappa n \right\rfloor)$ using the $k(n)$ and $k(\left\lfloor \kappa n \right\rfloor)$ largest observations from $\mathcal{X}_n^{(1)},\ldots,\mathcal{X}_n^{(B)}$ and $\mathcal{X}_{\left\lfloor \kappa n \right\rfloor}^{(1)},\ldots,\mathcal{X}_{\left\lfloor \kappa n \right\rfloor}^{(B)}$, respectively. We estimate $\zeta$ as
+
+### Practical and statistical considerations
+
+Having outlined the general approach, we fill in some missing details regarding inference. First we address estimation of $\zeta$. To estimate $\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]$ and $\mathbb{E}[\|\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\|_2^2]$, we produce a collection of bootstrapped samples $\mathcal{X}_n^{(b)}=\{\bm{X}_1^{(b)},\ldots,\bm{X}_n^{(b)}\}$ and $\mathcal{X}_{\left\lfloor \kappa n \right\rfloor}^{(b)}=\{\bm{X}_1^{(b)},\ldots,\bm{X}_{\left\lfloor \kappa n \right\rfloor}^{(b)}\}$ from $\bm{X}_1,\ldots,\bm{X}_n$, for $b=1,\ldots,B$. Next, we compute empirical TPDMs $\hat{\Sigma}^{(1)}(n),\ldots,\hat{\Sigma}^{(B)}(n)$ and $\hat{\Sigma}^{(1)}(\left\lfloor \kappa n \right\rfloor),\ldots,\hat{\Sigma}^{(B)}(\left\lfloor \kappa n \right\rfloor)$ using the $k(n)$ and $k(\left\lfloor \kappa n \right\rfloor)$ largest observations from $\mathcal{X}_n^{(1)},\ldots,\mathcal{X}_n^{(B)}$ and $\mathcal{X}_{\left\lfloor \kappa n \right\rfloor}^{(1)},\ldots,\mathcal{X}_{\left\lfloor \kappa n \right\rfloor}^{(B)}$, respectively. An estimate of $\zeta$ is then given by
 \begin{equation}\label{eq-zeta-hat}
     \hat{\zeta}(n;\kappa) := \frac{k(n)\sum_{b=1}^B \|\hat{\bm{\sigma}}^{(b)}(n)\|_2^2}{k(\left\lfloor \kappa n \right\rfloor)\sum_{b=1}^B \|\hat{\bm{\sigma}}^{(b)}(\left\lfloor \kappa n \right\rfloor)\|_2^2}.
 \end{equation}
-The bootstrapped empirical TPDMs can be reused in the final step. Instead of \eqref{eq-lambda-lw-hat-initial}, we set
+The bootstrapped empirical TPDMs can be reused in the final step, so that instead of \eqref{eq-lambda-lw-hat-initial}, we actually set
 \begin{equation}\label{eq-lambda-lw-hat-bootstrap}
-    \hat{\lambda} := \argmin_{\lambda\in[0,\zeta^{-1}]} \left\lVert \frac{1}{B}\sum_{b=1}^B \left[ (1-\lambda)\hat{\bm{\sigma}}^{(b)}(n) -  (1-\hat{\zeta} \lambda)\hat{\bm{\sigma}}^{(b)}(\left\lfloor \kappa n \right\rfloor)\right] \right\rVert_2^2.
+    \hat{\lambda}(n) := \argmin_{\lambda\in[0,\zeta^{-1}]} \left\lVert \frac{1}{B}\sum_{b=1}^B \left[ (1-\lambda)\hat{\bm{\sigma}}^{(b)}(n) -  (1-\hat{\zeta} \lambda)\hat{\bm{\sigma}}^{(b)}(\left\lfloor \kappa n \right\rfloor)\right] \right\rVert_2^2.
 \end{equation}
 Bootstrapping is intended to reduce noise in the estimation of $\zeta$ and $\lambda^\star$, but it is not fundamental to our procedure. The only place where sub-sampling is mandatory is to obtain an empirical TPDM based on $\left\lfloor \kappa n \right\rfloor$ observations.
 
-For fixed $n$, selection of $\kappa$ is subject to the familiar bias-variance trade-off. If $\kappa$ is too small, then $\left\lfloor \kappa n \right\rfloor$ will be small and the underlying asymptotic approximation may not be valid. If $\kappa$ is very close to one, then $\zeta$ is close to one and needs to be estimated very precisely. In this case, small differences in $\hat{\zeta}$ translate into large fluctuations in $\hat{\zeta}$. This will translate into high variability in $\hat{\lambda}$. This is borne out in our simulation experiments. A formal analysis of how to select $\kappa$ is beyond the scope of our investigation.
-
+For fixed $n$, selection of $\kappa$ is subject to the familiar bias-variance trade-off. If $\kappa$ is small, then $\left\lfloor \kappa n \right\rfloor$ may be too small for the underlying asymptotic approximation to be valid. If $\kappa$ is very close to one, then the estimate $\hat{\lambda}$ will be quite sensitive to small changes in $\hat{\zeta}$. This is borne out in our simulation experiments. A formal analysis of how to select $\kappa$ is beyond the scope of our investigation.
 
 ## Simulation experiments
 
 ### Symmetric logistic
 
-We start by testing our regularised TPDM estimators in the simplest setting, where the data are generated from the symmetric logistic model. Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathrm{RV}_+^d(2)$ follows a symmetric logistic model with dependence parameter $\gamma\in[0,1)$. Then the true TPDM is of the form
+We start by testing our regularised TPDM estimators in the simplest setting, where the data are generated from the symmetric logistic model. Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathrm{RV}_+^d(2)$ follows a symmetric logistic model with dependence parameter $\gamma\in(0,1]$. Then the true TPDM is of the form
 \begin{equation*}
     \sigma_{ij} = \begin{cases}
         1,& i=j, \\
         \sigma,& i\neq j,
     \end{cases}
 \end{equation*}
-where $\sigma=\sigma(\gamma)$ is some constant given by \eqref{ex-symmetric-logistic-tpdm}. When $\gamma\approx 1$, the empirical TPDM overestimates $\sigma$. This is one of the rare instances where applying equal shrinkage to all off-diagonal entries is a sensible approach. Therefore the soft-threshold, adaptive lasso, and Ledoit-Wolf estimators are all suitable choices. Assume for simplicity that $\hat{\bm{\sigma}}(n)=\hat{\sigma}(n)\bm{1}$ for some scalar $\hat{\sigma}(n)>\sigma$. For Ledoit-Wolf, optimal shrinkage occurs at $\lambda_{\mathrm{LW}}^\star(n)=1-\sigma/\hat{\sigma}(n)$, since then
+where $\sigma=\sigma(\gamma)$ is some constant -- see @exm-symmetric-logistic-tpdm. Recall from @fig-parametric-chi-tpdm-small-n that the empirical TPDM overestimates $\sigma$ when $\gamma\approx 1$. Since all off-diagonal entries of the TPDM are equal, the symmetric logistic model is one of the rare cases where penalising all entries equally is actually desirable. Assume for simplicity that $\hat{\bm{\sigma}}(n)=\hat{\sigma}(n)\bm{1}_{d\choose 2}$ for some scalar $\hat{\sigma}(n)>\sigma$. It is straightforward to show that the optimal Ledoit-Wolf shrinkage intensity is $\lambda_{\mathrm{LW}(n)}^\star=1-\sigma/\hat{\sigma}(n)$, since then
 \begin{equation*}
-    \tilde{\bm{\sigma}}(\lambda_{\mathrm{LW}}^\star(n)) = [1 - (1-\lambda_{\mathrm{LW}}^\star(n))] \hat{\bm{\sigma}} = \frac{\sigma}{\hat{\sigma}(n)} \hat{\sigma}(n) \bm{1} = \bm{\sigma}.
+    \tilde{\bm{\sigma}}(\lambda_{\mathrm{LW}}^\star(n)) = [1 - (1-\lambda_{\mathrm{LW}}^\star(n))] \hat{\bm{\sigma}} = \frac{\sigma}{\hat{\sigma}(n)} \hat{\sigma}(n) \bm{1}_{d\choose 2} = \bm{\sigma}.
 \end{equation*}
 Similarly, the optimal thresholds under soft-thresholding and adaptive lasso are 
 \begin{align*}
-    \lambda_\mathrm{S}^\star &= \hat{\sigma}(n)-\sigma=\hat{\sigma}(n)\lambda_{\mathrm{LW}}^\star, \\ 
-    \lambda_\mathrm{AL}^\star &=[\hat{\sigma}(n)^\eta (\hat{\sigma}(n)-\sigma)]^{1/(\eta+1)}=\hat{\sigma}(n)[\lambda_{\mathrm{LW}}^\star(n)]^{1/(\eta+1)},
+    \lambda_\mathrm{S}^\star(n) &= \hat{\sigma}(n)-\sigma=\hat{\sigma}(n)\lambda_{\mathrm{LW}}^\star, \\ 
+    \lambda_\mathrm{AL}^\star(n) &=[\hat{\sigma}(n)^\eta (\hat{\sigma}(n)-\sigma)]^{1/(\eta+1)}=\hat{\sigma}(n)[\lambda_{\mathrm{LW}}^\star(n)]^{1/(\eta+1)},
 \end{align*}
-respectively. Hence, a good estimate for the Ledoit-Wolf shrinkage parameter gives good estimates for the other regularisation parameters for free. Therefore, we may focus our attention on the Ledoit-Wolf case.
+respectively. Note that $\lambda_\mathrm{S}^\star$ and $\lambda_\mathrm{AL}^\star$ are expressed in terms of $\lambda_{\mathrm{LW}}^\star$. Thus, finding a good estimate for the Ledoit-Wolf shrinkage is sufficient to obtain reasonable estimates for the other regularisation parameters. On this basis, we allow ourselves to focus exclusively on testing the Ledoit-Wolf estimator. 
 
-We now describe our experimental procedure. We generate $n$ independent observations of $\bm{X}\in\mathrm{RV}_+^3(2)$ from a symmetric logistic model with dependence parameter $\gamma$. We set $k(n)=\left\lfloor 4\sqrt{n} \right\rfloor$. This satisfies the rate conditions \eqref{eq-k-rate-conditions} and gives a reasonable number of threshold exceedances in practice. Next, we estimate $\zeta(n;\kappa)$ using \eqref{eq-zeta-hat} with $B=10$ and compute $\hat{\lambda}$ via \eqref{eq-lambda-lw-hat-bootstrap} using the \texttt{optim()} function in R. We also compute the `true' optimal shrinkage by minimising the Frobenius loss between the bootstrapped empirical TPDMs and the true TPDM. This process is repeated for a sequence of values $5 \times 10^3 \leq n \leq 2 \times 10^5$ and $\kappa\in\{0.5, 0.75, 0.9\}$. The true dependence parameters are $\gamma\in\{0.5, 0.8, 0.9\}$. The corresponding dependence strengths $\sigma(\gamma)$ are 0.85 (strong dependence), 0.48 (moderately weak dependence) and 0.27 (weak dependence). All reported values are based on 100 repetitions.
+The setup for our experiment is as follows. We generate $n$ independent observations of $\bm{X}\in\mathrm{RV}_+^3(2)$ from a symmetric logistic model with dependence parameter $\gamma$. The intermediate sequence is set as $k(n)=\left\lfloor 4\sqrt{n} \right\rfloor$. This satisfies the rate conditions \eqref{eq-k-rate-conditions} and gives a reasonable number of threshold exceedances in practice. The ratio $\zeta(n;\kappa)$ is estimated using \eqref{eq-zeta-hat} with $B=10$ and $\hat{\lambda}$ computed via \eqref{eq-lambda-lw-hat-bootstrap} using the \texttt{optim()} function in R. Finally, we also compute the optimal shrinkage that minimises the Frobenius loss between the bootstrapped empirical TPDMs and the true TPDM; when averaged over many simulations these provide a good approximation to $\lambda^\star$. This experimental procedure is repeated for a sequence of sample sizes $5 \times 10^3 \leq n \leq 2 \times 10^5$, proportions $\kappa\in\{0.5, 0.75, 0.9\}$, and true dependence parameters $\gamma\in\{0.5, 0.8, 0.9\}$. The corresponding dependence strengths are $\sigma(0.5)=0.85$ (strong dependence), $\sigma(0.8)=0.48$ (moderately weak dependence) and $\sigma(0.9)=0.27$ (weak dependence). Results are based on 100 repetitions for each combination of parameters.
 
-```{r make-fig-symmetric-logistic-ledoit-wolf}
-#| label: fig-symmetric-logistic-ledoit-wolf
-#| fig-cap: "Blah"
-#| fig-scap: "Blah"
-#| fig-height: 7
+```{r make-fig-symmetric-logistic-ledoit-wolf-oracle}
+#| label: fig-symmetric-logistic-ledoit-wolf-oracle
+#| fig-cap: "Exploratory plots for understanding the performance of the Ledoit-Wolf TPDM in the symmetric logistic experiment. Left: the Frobenius risk $\\mathcal{R}(0)$ associated with the empirical TPDM $\\hat{\\Sigma}$ as a function of $n$. Right: $k(n)\\mathbb{E}[\\|\\hat{\\bm{\\sigma}}(n)\\|_2^2]\\lambda^\\star(n)$ as a function of $n$."
+#| fig-scap: "Exploratory plots for the Ledoit-Wolf TPDM and symmetric logistic data."
+#| fig-height: 3.5
 #| warning: false
 
 res <- readRDS(file.path("scripts", "shrinkage-tpdm", "results", "symmetric-logistic-ledoit-wolf.RDS"))
@@ -244,48 +339,23 @@ sl_tpdm <- function(a) {
 } 
 sl_tpdm <- Vectorize(sl_tpdm)
 
-# lambda_true and lambda_hat against n
-p1 <- ggplot(res, aes(x = n, y = lambda_hat, colour = as.factor(gamma), linetype = as.factor(kappa))) +
-  stat_summary(aes(y = lambda_star, colour = as.factor(gamma)), fun = median, geom = "line", linetype = 1) +
-  stat_summary(fun = median, geom = "line") +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.01)), labels = label_number(scale = 1/1000)) +
-  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0.01, 0.04))) +
-  scale_colour_manual(values = c("blue", "red", "darkgreen")) +
-  scale_linetype_manual(values = c(2, 3, 6)) +
-  labs(x = expression(n %*% 10^{-3}),
-       y = expression(hat(lambda)(n)),
-       colour = expression(gamma),
-       linetype = expression(kappa)) +
-  theme_light()
-
-# mean entry of Sigma_hat against n
-p2 <- ggplot(res, aes(x = n, y = E_sigma_hat_norm - (choose(d, 2) * sl_tpdm(gamma)^2), colour = as.factor(gamma))) +
+# Frobenius risk of Sigma hat
+p1 <- ggplot(res, aes(x = n, y = E_sigma_hat_norm - (choose(d, 2) * sl_tpdm(gamma)^2), colour = as.factor(gamma))) +
   stat_summary(fun = mean, geom = "line") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.01)), labels = label_number(scale = 1/1000)) +
   scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.02))) +
   scale_colour_manual(values = c("blue", "red", "darkgreen")) +
   scale_linetype_manual(values = c(2, 3, 6)) +
   labs(x = expression(n %*% 10^{-3}),
-       y = expression(sum((hat(sigma)[ij](n) - sigma[ij](n))^2, "", "")), 
+       y = expression("Frobenius risk of" ~ hat(Sigma)), 
        colour = expression(gamma)) +
   theme_light()
 
-# zeta_hat against n
-p3 <- ggplot(res, aes(x = n, y = zeta_hat, colour = as.factor(gamma), linetype = as.factor(kappa))) +
-  stat_summary(fun = median, geom = "line") +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.01)), labels = label_number(scale = 1/1000)) +
-  scale_linetype_manual(values = c(2, 3, 6)) +
-  scale_colour_manual(values = c("blue", "red", "darkgreen")) +
-  labs(x = expression(n %*% 10^{-3}),
-       y = expression(hat(zeta)(n,kappa)),
-       colour = expression(gamma),
-       linetype = expression(kappa)) +
-  theme_light()
-
 # k * norm(Sigma_hat) * lambda_true against n
-p4 <- ggplot(res, aes(x = n, y = k * E_sigma_hat_norm * lambda_star, colour = as.factor(gamma))) +
+p2 <- ggplot(res, aes(x = n, y = k * E_sigma_hat_norm * lambda_star, colour = as.factor(gamma))) +
   stat_summary(fun = median, geom = "line") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.01)), labels = label_number(scale = 1/1000)) +
+  scale_y_continuous(expand = expansion(mult = c(0.02, 0.02))) +
   scale_colour_manual(values = c("blue", "red", "darkgreen")) +
   scale_linetype_manual(values = c(2, 3, 6)) +
   labs(x = expression(n %*% 10^{-3}),
@@ -293,26 +363,63 @@ p4 <- ggplot(res, aes(x = n, y = k * E_sigma_hat_norm * lambda_star, colour = as
        colour = expression(gamma)) +
   theme_light()
 
-ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2, legend = "right", common.legend = TRUE)
+ggarrange(p1, p2, ncol = 2, legend = "right", common.legend = TRUE)
 ```
 
-The top-right panel of \autoref{fig-ledoit_wolf_symmetric_logistic} plots the mean of $\|\hat{\bm{\sigma}}(n)-\bm{\sigma}\|_2^2$ against $n$, based on all empirical TPDMs computed across all simulations. An error $\|\hat{\bm{\sigma}}(n)-\bm{\sigma}\|_2^2=\epsilon$ is equivalent to overestimating each entry by $\epsilon/\sqrt{3}$. The magnitude of the bias is decreasing in $n$ and increasing in $\gamma$. However, we note that even at $n=200,000$ there is non-negligible bias present. This illustrates that bias-corrected estimation still has a role to play at large sample sizes.
+```{r make-fig-symmetric-logistic-ledoit-wolf-lambda-hat}
+#| label: fig-symmetric-logistic-ledoit-wolf-lambda-hat
+#| fig-cap: "The optimal Ledoit-Wolf shrinkage intensity $\\lambda^\\star(n)$ (solid lines) and the mean estimates $\\hat{\\lambda}(n)$ obtained from our tuning procedure (dashed/dotted lines) as a function of $n$ for various values of $\\gamma$ and $\\kappa$."
+#| fig-scap: "Optimal/estimated Ledoit-Wolf shrinkage intensities for symmetric logistic data."
+#| fig-height: 4.5
+#| warning: false
 
-The bottom-right panel depicts the mean of $k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n)$ against $n$. Our method is underpinned by an asymptotic approximation that assumes this quantity is constant above $\left\lfloor \kappa n\right\rfloor$. By inspecting this plot (for different $\gamma$), we can gauge whether the necessary convergences have occurred. For $\gamma=0.5$ and $\gamma=0.8$, the quantity appears to be approximately constant beyond $n\approx X$ and $n\approx 100,000$, respectively. For $\gamma=0.9$, convergence does not seem to have occurred by $n=200,000$. Thus we cannot guarantee that our procedure will produce good estimates for the regularisation parameter when $\gamma=0.9$ and $n\leq 200,000$.
+# lambda_true and lambda_hat against n
+ggplot(res, aes(x = n, y = lambda_hat, colour = as.factor(gamma), linetype = as.factor(kappa))) +
+  stat_summary(aes(y = lambda_star, colour = as.factor(gamma)), fun = median, geom = "line", linetype = 1) +
+  stat_summary(fun = median, geom = "line") +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.01)), labels = label_number(scale = 1/1000)) +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.04))) +
+  scale_colour_manual(values = c("blue", "red", "darkgreen")) +
+  scale_linetype_manual(values = c(2, 3, 6)) +
+  labs(x = expression(n %*% 10^{-3}),
+       y = expression(hat(lambda)(n)),
+       colour = expression(gamma),
+       linetype = expression(kappa)) +
+  theme_light()
+```
 
-The main results are shown in the top-left panel of @fig-symmetric-logistic-ledoit-wolf. The solid lines represent the true values of the optimal shrinkage parameter $\lambda(n)$. The dashed/dotted lines represent the mean estimate $\hat{\lambda}(n)$ obtained via our procedure for different values of $\kappa$ (listed in the plot legend). For $\gamma\in \{0.5,0.8\}$, our procedure works very well. The estimated values are very close to the true ones, provided the sample is large enough. When $n$ is large, the estimates are good for all values of $\kappa$. This agrees with the theory: good estimates may be obtained at a sample size $n$ provided $k(m)\mathbb{E}[\|\hat{\bm{\sigma}}(m)\|_2^2]\lambda^\star(m)$ is approximately constant for $m\geq \left\lfloor \kappa n\right\rfloor$. When $n$ is small, the estimates are rather conservative. This is sub-optimal but under-shrinking and erring towards the empirical TPDM is probably preferable to over-shrinking. For $\gamma=0.9$ we predicted that the estimates may be poor owing to the slow convergence rate. Indeed, the shrinkage parameter is nearly always significantly underestimated. The plot also shows the influence of the tuning parameter $\kappa$. Estimates based on $\kappa=0.9$ are highly variable but exhibit less bias; choosing $\kappa$ more conservatively results in stable but (negatively) biased estimates.
+The left plot in @fig-symmetric-logistic-ledoit-wolf-oracle shows the average Frobenius loss $\mathcal{R}(0)=\|\bm{\sigma} - \hat{\bm{\sigma}}(n)\|_2^2$ as a function of $n$ for each value of $\gamma$. This summarises the magnitude of the bias of the empirical TPDM; an error $\mathcal{R}(0)=\epsilon$ is equivalent to overestimating each entry of $\bm{\sigma}$ by $\epsilon/\sqrt{3}$. As expected, the magnitude of the bias is decreasing in $n$ and increasing in $\gamma$. However, we note that even at $n=200,000$ there is non-negligible bias present, showing that bias-corrected estimation has a role to play even when $n$ is large. This is an important point, considering that our procedure relies on large sample approximations. The right-hand plot shows the mean of $k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n)$ against $n$. Our tuning procedure requires that this quantity is approximately constant beyond $\left\lfloor \kappa n\right\rfloor$. For $\gamma=0.5$, the convergence is rapid, so we expect our procedure will perform well even when $n$ is small. When $\gamma=0.8$, the quantity approximately levels off at approximately $n=100,000$, while for $\gamma=0.9$ it is still increasing at $n=200,000$.
+
+@fig-symmetric-logistic-ledoit-wolf-lambda-hat compares the mean estimates $\hat{\lambda}(n)$ for different values of $\kappa$ (dashed/dotted lines) against the oracle value $\lambda^{\star}(n)$ (solid line). The solid lines represent the true values of the optimal shrinkage parameter $\lambda(n)$. For $\gamma=0.5$, the optimal shrinkage is close to zero and the estimates $\hat{\lambda}(n)$ reflect this, even when $n$ is small. As predicted, the selection procedure performs well when $\gamma=0.8$ provided the sample size is sufficiently large. In particular, we obtain good estimates when $n\geq 150,000$ (i.e. $\left\lfloor \kappa n\right\rfloor\geq 75,000$), which aligns reasonably closely with our earlier comments concerning the convergence in @fig-symmetric-logistic-ledoit-wolf-oracle. Our tuning procedure does not work particularly well in the weakest dependence scenario ($\gamma=0.9$). While the intensities are sub-optimal, conservative estimates that err towards the empirical TPDM are probably preferable to over-shrinking. Our theoretical analysis provides assurance that these estimates would improve eventually as $n$ increases. The plot also shows the influence of the tuning parameter $\kappa$. When $\kappa$ is close to one the estimates $\hat{\lambda}(n)$ have high uncertainty, while conservative choices of $\kappa$ yield more stable but (negatively) biased estimates.
 
 ### EVA (2023) Data Challenge 4
 
-Recall from Chapter XX that our submission to sub-challenge 4 for the EVA (2023) Data Challenge utilised CP decompositions of the empirical TPDMs corresponding to five clusters. It transpired that our approach overestimated the true probabilities. Subsequent investigation suggested that we overestimated dependence, especially in the first, fourth and fifth clusters. According to the Editorial, dependence in these clusters is weak [@rohrbeckEditorialEVA20232023]. In our post-hoc analysis, we proposed a remedy using sparse simplex projections. This effectively weakens dependence by spreading the mass of the empirical angular measure towards and onto the simplex boundary. This approach worked exceptionally well, but required making wholesale changes to our approach. Now, armed with our Ledoit-Wolf TPDM estimator, we are able to propose another alternative strategy. The new approach follows our original methodology exactly the Ledoit-Wolf TPDM replacing the raw empirical TPDM. The substitution is straightforward since the Ledoit-Wolf estimator is completely positive (@prp-ledoit-wolf-tpdm-properties).
+Recall from Chapter XX that our submission to Challenge 4 in the EVA (2023) Data Challenge utilised completely positive (CP) decompositions of the empirical TPDMs corresponding to five separate clusters. It transpired that our approach overestimated the true event probabilities of interest. Subsequent investigation revealed that we overestimated dependence. This was especially true in the first, fourth and fifth clusters, where dependence is weak [@rohrbeckEditorialEVA20232023], leading us to suspect that the bias issue might be the root cause. In our post-hoc analysis (Section XX), we proposed a remedy using sparse simplex projections. The intention and effect of this was to spread the mass of the empirical angular measure towards/onto the simplex boundary, thereby artificially 'weakening' the dependence. This approach showed great promise, but required wholesale changes to our overall methodology. Armed with the Ledoit-Wolf TPDM estimator, we are now in a position to propose yet another strategy. The new approach follows our original methodology exactly, except we replace the empirical TPDM with the Ledoit-Wolf counterpart. The substitution is seamless due to complete positivity of $\tilde{\Sigma}$ (@prp-lw-tpdm-properties).
 
-Table XX in Chapter XX shows the summary statistics for the empirical TPDMs of the five clusters. The median values of $\{\hat{\sigma}_{ij}:i\neq j\}$ in each cluster are found to be 0.33, 0.68, 0.67, 0.33, and 0.50. Within each cluster, the range of $\{\hat{\sigma}_{ij}:i\neq j\}$ is at most 0.15. This means that the pairwise dependence strengths are relatively equal in each cluster. The previous experiment demonstrates that the Ledoit-Wolf estimator is adequate in such cases. Let $\hat{\Sigma}^{(1)},\ldots,\hat{\Sigma}^{(5)}$ denote the clusters' empirical TPDMs based on the $k$ largest observations among the $n=10^4$ samples provided. We estimate shrinkage parameters $\hat{\lambda}^{(1)},\ldots,\hat{\lambda}^{(5)}$ for each cluster using our tuning procedure with $k(n)=\left\lfloor k\sqrt{n}/100 \right\rfloor$, $\kappa=0.75$ and $B=10$. We then apply the CP-factorisation algorithm of @kirilioukEstimatingProbabilitiesMultivariate2022 to each TPDM and compute the resulting probability. This procedure is repeated for $0.02 \leq k \leq 0.07$. We also rerun the three other methods described in Chapter XX for comparison. 
+Visual representations of the five clusters' empirical TPDMs are provided in @fig-eva-c4-ledoit-wolf-tpdm (left). From Table XX in Chapter XX we know that the median values of $\{\hat{\sigma}_{ij}:i\neq j\}$ in each cluster are 0.33, 0.68, 0.67, 0.33, and 0.50. Crucially, within each cluster the range of $\{\hat{\sigma}_{ij}:i\neq j\}$ is at most 0.15, implying that the within-cluster pairwise dependence strengths are relatively equal. In such cases, the Ledoit-Wolf estimator is adequate. If this were not the case, more flexible regularisers such as adaptive lasso would be required. Let $\hat{\Sigma}^{(1)},\ldots,\hat{\Sigma}^{(5)}$ denote the clusters' empirical TPDMs based on the $k$ largest observations among the $n=10^4$ samples provided. We estimate shrinkage parameters $\hat{\lambda}^{(1)},\ldots,\hat{\lambda}^{(5)}$ for each cluster using our selection procedure with $k(n)=\left\lfloor k \sqrt{n}/100 \right\rfloor$, $\kappa=0.75$ and $B=10$. The remaining steps follow Section XX: we apply the CP-factorisation algorithm of @kirilioukEstimatingProbabilitiesMultivariate2022 to each Ledoit-Wolf TPDM and compute probability estimates using the formula XX. 
+
+```{r make-fig-eva-c4-ledoit-wolf-tpdm}
+#| label: fig-eva-c4-ledoit-wolf-tpdm
+#| fig-cap: "The empirical TPDM $\\hat{\\Sigma}=\\mathrm{diag}(\\hat{\\Sigma}^{(1)},\\ldots,\\hat{\\Sigma}^{(5)})$ (left) and the Ledoit-Wolf TPDM $\\tilde{\\Sigma}=\\mathrm{diag}(\\tilde{\\Sigma}^{(1)}(\\hat{\\lambda}_1),\\ldots,\\tilde{\\Sigma}^{(5)}(\\hat{\\lambda}_5))$ for the EVA (2023) Data Challenge based on $k=250$."
+#| fig-scap: "The empirical TPDM $\\hat{\\Sigma}$ (left) and the Ledoit-Wolf TPDM $\\tilde{\\Sigma}$ for the EVA (2023) Data Challenge."
+#| fig-height: 4
+
+Sigma_hat_clusters <- readRDS("scripts/shrinkage-tpdm/results/eva-c4-Sigma-hat.RDS")
+Sigma_tilde_clusters <- readRDS("scripts/shrinkage-tpdm/results/eva-c4-Sigma-tilde.RDS")
+
+p1 <- plot_tpdm(Sigma_hat_clusters, x_labels = FALSE, y_labels = FALSE)
+p2 <- plot_tpdm(Sigma_tilde_clusters, x_labels = FALSE, y_labels = FALSE)
+grid.arrange(p1, p2, ncol = 2)
+```
+
+@fig-eva-c4-ledoit-wolf-lambda reveals the amount of each shrinkage for each cluster for $0.02 \leq k/n \leq 0.07$. As expected, clusters 1 and 4 are penalised the most and clusters 2 and 3 the least. The shrinkage intensities are sensitive to the choice of $k$. Counterintuitively the parameters $\hat{\lambda}^{(1)},\ldots,\hat{\lambda}^{(5)}$ seem to increase as $k$ decreases, despite the fact that the bias in the TPDM is usually smaller at higher thresholds [@fixSimultaneousAutoregressiveModels2021]. This warrants further investigation in future. For the present study, we focus on the case where $k=250$, since this is the number of threshold exceedances used in our competition entry. The corresponding Ledoit-Wolf TPDM estimate is shown in @fig-eva-c4-ledoit-wolf-tpdm (right). Comparing against the empirical TPDM on the left, there is a dramatic reduction in the entries in clusters 1 and 4. Consequently, this matrix is presumably closer to the (unknown) true TPDM than the raw estimate. The final probability estimates in @fig-eva-c4-ledoit-wolf-prob-estimates support this conclusion. In each panel, the horizontal dashed line shows the true value of the probabilities $p_1$ (left) and $p_2$ (right). The grey line corresponds to our original method based on CP-decompositions of the empirical TPDM. It drastically overestimates the event probabilities. The green and blue lines result from fitting a max-linear model using the $k$ largest angles defined via self-normalisation and Euclidean projections, respectively; these methods were described in detail in Section XX. The red line is derived from our new procedure based on CP-decompositions of Ledoit-Wolf TPDMs. At $k=250$, it gives a near-perfect estimate of $p_1$ and a very good estimate of $p_2$. When $k$ is large the probability estimates are too large because the shrinkage intensities are too small, especially in the first, fourth and fifth clusters (see @fig-eva-c4-ledoit-wolf-lambda).
 
 ```{r make-fig-eva-c4-ledoit-wolf-lambda}
 #| label: fig-eva-c4-ledoit-wolf-lambda
-#| fig-cap: "Blah"
-#| fig-scap: "Blah"
-#| fig-height: 4
+#| fig-cap: "Estimated shrinkage intensities $\\hat{\\lambda}^{(1)},\\ldots,\\hat{\\lambda}^{(5)}$ associated with the clusters' empirical TPDMs $\\hat{\\Sigma}^{(1)},\\ldots,\\hat{\\Sigma}^{(5)}$ for the EVA (2023) Data Challenge."
+#| fig-scap: "Estimated shrinkage intensities $\\hat{\\lambda}^{(1)},\\ldots,\\hat{\\lambda}^{(5)}$ for the EVA (2023) Data Challenge."
+#| fig-height: 2.5
+#| fig-width: 5
 #| message: false
 
 res <- readRDS(file.path("scripts", "shrinkage-tpdm", "results", "eva-c4-ledoit-wolf.RDS"))
@@ -333,48 +440,13 @@ res %>%
   theme_light()
 ```
 
-@fig-eva-c4-ledoit-wolf-lambda reveals the amount of each shrinkage each cluster receives. As expected, the intensity is greatest and clusters 1 and 4 and smallest in clusters 2 and 3. For reference, @fig-eva-c4-ledoit-wolf-tpdm provides a visualisation of the raw and regularised estimates with $k=250$ (the number of threshold exceedances used in our submitted entry). To be precise, these are block-diagonal matrices formed from the raw/shrunk cluster-wise TPDMs. There is a stark contrast between these matrices, which will influence the results downstream. The parameters $\hat{\lambda}$ are quite sensitive to the choice of $k$. Surprisingly, the shrinkage increases as $k$ decreases. This is somewhat counter-intuitive: we expect that bias is largest when the radial threshold is lowered. \textit{Not actually sure why this is happening -- will think about it.}
-
-```{r make-fig-eva-c4-ledoit-wolf-tpdm}
-#| label: fig-eva-c4-ledoit-wolf-tpdm
-#| fig-cap: "Blah"
-#| fig-scap: "Blah"
-#| fig-height: 4
-
-Sigma_hat_clusters <- lapply(2:4, function(i) matrix(runif(i^2), nrow = i, ncol = i))
-Sigma_tilde_clusters <- lapply(2:4, function(i) matrix(runif(i^2), nrow = i, ncol = i))
-
-colpal <- colorspace::sequential_hcl(n = 100, "Viridis")
-breaks <- lattice::do.breaks(c(0, 1.3), length(colpal))
-
-Sigma_hat_bdiag <- bdiag(Sigma_hat_clusters) %>% as.matrix()
-S1 <- t(Sigma_hat_bdiag[nrow(Sigma_hat_bdiag):1, ])
-p1 <- lattice::levelplot(S1, col.regions = colpal, at = breaks,
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(draw = FALSE),
-                                       y = list(draw = FALSE)))
-
-Sigma_tilde_bdiag <- bdiag(Sigma_tilde_clusters) %>% as.matrix()
-S2 <- t(Sigma_tilde_bdiag[nrow(Sigma_tilde_bdiag):1, ])
-p2 <- lattice::levelplot(S2, col.regions = colpal, at = breaks,
-                         xlab = "", ylab = "",
-                         colorkey = TRUE,
-                         scales = list(x = list(draw = FALSE),
-                                       y = list(draw = FALSE)))
-grid.arrange(p1, p2, ncol = 2)
-```
-
-The final probability estimates are given in @fig-eva-c4-ledoit-wolf-prob-estimates. In each panel, the horizontal dashed line shows the true probability. The grey line corresponds to our original method based on CP-decompositions of the empirical TPDM. It yields drastic overestimates. The green and blue lines result from fitting a max-linear model using the $k$ largest angles defined via self-normalisation and Euclidean projections, respectively. The red line is derived from CP-decompositions of the Ledoit-Wolf TPDMs. At $k=250$, it gives the best estimate of $p_1$ and a very good estimate of $p_2$. The results indicate that the shrinkage parameters are conservative when $k/n$ is large. 
 
 ```{r make-fig-eva-c4-ledoit-wolf-prob-estimates}
 #| label: fig-eva-c4-ledoit-wolf-prob-estimates
-#| fig-cap: "Blah"
-#| fig-scap: "Blah"
-#| fig-height: 4
+#| fig-cap: "Probability estimates for the EVA (2023) Data Challenge from all four proposed methods. The true probabilities $p_1$ (left) and $p_2$ (right) are indicated by the horizontal dashed lines. The methodologies associated with the grey, blue and green lines are described in Chapter XX. The red line shows the results based on CP decompositions of the Ledoit-Wolf estimates. The vertical dashed line is at $k=250$, the number of threshold exceedances used in our competition entry."
+#| fig-scap: "Probability estimates for the EVA (2023) Data Challenge obtained from the Ledoit-Wolf TPDM."
+#| fig-height: 4.5
 #| message: false
-
-
 
 fancy_scientific_short <- function(l) {
   l %>%
@@ -413,19 +485,18 @@ res %>%
 
 ### Extremal SAR model
 
-Our final experiment emulates the simulation study of @fixSimultaneousAutoregressiveModels2021. The goal is to estimate the dependence parameter $\rho$ in the extremal SAR model. This experiment will reinforce the effectiveness of our tuning procedure, while also highlighting the limitations of being restricted to Ledoit-Wolf shrinkage. Suppose $\bm{X}$ is as described in Section XX, with (known) neighbourhood matrix $W$ and (unknown) dependence parameter $\rho$. Following @fixSimultaneousAutoregressiveModels2021, we shall estimate $\rho$ by minimising the Frobenius difference between the model TPDM (viewed as a function of $\rho$) and a bias-corrected estimate of the TPDM. This can be posed as a hierarchical/bilevel optimisation problem, whereby the upper-level objective function depends on the solution to a lower-level problem. Specifically, we define
+Our final experiment emulates the simulation study in @fixSimultaneousAutoregressiveModels2021. The goal is to estimate the dependence parameter $\rho$ of the extremal SAR model (Section XX), a sub-case of the max-linear model used for spatial extremes. This experiment will reinforce the effectiveness of our tuning procedure, while also highlighting the limitations of Ledoit-Wolf shrinkage compared to the more flexible thresholding estimators. Suppose $\bm{X}$ is as described in Section XX, with (known) neighbourhood matrix $W$ and (unknown) dependence parameter $\rho$. Following @fixSimultaneousAutoregressiveModels2021, $\rho$ is to be estimated by minimising the Frobenius difference between the model TPDM (viewed as a function of $\rho$) and a bias-corrected estimate of the TPDM. This can be posed as a hierarchical/bilevel optimisation problem, whereby the upper-level objective function (estimating $\rho$) depends on the solution to a lower-level problem (estimating $\Sigma$). Specifically, we define
 \begin{equation}\label{eq-extremal-sar-rho-bilevel}
     \hat{\rho} := \argmin_\varrho \hat{\mathcal{L}}(\varrho), \qquad \hat{\mathcal{L}}(\varrho) := \| \bm{\sigma}(\varrho) - \tilde{\bm{\sigma}}(\hat{\lambda}) \|_2^2.
 \end{equation}
-The loss function $\mathcal{L}(\varrho)$ depends on the estimate of $\tilde{\bm{\sigma}}(\hat{\lambda})$ of $\bm{\sigma}$. Accurate estimation of $\rho$ relies on accurate estimation of TPDM. If $\tilde{\bm{\sigma}}(\hat{\lambda})$ is a poor estimate of $\bm{\sigma}$, then the loss $\mathcal{L}(\varrho)$ may not be informative for $\rho$. In @fixSimultaneousAutoregressiveModels2021, $\tilde{\bm{\sigma}}$ represents the soft-thresholded estimator and $\hat{\lambda}$ is obtained by fitting a non-linear model relating the pairwise dependence strengths and inter-site distances. The soft-thresholded estimator gives a reasonable fit -- see Figure 3 (right) in @fixSimultaneousAutoregressiveModels2021. This suggests that the bias is approximately constant in \textit{absolute} terms, hinting that the Ledoit-Wolf estimator is ill-suited to this problem. 
+The loss function $\mathcal{L}(\varrho)$ depends on the estimate $\tilde{\bm{\sigma}}(\hat{\lambda})$ of $\bm{\sigma}$, so accurate estimation of the TPDM is critical. If $\tilde{\bm{\sigma}}(\hat{\lambda})$ is not representative of $\bm{\sigma}$, then the loss may not be informative for $\rho$. In @fixSimultaneousAutoregressiveModels2021, $\tilde{\bm{\sigma}}$ represents the soft-thresholded estimator and $\hat{\lambda}$ is obtained by fitting a non-linear model relating the pairwise dependence strengths and inter-site distances. The soft-thresholded estimator achieves a reasonable fit -- see Figure 3 (right) in @fixSimultaneousAutoregressiveModels2021.
 
-Our simulation setup is based on Section 4.2.1 in @fixSimultaneousAutoregressiveModels2021. We consider $d=36$ sites arranged in an $6\times 6$ grid. We generate $n$ independent realisations of a $6\times 6$ spatial field based on the extremal SAR model with dependence parameter $\rho=0.15$. Dependence vanishes at a distance of approximately 4 units. The empirical TPDM $\hat{\Sigma}$ is computed using the $k(n)=\left\lfloor 4\sqrt{n} \right\rfloor$ largest observations. Next, we compute the oracle parameters $\lambda^\star$ for the soft-threshold, Ledoit-Wolf, and adaptive lasso ($\eta=2$) TPDMs. These are subtly different to our earlier notion of oracle; they minimise the Frobenius difference between the true TPDM and the *observed* empirical TPDM. Averaged other many simulations, they should converge to the original notion of the oracle. We then compute the oracle TPDMs $\tilde{\bm{\sigma}}(\lambda^\star)$ and estimate $\rho$ by \eqref{eq-extremal-sar-rho-bilevel}. This process is repeated using estimates of the regularisation parameter for Ledoit-Wolf (using our data-driven procedure with $\kappa=0.75$ and $B=5$) and soft-threshold (using the proximity-based method of @fixSimultaneousAutoregressiveModels2021). There is no available method for estimating the adaptive lasso threshold. The procedure is repeated 100 times at a sequence of sample sizes varying between $10^4 \leq n \leq 2\times 10^5$. 
-
+Our simulation setup follows Section 4.2.1 in @fixSimultaneousAutoregressiveModels2021 with some minor adjustments. We consider $d=36$ sites arranged in an $6\times 6$ grid and generate $n$ independent realisations of a $6\times 6$ spatial field from an extremal SAR model with dependence parameter $\rho=0.15$. With this parameter choice, dependence vanishes at a distance of approximately 4 units. The empirical TPDM $\hat{\Sigma}$ is computed using the $k(n)=\left\lfloor 4\sqrt{n} \right\rfloor$ largest observations. Next, we use the true TPDM (@exm-max-linear-tpdm) to compute $\lambda^\star$ for the soft-threshold, Ledoit-Wolf, and adaptive lasso ($\eta=2$) TPDMs. From each oracle TPDM $\tilde{\bm{\sigma}}(\lambda^\star)$, we compute an estimate of $\rho$ by solving \eqref{eq-extremal-sar-rho-bilevel}. These values represent the estimates of $\rho$ that would be found by an oracle who is constrained to a particular type of regularisation. Finally, we repeat the same steps using regularisation parameters selected using our data-driven procedure (for Ledoit-Wolf with $\kappa=0.75$ and $B=5$) or the spatial method of @fixSimultaneousAutoregressiveModels2021 (for soft-threshold). Currently there are no available methods for tuning $\lambda$ and/or $\eta$ for the adaptive lasso. The procedure is repeated 100 times at a sequence of sample sizes varying between $10^4 \leq n \leq 2\times 10^5$. 
 
 ```{r make-fig-extremal-sar-regularised-tpdm}
 #| label: fig-extremal-sar-regularised-tpdm
-#| fig-cap: "Blah"
-#| fig-scap: "Blah"
+#| fig-cap: "Results for our experiments based on the extremal SAR model. Left: the mean Frobenius error of the oracle and estimated TPDMs. Middle: the values of the regularisation parameter selected by the oracle or tuning procedure. Right: the empirical bias of the estimates of $\\rho$ computed by solving \\eqref{eq-extremal-sar-rho-bilevel}."
+#| fig-scap: "Results on regularised TPDM estimation for fitting extremal SAR models."
 #| fig-height: 4
 
 res <- readRDS(file.path("scripts", "shrinkage-tpdm", "results", "extremal-sar-ledoit-wolf.RDS"))
@@ -438,12 +509,12 @@ p1 <- res %>% pivot_longer(
   filter(param == "fl") %>%
   ggplot(aes(x = n, y = value, colour = tpdm_estimator, linetype = type)) +
   stat_summary(fun = mean, geom = "line") +
-  scale_x_continuous(expand = expansion(mult = c(0.01, 0.01)), labels = label_number(scale = 1/1000)) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.01)), breaks = breaks_extended(n = 5), labels = label_number(scale = 1/1000)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.02)), transform = log10_trans()) +
-  scale_colour_manual(values = c("darkgreen", "grey", "red", "blue"), labels = c(expression("Adaptive lasso," ~ eta == 1), "Empirical", "Ledoit-Wolf", "Soft")) +
+  scale_colour_manual(values = c("darkgreen", "grey", "red", "blue"), labels = c(expression("Adaptive lasso," ~ eta == 2), "Empirical", "Ledoit-Wolf", "Soft")) +
   scale_linetype_manual(values = 1:2, labels = c("Estimated", "Oracle")) +
   labs(x = expression(n %*% 10^{-3}),
-       y = expression(sum((tilde(sigma)[ij] - sigma[ij])^2, "", "")), 
+       y = "Frobenius risk", 
        colour = "TPDM estimator",
        linetype = "Type") +
   theme_light()
@@ -456,12 +527,12 @@ p2 <- res %>% pivot_longer(
   filter(param == "lambda") %>%
   ggplot(aes(x = n, y = value, colour = tpdm_estimator, linetype = type)) +
   stat_summary(fun = mean, geom = "line") +
-  scale_x_continuous(expand = expansion(mult = c(0.01, 0.01)), labels = label_number(scale = 1/1000)) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.01)), breaks = breaks_extended(n = 5), labels = label_number(scale = 1/1000)) +
   scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.02))) +
   scale_colour_manual(values = c("darkgreen", "red", "blue"), labels = c(expression("Adaptive lasso," ~ eta == 1), "Ledoit-Wolf", "Soft")) +
   scale_linetype_manual(values = 1:2, labels = c("Estimated", "Oracle")) +
   labs(x = expression(n %*% 10^{-3}),
-       y = expression(hat(lambda)), 
+       y = expression(lambda(n)), 
        colour = "TPDM estimator",
        linetype = "Type") +
   theme_light()
@@ -474,7 +545,7 @@ p3 <- res %>% pivot_longer(
   filter(param == "rho") %>%
   ggplot(aes(x = n, y = value - rho, colour = tpdm_estimator, linetype = type)) +
   stat_summary(fun = mean, geom = "line") +
-  scale_x_continuous(expand = expansion(mult = c(0.01, 0.01)), labels = label_number(scale = 1/1000)) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.01)), breaks = breaks_extended(n = 5), labels = label_number(scale = 1/1000)) +
   scale_y_continuous(expand = expansion(mult = c(0.02, 0.02))) +
   scale_colour_manual(values = c("darkgreen", "grey", "red", "blue"), labels = c(expression("Adaptive lasso," ~ eta == 1), "Empirical", "Ledoit-Wolf", "Soft")) +
   scale_linetype_manual(values = 1:2, labels = c("Estimated", "Oracle")) +
@@ -487,35 +558,22 @@ p3 <- res %>% pivot_longer(
 ggarrange(p1, p2, p3, nrow = 1, ncol = 3, common.legend = TRUE, legend = "top")
 ```
 
-The left-hand plot in fig-extremal-sar-regularised-tpdm shows how the Frobenius loss (on a log scale) varies with $n$ for each TPDM estimate. The colours correspond to the regularisation method used (if any); the linetype indicates whether the regularisation parameter is an oracle or has been estimated. The oracle losses represent a lower limit on the Frobenius loss that can be attained by each class of estimator. For this reason, the dashed lines lie below the solid lines. If the solid line lies close to the oracle loss, then $\lambda$ has been selected optimally. In this respect, the soft-threshold tuning procedure of @fixSimultaneousAutoregressiveModels2021 performs very well. This should be caveated by noting that it requires extra information to achieve this. For Ledoit-Wolf, our data-driven procedure also appears to be working relatively well. Comparing across estimators, the plot suggests that soft-threshold is the best performing and Ledoit-Wolf the worst, but all are markedly superior to the empirical estimate. 
-
-The middle plot provides more insight into the selected values of $\lambda$. The soft-threshold parameter is very close to the oracle value. Our estimator also performs well, following the the oracle very closely. This hold true even for small samples despite it being based on large-sample approximations. For this example, the Frobenius loss seems to be quite sensitive to errors in the shrinkage intensity, especially when $n$ is small. Thus, even though we estimate $\lambda$ rather accurately, the Frobenius loss can still be non-negligible. 
-
-The right-hand plot displays the bias $\hat{\rho}-\rho$ in the spatial dependence parameter estimates. The empirical TPDM overestimates dependence and therefore overestimates $\rho$. The soft-threshold estimate is interesting: the estimator of @fixSimultaneousAutoregressiveModels2021 actually outperforms the oracle. This is not a contradiction. A smaller Frobenius loss does not guarantee a better estimate of $\rho$ (unless the loss equals zero). @fixSimultaneousAutoregressiveModels2021 found that their estimator exhibited a slight negative bias for $\rho$. Our results confirm this but shed more light on its root cause. Since the oracle suffers the same issue, we infer that the bias arises from working in the soft-thresholding class, *not* from their tuning procedure. As predicted, the Ledoit-Wolf estimator performs comparatively poorly. It has a significant downwards bias, especially when $n$ is small. However, we reiterate that this is a shortcoming of using a restricted class of estimator, not our procedure. The estimates of $\rho$ obtained via our method are as good as one could hope for. The adaptive lasso oracle achieves relatively good results; there is scope to improve on this by varying the additional parameter $\eta$. 
+The left-hand plot in @fig-extremal-sar-regularised-tpdm shows how the Frobenius loss (on a log scale) varies with $n$ for each oracle/estimated TPDM. The colours correspond to the regularisation method used; the line type indicates whether the regularisation parameter is estimated or an oracle based on knowledge of the true TPDM. By definition, the risk attained by the oracle losses provides a lower bound on the risk that can be attained for a given estimator class. If the solid line lies close to the oracle loss, then $\lambda$ has been well selected. In this respect, the blue lines show that the soft-threshold tuning procedure of @fixSimultaneousAutoregressiveModels2021 performs very well, with the usual caveat that it makes use of extra information to do so. Moreover, the soft-thresholded estimates are very close to the true TPDM in Frobenius norm. For Ledoit-Wolf (red) our data-driven procedure gives reasonably good results provided $n$ is large. The Ledoit-Wolf estimates are worse than the soft-threshold or adaptive lasso, but are still far superior to the empirical estimate. The middle plot provides more insight into the selected values of $\lambda$. The soft-threshold parameter is very close to the oracle value. Our shrinkage parameters also track the oracle quite closely, even for small $n$, though these small errors seem to translate into non-negligible errors in the overall Frobenius norm. The right-hand plot examines the empirical bias $\hat{\rho}-\rho$ in the final estimates of the spatial dependence parameter. The empirical TPDM (grey) overestimates dependence and wildly overestimates $\rho$. The soft-threshold estimate is interesting, with the estimator of @fixSimultaneousAutoregressiveModels2021 actually outperforming the oracle. This is not a contradiction: a smaller Frobenius loss does not guarantee a better estimate of $\rho$. @fixSimultaneousAutoregressiveModels2021 found that their estimator exhibited a slight negative bias for $\rho$. Our results confirm this and provide additional insight into why this occurs. Since the oracle suffers the same issue, we can infer that the bias is due to misspecification (i.e. being restricted to the soft-thresholded TPDMs) rather than a deficiency of their tuning procedure. As predicted, the Ledoit-Wolf estimator performs comparatively poorly and generally underestimates $\rho$, especially when $n$ is small. However, we reiterate that this is a shortcoming of using a restrictive shrinkage method and not due to our our tuning procedure, since the oracle estimates (dashed line) are no better than our estimated (solid line). Adaptive lasso achieves comparable results to soft-thresholding, except the sign of the bias is reversed. There is scope for further improvement by varying the down-weighting hyperparameter $\eta$. 
 
 ## Conclusions and outlook
 
-**Achievements:**
+The main contributions of this chapter are to counteract the bias issue of the empirical TPDM by proposing two classes of bias-corrected estimators. The first class, based on thresholding, generalises the estimator proposed in @fixSimultaneousAutoregressiveModels2021 and includes more flexible regularisers, such as adaptive lasso. The second class employs linear shrinkage to reduce the bias. Admittedly, the restrictive form of this estimator limits its applicability. However, a key advantage is that it possesses nice mathematical properties that enable it to be used immediately in existing TPDM-based modelling frameworks. Moreover, we construct a data-driven statistical procedure for tuning these estimators, the first of its kind. The procedure is underpinned by asymptotic approximations, but our simulation experiments demonstrate reasonable performance with finite sample sizes. 
 
-- First data-driven approach for reducing bias in the TPDM. 
-- Based on asymptotic approximations, but finite-sample performance is good across multiple experiments.
-- Shown how properties of proposed estimator make it easy to plug-in to other methodologies. As an example, we applied it to EVA method because it is completely positive. Would be easy to do the same with @rohrbeckSimulatingFloodEvent2023, say, because it is positive definite). 
-- Proposed a broader class of TPDM estimators; final experiments shows that these can be useful.
+**Move (some of?) the comments below to final chapter?**
 
-**Future work:**
-
-- More investigation into the procedure, e.g. choice of $\kappa$ and $B$.
-- Is there a way to make the LW more flexible, e.g. estimating the shrinkage separately for groups of similarly sized entries in $\hat{\Sigma}$.
-- Derive similar procedures for tuning the more flexible estimators. Is there any way to estimate the optimism in Section 6.3.1, or is this a non-starter?
-- Once the previous objective is achieved, a framework for choosing the $\lambda$ *and* the type of estimator.
-- Results from EVA application suggest that a good estimate of the dependence structure can be obtained by (i) estimating something and then correcting it, or (ii) modifying the data (i.e. the angles) themselves and then estimating things. Can these two disparate approaches be compared/unified in any way?
-- Minimisation with respect to other loss functions [@rothmanGeneralizedThresholdingLarge2009]. E.g. how well it detects the sparsity structure, 
-\begin{align*}
-    \mathrm{TPR}(\lambda) &:= \frac{|\{(i,j) : i<j,\, \tilde{\sigma}_{ij}(\lambda)\neq 0,\, \sigma_{ij}\neq 0\}|}{|\{(i,j) : i<j,\, \sigma_{ij}\neq 0\}|}, \\
-    \mathrm{FPR}(\lambda) &:= \frac{|\{(i,j) : i<j,\, \tilde{\sigma}_{ij}(\lambda)\neq 0,\, \sigma_{ij} = 0\}|}{|\{(i,j) : i<j,\, \sigma_{ij} = 0\}|},
-\end{align*} 
-or a measure of agreement between the principal eigenspaces (CITE Krzanowski (1979))
+There is ample opportunity to develop these methods further. In terms of our approach, more investigation into how to choose the proportion $\kappa$ and the number of bootstrap samples $B$ is needed. Ways to improve the flexibility of the Ledoit-Wolf estimator would be a welcome enhancement. As an initial suggestion, is it possible to apply different levels of shrinkage to groups of similarly sized entries in $\hat{\Sigma}$? Establishing a general solution to the problem of data-driven tuning for regularised estimators would be a significant breakthrough. This would permit the use of the soft-thresholded TPDM in non-spatial applications, for example. It would be interesting to meditate further on the results in Section XX, pertaining to the EVA (2023) Data Challenge. There we provided two very different approaches to mitigate the problem of 'overestimating weak dependence' that yield almost identical results. The first approach utilises sparse simplex projections to directly modify the data (pseudo angles); the second approach treats bias-correction as a post-processing step. Can these two disparate approaches be connected or unified? Finally, one might take a broader perspective and consider alternative loss functions instead of the Frobenius risk. For example, if one is interested in applying the TPDM for PCA purposes, a more appropriate criterion might be some measure of agreement between the principal eigenspaces of $\Sigma$ and $\tilde{\Sigma}(\lambda)$, such as the $K_p$ coefficient (CITE Krzanowski (1979))
 \begin{equation*}
-K_p(\lambda) := \sum_{i=1}^p \sum_{j=1}^p \left\langle \tilde{\bm{u}}_i(\lambda),\bm{u}_j\right\rangle^2, \qquad (1\leq p\leq d). 
+K_p(\lambda) := \sum_{i=1}^p \sum_{j=1}^p \left\langle \tilde{\bm{u}}_i(\lambda),\bm{u}_j\right\rangle^2, \qquad (1\leq p\leq d), 
 \end{equation*}
-  These may be useful if using TPDM for clustering or PCA, respectively. For the sparsity, could use the fact that TPDM based on sparse simplex projections has the same zeroes as the TPDM (and these zeroes will occur in finite samples). Can then plot the ROC curve based on TPR/FPR as above with the true $\sigma_{ij}$ replaced with the entries $\hat{\sigma}_{ij}^\star$ of the sparse projection-based estimate. Can then see whether this data-driven ROC curve is representative of true (oracle) ROC curve. Note that sparsity only makes sense for threshold estimates, LW does not produce zeroes.
+where $\tilde{\bm{u}}_i(\lambda)$ denotes the $i$th eigenvectors of $\tilde{\Sigma}(\lambda)$. Alternatively, some applications (e.g. clustering) might call for identification of the sparsity structure of $\Sigma$, i.e. the positions of its zero/non-zero entries. For this, one might adopt the performance criteria
+\begin{align}
+    \mathrm{TPR}(\lambda) &:= \frac{|\{(i,j) : i<j,\, \tilde{\sigma}_{ij}(\lambda)\neq 0,\, \sigma_{ij}\neq 0\}|}{|\{(i,j) : i<j,\, \sigma_{ij}\neq 0\}|}, \label{eq-tpr-lambda}\\
+    \mathrm{FPR}(\lambda) &:= \frac{|\{(i,j) : i<j,\, \tilde{\sigma}_{ij}(\lambda)\neq 0,\, \sigma_{ij} = 0\}|}{|\{(i,j) : i<j,\, \sigma_{ij} = 0\}|}, \label{eq-fpr-lambda}
+\end{align} 
+Note that this only makes sense for threshold-based estimates, since Ledoit-Wolf shrinkage does not produce zeroes unless $\lambda=1$. In such settings, the threshold $\lambda$ would typically be selected by inspecting a receiver operating characteristic (ROC) curve and/or maximising the area under the curve (AUC). The obvious impediment to this is that the true TPDM is unknown, so the TPR and FPR cannot be evaluated. To circumvent this, we suggest replacing $\Sigma$ in \eqref{eq-tpr-lambda} and \eqref{eq-fpr-lambda} with a modified version of the empirical TPDM based on Euclidean simplex projections. *I'll come back to this when I write up the future work section in Chapter 7, I think I'll just write down all my thoughts about the sparse TPDM there.* By conducting a series of appropriate experiments, one can ascertain with this pseudo-ROC curve is close to the true ROC curve, thereby providing a method for selecting the optimum threshold. 
+
