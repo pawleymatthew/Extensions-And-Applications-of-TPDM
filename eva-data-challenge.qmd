@@ -1,0 +1,775 @@
+# EVA (2023) Data Challenge: Extreme value statistics for analysing simulated environmental extremes
+
+```{r eva-data-challenge-load-packages}
+#| include: false
+library(tidyverse)
+library(tidyr)
+library(lattice)
+library(png)
+library(grid)
+library(gridExtra)
+library(Rfast)
+library(stringr)
+library(magrittr)
+library(pracma)
+library(scales)
+library(patchwork)
+library(ggpubr)
+library(colorspace)
+library(kableExtra)
+
+options(dplyr.summarise.inform = FALSE)
+options(knitr.kable.NA = "")
+```
+
+## Preamble {#sec-eva-preliminary}
+
+*Write introductory page explaining context of the Data Challenge.*
+
+\includepdf[pagecommand={}]{authorship-qa76b.pdf}
+
+## Abstract
+
+We present the methods employed by team 'Uniofbathtopia' as part of a competition organised for the 13th International Conference on Extreme Value Analysis (EVA2023), including our winning entry for the third sub-challenge. Our approaches unite ideas from extreme value theory, which provides a statistical framework for the estimation of probabilities/return levels associated with rare events, with techniques from unsupervised statistical learning, such as clustering and support identification. The methods are demonstrated on the data provided for the EVA (2023) Conference Data Challenge -- environmental data sampled from the fantasy country of `Utopia' -- but the underlying assumptions and frameworks should apply in more general settings and applications.
+
+## Introduction 
+
+In recent decades, the field of environmental sciences has experienced significant advancements, particularly through the utilisation of sophisticated modelling techniques to better understand extreme events. Extreme value analysis is the branch of statistical modelling that focuses on quantifying the frequency and severity of very rare events. Notably, the Peaks over Threshold (PoT) approach [@DavSmith1990, @pickands75}, has played a pivotal role in enhancing our comprehension of extreme environmental phenomena. Within climate science, significant strides have been made in the modelling of a broad spectrum of variables, including temperature [@clarkson23], precipitation [@katz99], wind speeds [@Kunz2010,@FawWalsh06}, as well as other broader environmental topics including hydrology [@Towler10,@KATZ2002} and air pollution [@GOULD2022]. 
+
+
+In this paper, we outline the techniques utilised by the team 'Uniofbathtopia' for the data challenge organised for the 13$^{\text{th}}$ International Conference on Extreme Value Analysis (EVA2023). A full description of the tasks can be found in the editorial [@Rohr23]. We outline our methodologies for each of the four sub-challenges, in which we complement traditional methods from extreme value statistics with other statistical modelling techniques according to the requirements of each task. The challenges involve the estimation of extreme marginal quantiles, marginal exceedance probabilities and joint tail probabilities within the context of an environmental application, designed on the fictitious country of `Utopia'. The organisers of the competition simulated the data using known parameters, so that teams' models could be validated and compared, and in such a way as to mimic the rich, complex behaviour exhibited by real-world processes. Therefore, we expect that the performance of our proposed methods should extend to general settings and applications.
+
+In the univariate tasks we utilise the generalised Pareto distribution (GPD) and use model-based clustering methods including hierarchical models [@hastibfri2009] and mixture models [@fraley2002], as well as Markov chain Monte Carlo (MCMC) for parameter estimation [@coles1996@. We also use bootstrapping methods for confidence interval estimation [@gill2020]. For the multivariate problems our approaches are heavily based on the parametric family of max-linear combinations of regularly varying random variables [@fougeres2013]. We introduce novel methods for performing inference for these models, advancing existing approaches [@cooley2019, @kiriliouk2022] using modern statistical learning techniques including sparsity-inducing projections and clustering. The novel aspects of our work are: exploring MCMC parameter estimation bias for systems with large uncertainty in tail behaviour, and proposing a new estimator for the noise coefficient matrix of a max-linear model based on sparse projections onto the simplex.
+
+The format of the paper is as follows: @sec-eva-univariate describes our solutions for the univariate challenges with each challenge split into methodology and results sections. @sec-eva-multivariate introduces the requisite background theory from multivariate extremes before outlining the methodological frameworks and the results attained for Challenges 3 and 4. We conclude with some final discussion of our performance in @sec-eva-conclusion.
+
+## Univariate Challenges {#sec-eva-univariate}
+
+The first two challenges both involve estimating univariate extreme marginal quantiles, so we initially describe some of the theory that will be used across both tasks. Suppose that a generalised Pareto distribution with scale and shape parameters, $\sigma$ and $\xi$ respectively, is a suitable model for exceedances of a high threshold $u$ by a variable $Y$. Then, for $y > u$,
+\begin{equation*}
+    \mathbb{P}(Y > y \mid Y > u) = \begin{cases}
+    \left(1 + \xi\left(\frac{y-u}{\sigma}\right)\right)_{+}^{-1/\xi}, & \xi \neq 0, \\
+    \exp \left(-\frac{y-u}{\sigma}\right), & \xi = 0,
+    \end{cases}
+\end{equation*}
+where $\xi, u \in \R$, $\sigma \in \R^+$ and $(\cdot)_{+} = \max(\cdot , 0)$. Given the probability $\zeta_u = \mathbb{P}(Y > u)$, the probability of $Y > y$ can be expressed as
+\begin{equation}\label{eq-eva-uni-prob-ind}
+    \mathbb{P}(Y > y) = \zeta_u \mathbb{P}(Y > y \mid Y > u). 
+\end{equation}
+We can find the $p$th percentile of the distribution of $Y$ by rearranging the distribution function to form the quantile function,
+\begin{equation*}
+    q(p) = \begin{cases}
+    u + \frac{\sigma}{\xi}\left(\left(\frac{\zeta_u}{1 - p}\right)^{\xi}-1\right), & \xi \neq 0, \\
+    u + \sigma \log \left(\frac{\zeta_u}{1-p}\right), & \xi = 0,
+    \end{cases}
+\end{equation*}
+where $p > 1 - \zeta_u$ to ensure that $q(p) > u$. However, we can also write down this expression for a return level, that is, the level $y_T$ that is exceeded on average once every $T$ years,
+\begin{equation}\label{eq-eva-uni-return}
+    y_T = \begin{cases}
+    u + \frac{\sigma}{\xi}((T n_{\text{yr}} \zeta_u)^{\xi}-1), & \xi \neq 0, \\
+    u + \sigma \log (T n_{\text{yr}} \zeta_u), & \xi = 0. 
+    \end{cases}
+\end{equation}
+where $n_{\text{yr}}$ is the number of observations per year. For the purposes of the second challenge, $n_{\text{yr}} = 300$ as we are given that a year in Utopia consists of 12 months and 25 days per month, and there is one observation per day.
+
+These expressions imply that, having chosen an appropriate threshold $u$, we can estimate quantiles and return levels once we obtain estimates of $\sigma$ and $\xi$. The method of obtaining these values is different for different tasks and will be described, for the univariate challenges, in @sec-eva-c1 and @sec-eva-c1. We also require an estimate of $\zeta_u$, the probability of an individual observation exceeding the threshold $u$. We can achieve this by using the empirical probability of $Y$ exceeding $u$,
+\begin{equation}\label{eq-eva-uni-exceedance}
+    \hat{\zeta}_u = \sum^{n}_{i=1} \ind\{y_i > u\}/n,
+\end{equation}
+that is, the proportion of the total number of observations that exceed the threshold for observations $y_1, \dots y_n$, where for the univariate challenges $n = 21,000$,  and where $\ind\{y_i > u\}$ is the indicator function,
+\begin{equation*}
+    \ind\{y_i > u\} = \begin{cases}
+        1 & \text{if }y_i > u, \\
+        0 & \text{otherwise.}
+    \end{cases} 
+\end{equation*}
+
+### Data
+
+We are interested in the extreme values of the environmental variable $Y$ which, for the two univariate tasks, we denote $Y_{i}$ for day $i$. For each day, we also have a vector of covariates $\bm{X}_i = (V_{1,i}, \dots, V_{8,i})$ with variables $(V_{1}, \dots, V_{4})$ representing unnamed covariates and $(V_{5}, V_{6}, V_{7}, V_{8})$ representing season, wind speed, wind direction and atmosphere respectively. Season is a factor variable, where $V_{5} \in \{1,2\}$, and each season covers half of the year. We perform our methodology for this challenge on each season individually. Given the covariates $\bm{X}_1, \dots, \bm{X}_n$, $Y_1, \dots, Y_n$ are independent [@Rohr23]. For the first challenge, the data is divided into a training set comprising 70 years' worth of daily environmental data and a test set featuring 100 days of environmental data, showcasing diverse combinations of the covariates. We denote the test data points by $\tilde{\bm{x}}_1, \dots, \tilde{\bm{x}}_{100}$. A comprehensive description of the dataset for this challenge is available in the competition editorial [@Rohr23].
+
+### Challenge 1 {#sec-eva-c1}
+
+#### Methodology
+
+In the first task, we are required to provide point estimates and central 50\% confidence intervals for extreme quantiles. As such, we need a model for the distribution of $Y \mid \bm{X}$ in order to estimate the conditional quantiles, $q_1, \dots, q_{100}$, where
+\begin{equation*}
+    \mathbb{P}(Y \leq q_k) \mid \bm{X} = \tilde{\bm{x}}_k) = 0.9999.
+\end{equation*}
+We approach this problem with a two step strategy. We first partition the covariate space into clusters and then analyse the extremes of each cluster individually. In each resulting cluster, it is assumed that the extreme values can be adequately modelled using a GPD, characterised by common scale and shape parameters, along with a common threshold and exceedance probability. To implement this, we propose partitioning the observations into groups by fitting a Gaussian mixture model to the environmental covariates. The dataset contained some missing values. We assumed that the missing observations where missing completely at random and removed them from the analysis, which was a valid assumption based on the editorial @Rohr23.
+
+```{r}
+#| label: fig-eva-uni-elbow
+#| fig-cap: "An elbow plot to determine an optimum number of clusters for season 1 (top) and season 2 (bottom). The figure displays the negative log-likelihood for different simulations (blue) as well as the average (red)."
+#| fig-scap: "Challenge 1: Blah."
+#| fig-height: 4
+
+img1 <- rasterGrob(as.raster(readPNG("~/Documents/GitHub/Extensions-And-Applications-of-TPDM/scripts/eva-data-challenge/elsom-figs/ElbowS1_smol.png")), interpolate = FALSE)
+img2 <- rasterGrob(as.raster(readPNG("~/Documents/GitHub/Extensions-And-Applications-of-TPDM/scripts/eva-data-challenge/elsom-figs/ElbowS2_smol.png")), interpolate = FALSE)
+ggarrange(img1, img2, ncol = 2)
+```
+
+We perform the clustering of the covariates for each season individually by using the method in @fraley2003. Let $\bm{x}^{(s)}_1,\dots,\bm{x}^{(s)}_N$, where $N = n/2$, denote the observations for season $s \in \{1,2\}$. We then assume that the covariates are sampled from a mixture of multivariate normal distributions. More formally, we want to estimate a $d$-dimensional Gaussian mixture model (where $d = 7$ in this challenge) with $J^{(s)}$ components, mean vectors $\bm{\mu}^{(s)}_1, \dots, \bm{\mu}^{(s)}_{J^{(s)}} \in \mathbb{R}^d$, mixture probabilities $\bm{\alpha}^{(s)} = \{\alpha^{(s)}_1, \dots, \alpha^{(s)}_{J^{(s)}}\}$, where $\alpha^{(s)}_j > 0$ and $\sum^{J^{(s)}}_{j=1}\alpha^{(s)}_j = 1$, and covariance matrices  $\bm{\Sigma}^{(s)}_1, \dots, \bm{\Sigma}^{(s)}_{J^{(s)}} \in \mathbb{R}^{d\times d}$, which are symmetric and positive definite. In the remainder of the subsection, we drop the season index $s$ for brevity. The probability density function of the observation $\bm{x}_i$ can then be written as
+\begin{equation}\label{eq-eva-uni-mixture}
+    p(\bm{x}_i \mid \bm{\Psi}) = \sum^J_{j=1}\alpha_j \phi(\bm{x}_i;\bm{\mu}_j, \bm{\Sigma}_j)
+\end{equation}
+where $\bm{\Psi} = \{\bm{\alpha}, \bm{\mu}, \bm{\Sigma}\}$ are the parameters of the mixture model and we use $\phi(\cdot \hspace{1mm} ; \bm{\mu}_j, \bm{\Sigma}_j)$ to denote the probability density function of the Gaussian distribution with mean vector $\bm{\mu}_j$ and covariance matrix $\bm{\Sigma}_j$. Assuming that an appropriate fixed $J$ has been found for each season, the mixture model parameters $\bm{\Psi}$ are unknown and to be found. In order to achieve this, we use the expectation maximisation (EM) algorithm to perform maximum likelihood estimation [@mclachlan2000], which is executed using the \texttt{mclust} package in \texttt{R} [@fraley2003]. The optimum number of clusters is then found by using the elbow method; we derive the negative log-likelihood for each choice of $J$, and identify the point at which this value begins to plateau.
+
+In addition to the cluster parameters, the EM algorithm gives a cluster allocation for the observations. We use this allocation to split the observations of $Y$, and we denote by $\mathcal{Y}^{(j)}$ the data points in the $j$th cluster ($j = 1, \dots, J$). We are then able to perform extreme value analysis on each set of points $\mathcal{Y}^{(j)}$ separately, by fitting a GPD, with parameters $\hat{\sigma}_j$ and $\hat{\xi}_j$, to the extremal data, using maximum likelihood estimation, as outlined at the start of @sec-eva-univariate. We make the assumption that the effects of the covariates on $Y$ are entirely captured by the cluster assignments. The threshold, $\hat{u}_j$, is chosen by interpreting mean residual life plots and parameter stability plots [@Coles2001]. 
+
+The cluster estimates are then used to estimate $q_k$. We introduce a latent variable $Z_k$, where $Z_k = j$ refers to $\Tilde{\bm{x}}_k$ being allocated to the $j$th cluster. Using the law of total probability, we then write $\mathbb{P}(Y > q_k \mid \bm{X} = \Tilde{\bm{x}}_k$) as
+\begin{equation}\label{eq-eva-uni-LOTP}
+    \mathbb{P}(Y > q_k \mid \bm{X} =\Tilde{\bm{x}}_k)
+       =\sum_{j=1}^J \mathbb{P}(Z_k = j \mid \bm{X} = \Tilde{\bm{x}}_k) \mathbb{P}(Y > q_k \mid \bm{X} = \Tilde{\bm{x}}_k, Z_k = j).
+\end{equation}
+We can write the first probability in this expression using \eqref{eq-eva-uni-mixture},
+\begin{equation*}
+    \mathbb{P}(Z_k = j \mid \bm{X} =\Tilde{\bm{x}}_k) = \frac{\alpha_j \phi(\Tilde{\bm{x}}_k;\bm{\mu}_j, \bm{\Sigma}_j)}{p(\Tilde{\bm{x}}_k \mid \bm{\Psi})},
+\end{equation*}
+and using \eqref{eq-eva-uni-prob-ind}, it is possible to express the second probability as
+\begin{equation*}
+    \mathbb{P}(Y > q_k \mid Z_k = j, \bm{X} = \Tilde{\bm{x}}_k) = \mathbb{P}(Y > q_k \mid Y > \hat{u}_j, Z_k = j) \mathbb{P}(Y > \hat{u}_j | Z_k = j).
+\end{equation*}
+The exceedance probability, $\mathbb{P}(Y > \hat{u}_j | Z_k = j)$ is calculated empirically using \eqref{eq-eva-uni-exceedance}, and the other probability in the expression is found by fitting a GPD to the clusters. We then have all the components in \eqref{eq-eva-uni-LOTP} to find $q_k$ that satisfies $\mathbb{P}(Y > q_k \mid \bm{X} =\Tilde{\bm{x}}_k) = 0.0001$. 
+
+The challenge also requires central 50\% confidence intervals for the estimates of these extreme conditional quantiles. For each set of points in a cluster, $\mathcal{Y}^{(j)}$, we are able to find an estimate of the quantile by performing a jackknife resampling [@efron1981] of the extremal data and use this to fit the GPD. In the jackknife resampling method, sets of samples are created by leaving out one observation at a time and calculating the quantile point estimate based on the remaining observations. For each observation $i$ in the extremal dataset $\mathcal{Y}^{(j)} \mid \mathcal{Y}^{(j)} > \hat{u}_j$, we create a new dataset $\mathcal{Y}^{(j)}_{(-i)} \mid \mathcal{Y}^{(j)} > \hat{u}_j$ by excluding the $i$th observation. We then fit a new GPD to this data and, using these parameter estimates, calculate the quantile point estimate in \eqref{eq-eva-uni-quant}. Once we have undertaken this process for every observation in the dataset, we calculate the empirical 25th and 75th percentiles for the jackknife samples.
+
+#### Results
+
+As mentioned above, we perform clustering separately for each of the two seasons - Season 1 and Season 2. Elbow plots are used to determine suitable number of clusters; these results are displayed in @fig-eva-uni-elbow. It is clear from these figures that the negative log-likelihood does not obviously level off for up to 10 clusters.
+After balancing the trade-off between maximising the number of covariate clusters, and maximising the number of data points within each cluster, the number of covariate clusters was determined to be $J = 5$ for each season. By choosing $J = 5$, the average number of observations in each cluster was 2,580 (with a standard deviation of 535).
+
+The performance of this method was disappointing (see editorial @Rohr23), and there are a few reasons why this could have been the case. Firstly, there were no clearly defined clusters. This points to the fact that the fitted Gaussian mixture distribution may have been unable to fully capture the non-Gaussian distribution of the covariate values. In @fig-eva-uni-elbow, the point at which the negative log-likelihood plateaus is not clear, illustrating this argument. The second reason could be that covariates were not used when fitting the GPDs to the extreme data in each cluster, only for cluster assignment. A GPD with covariate models for each cluster may have resulted in better quantile estimates. A further development could be to explore generalised Pareto regression trees, as they are able to perform clustering using trends in the covariates [@Fark21].
+
+```{r}
+#| label: fig-eva-uni-losfunc
+#| fig-cap: "A diagram of the loss function using the true quantile value $q=196.6$."
+#| fig-scap: "Challenge 2: Blah."
+#| fig-height: 3.5
+
+img1 <- rasterGrob(as.raster(readPNG("~/Documents/GitHub/Extensions-And-Applications-of-TPDM/scripts/eva-data-challenge/elsom-figs/LossFunc3.png")), interpolate = FALSE)
+
+ggarrange(img1)
+```
+
+### Challenge 2 {#sec-eva-c2}
+
+In the second challenge, we are required to estimate the marginal quantile $q \in \mathbb{R}$ such that
+\begin{equation*}
+    \mathbb{P}(Y > q) = \frac{1}{300 T},
+\end{equation*}
+where $T=200$, that is, an estimate of the 200 year return level for Amaurot. This challenge was assessed using a loss function that penalises under-estimating the quantile more than over-estimating it. Formally, for a given estimate $\hat{q}$ and the true marginal quantile $q$, the loss is calculated as,
+\begin{equation}\label{eq-eva-uni-lossy}
+    L(q,\hat{q}) = \begin{cases}
+        0.9(0.99q-\hat{q}) & \text{if } 0.99q > \hat{q},\\
+        0,  & \text{if } |q - \hat{q}| \leq 0.01q,\\
+        0.1(\hat{q} - 1.01q), & \text{if }1.01q<\hat{q}.
+    \end{cases}
+\end{equation}
+This replicates real-world scenarios. For example, in a hydrology context, over-estimating flood defences leads to increased costs, while under-estimating them results in severe consequences, such as fatalities. After completing the challenge, we were given the correct quantile $q = 196.6$ and so we can substitute this value into the loss function, as displayed in @fig-eva-uni-losfunc.
+
+For this analysis, we make the underlying assumption that the extreme values of $Y$ are independent and identically distributed (IID), that is, we ignore any dependence on $\bm{X}$. This assumption is made to simplify the modelling process.
+We then assume that the exceedances of $Y$ above a high threshold $u$ follow a GPD,
+\begin{equation*}
+    Y-u \mid Y > u \sim \text{GPD}(\sigma, \xi).
+\end{equation*}
+Using \eqref{eq:return}, the 200-year return level is then
+\begin{equation*}
+    y_{200} = \hat{u} + \frac{\hat{\sigma}}{\hat{\xi}}((200 \times 300 \hat{\zeta}_u)^{\hat{\xi}}-1),
+\end{equation*}
+where we have substituted $T = 200$ and $n_y = 300$ as we have 300 daily observations a year.
+
+```{r}
+#| label: fig-eva-uni-survive
+#| fig-cap: "A GPD fitted to extreme $Y$ values above threshold 110, with a survival curve (top) fitted using the mean of the posterior parameter values, with a 90% confidence interval as dashed lines, and the respective posterior distributions of sampled scale (bottom left) and shape (bottom right) parameters, with the mean values as dashed lines."
+#| fig-scap: "Challenge 2: Blah."
+#| fig-height: 6
+#| fig-pos: "H"
+
+img1 <- rasterGrob(as.raster(readPNG("~/Documents/GitHub/Extensions-And-Applications-of-TPDM/scripts/eva-data-challenge/elsom-figs/CCDF.png")), interpolate = FALSE)
+img2 <- rasterGrob(as.raster(readPNG("~/Documents/GitHub/Extensions-And-Applications-of-TPDM/scripts/eva-data-challenge/elsom-figs/PostScale2.png")), interpolate = FALSE)
+img3 <- rasterGrob(as.raster(readPNG("~/Documents/GitHub/Extensions-And-Applications-of-TPDM/scripts/eva-data-challenge/elsom-figs/PostShape2.png")), interpolate = FALSE)
+ggarrange(img1, ggarrange(img2, img3, ncol = 2), nrow = 2)
+```
+
+To define a Bayesian framework, we choose prior distributions for $\sigma$ and $\xi$, $\sigma \sim \text{ Gamma}(4, 1)$, $\xi \sim N(0, 1)$.
+These prior distributions are selected to reflect minimal prior knowledge about the exact parameter values (whilst ensuring that $\sigma$ remain positive). Subsequent analysis demonstrated that the parameter estimates were robust and largely unaffected by the specific choice of priors, which indicated that the data provided sufficient information to primarily determine the posterior distributions.
+
+We use Markov chain Monte Carlo methods [@coles1996,@gelfand1990] to sample from the resulting posterior distribution of $(\sigma, \xi)$. This method was preferred over maximum likelihood estimation as we wanted a full distribution of the parameters, allowing for more insight into the uncertainty of the estimates.
+
+```{r}
+#| label: fig-eva-uni-corrs
+#| fig-cap: "A histogram of residuals of predicted and simulated scale (left) and shape (right) parameters. These residuals are then used as a bias correction for the return level estimate."
+#| fig-scap: "Challenge 2: Blah."
+#| fig-height: 4
+#| fig-pos: "H"
+
+img1 <- rasterGrob(as.raster(readPNG("~/Documents/GitHub/Extensions-And-Applications-of-TPDM/scripts/eva-data-challenge/elsom-figs/ShiftScaleDens.png")), interpolate = FALSE)
+img2 <- rasterGrob(as.raster(readPNG("~/Documents/GitHub/Extensions-And-Applications-of-TPDM/scripts/eva-data-challenge/elsom-figs/ShiftShapeDens.png")), interpolate = FALSE)
+ggarrange(img1, img2, ncol = 2)
+```
+
+To assess how well our approach recovers the true parameter values, we generate sets of simulated data from GPDs with parameters that were representative of the ones sampled via our MCMC algorithm. Formally, for each simulated dataset, we sample values $\tilde{\sigma}$ and $\tilde{\xi}$, and then generate data points $\tilde{w}_1, \tilde{w}_2, \dots, \tilde{w}_{m}$ from a GPD($\tilde{\sigma}, \tilde{\xi}$), where $m$ is equal to the number of exceedances of $Y$ above $u$. We considered two approaches to sample $\tilde{\sigma}$ and $\tilde{\xi}$, and we generated 1000 datasets for each. The first approach is to sample these parameters from the posterior distribution. The other approach is to sample the parameters from uniform distributions, $\tilde{\sigma} \sim U(11, 18)$ and $\tilde{\xi} \sim \text{Unif}(-0.15, 0.20)$; these limits were selected based on the posterior samples. For each generated dataset, we again run our MCMC algorithm and store the posterior mean estimate for $\tilde{\sigma}$ and $\tilde{\xi}$. Finally, we apply the mean corrections to the initial GPD parameter estimates to calculate an adjusted return level.
+
+#### Results
+
+We determine a threshold of $\hat{u} = 110$ by using mean excess plots, resulting in $m = 180$. We can then use this to calculate the empirical estimate for the exceedance probability $\hat{\zeta}_u = 180/ 21000 \approx 0.0086$. @fig-eva-uni-survive shows the posterior samples of the shape and scale distributions for the initial GPD fit. The range of these distributions are then used to inform the sampling boundaries for the simulated datasets as described in Section \ref{sec:chall2meth}. We also plot a survival function to assess the model fit (@fig-eva-uni-survive), where the dashed red lines reflect a 90\% credible interval for the fit.
+We find that the posterior distribution of the shape parameter spanned both negative and positive values, indicating uncertainty in the tail behaviour of the underlying distribution. It was also clear from inspecting smaller values of the extremes in the survival curve, that the GPD fit could be improved.
+
+```{r}
+#| label: fig-eva-uni-returns
+#| fig-cap: "The return level samples before shifting (blue) and after shifting (red). The dashed lines denote the mean of the samples."
+#| fig-scap: "Challenge 2: Blah."
+#| fig-height: 4
+#| fig-pos: "H"
+
+img1 <- rasterGrob(as.raster(readPNG("~/Documents/GitHub/Extensions-And-Applications-of-TPDM/scripts/eva-data-challenge/elsom-figs/NewReturnLevel.png")), interpolate = FALSE)
+
+ggarrange(img1)
+```
+
+We opted for our second approach to create the simulated datasets, that is, we sampled the parameters from uniform distributions to make the corrections for our final results. We choose this approach as, by employing uniform coverage of the parameter space, we return a more risk-averse return level with respect to the challenge loss function. The distributions of the residuals of the mean predicted parameters and the true (simulated) parameters are displayed in @fig-eva-uni-corrs. There are significant negative residuals for the scale parameter and significant positive residuals for the shape parameter. We wanted to use these residual distributions to make a correction to the initial parameter estimates. We apply the mean corrections to the initial posterior parameter values and compared the mean return levels. These are shown in @fig-eva-uni-returns. This non-standard approach was used for simplicity, however, some further work could be to more carefully incorporate these results into the initial posterior parameter distributions.  This gives an overall increase in the average return level from 196.4 to 199.4.
+
+The correct quantile value was $q = 196.6$. We were interested to find that the initial GPD fit to the data gave a return level of $196.4$, which led to a loss of $L(196.6, 196.4) = 0$. It is possible that small effects of the covariates are compensated for by other factors, giving a correct return level under the misspecified model assumption.
+Although our final answer, with the correction, increased our return level, it also increased the loss from $L(196.6, 196.4) = 0$ to $L(196.6, 199.4) = 0.0834$ (using \eqref{eq-eva-uni-lossy}). Before the correct quantile value was announced, we were encouraged that the method resulted in an increase in the return level, as an over-estimate was preferable to an under-estimate in the context of the competition. It is worth noting that if we had opted to sample the parameters of the simulated data from the posterior distributions, we would have got an average return level of $198.7$, which would have given a smaller loss, $L(196.6, 198.7) = 0.0134$. The simplicity of the model, given the underlying assumption about the data, creates ambiguity regarding whether the large residuals in the parameter estimates are caused by bias or by model misspecification. For future work, it would be appropriate to incorporate a more sophisticated model of the covariates to reduce model misspecification and to investigate whether any residuals in parameter estimates are due to bias.    
+
+## Multivariate Challenges {#sec-eva-multivariate}
+
+In Challenges 3 and 4 we are presented with a $d$-dimensional random vector $\bm{X}=(X_1,\ldots,X_d)\sim F_{\bm{X}}$, representing the value of an environmental variable at $d$ sites in Utopia, where $F_{\bm{X}}$ is an unknown joint distribution function. Our goal is to estimate the probability that $\bm{X}$ lies in a given extreme `failure region' based on a sample of independent observations of $\bm{X}$. The failure regions of interest are such that certain components of $\bm{X}$ are simultaneously large while all remaining components (if any) are of lower order. The inherent difficulty of the task stems from the fact that the events' return periods are of similar order or even significantly longer than the observation period over which the data are collected; empirical methods based solely on the relative frequency of event occurrences are fruitless. Instead, we use the observed data to infer an estimate for the probabilistic structure of the joint tail of $\bm{X}$ and subsequently compute tail event probabilities under this model. This encapsulates the philosophy of multivariate extreme value statistics. 
+
+In the absence of prior knowledge about the physical processes driving the environment of Utopia, we are compelled to recourse to data-driven, statistical learning methods for multivariate extremes. The particular tools we choose will depend on the nature and difficulties of the task at hand. In Challenge 3, the failure regions are defined by different subsets of variables being large, thereby placing emphasis on accurately modelling the so-called extremal directions of $\bm{X}$. The salient characteristic of Challenge 4 is its high dimensionality, which calls for the utilisation of dimension reduction techniques, such as clustering, in order to overcome the curse of dimensionality inherent to tail dependence estimation.
+
+### Background
+
+#### Multivariate regular variation and the angular measure
+
+Let $\bm{X}$ denote a random vector that takes values in the positive orthant $\R_+^d:=[0,\infty)^d$. As is commonly done in multivariate extremes, we work in the framework of multivariate regular variation (MRV).
+
+#### Multivariate regular variation and the angular measure
+
+Let $\bm{X}$ denote a random vector that takes values in the positive orthant $\R_+^d:=[0,\infty)^d$. As is commonly done in multivariate extremes, we work in the framework of multivariate regular variation (MRV).
+
+:::{#def-eva-mrv}
+We say that $\bm{X}$ is *multivariate regularly varying* with index $\alpha>0$, denoted $\bm{X}\in\mathrm{RV}_+^d(\alpha)$, if it satisfies the following (equivalent) definitions [@resnickHeavytailPhenomenaProbabilistic2007, Theorem 6.1]:
+
+1. There exists a sequence $b_n\to\infty$ and a non-negative Radon measure $\nu_{\bm{X}}$ on $\mathbb{E}_0:=[0,\infty]^d\setminus\{\bm{0}\}$ such that
+\begin{equation}\label{eq-eva-mrv}
+n\mathbb{P}(b_n^{-1}\bm{X} \in \cdot) \stackrel{\mathrm{v}}{\rightarrow} \nu_{\bm{X}}(\cdot),\qquad (n\to\infty),
+\end{equation}
+where $\stackrel{\mathrm{v}}{\rightarrow}$ denotes vague convergence in the space of non-negative Radon measures on $\mathbb{E}_0$. The *exponent measure* $\nu_{\bm{X}}$ is homogeneous of order $-\alpha$, i.e. $\nu_{\bm{X}}(s\,\cdot)=s^{-\alpha}\nu_{\bm{X}}(\cdot)$ for any $s>0$.
+2. For any norm $\|\cdot\|$ on $\R^d$, there exists a sequence $b_n\to\infty$ and a finite *angular measure* $H_{\bm{X}}$ on $\mathbb{S}_+^{d-1}:=\{\bm{x}\in\R_+^d:\|\bm{x}\|=1\}$ such that for $(R,\bm{\Theta}):=(\|\bm{X}\|,\bm{X}/\|\bm{X}\|)$,
+\begin{equation}\label{eq-eva-polar-mrv}
+n\mathbb{P}((b_n^{-1}R,\bm{\Theta}) \in \cdot) \stackrel{\mathrm{v}}{\rightarrow} \nu_{\alpha}\times H_{\bm{X}}(\cdot),\qquad (n\to\infty),
+\end{equation}
+in the space of non-negative Radon measures on $(0,\infty]\times\mathbb{S}_+^{d-1}$, where $\nu_{\alpha}((x,\infty))=x^{-\alpha}$ for any $x>0$.
+:::
+
+The limit measures $\nu_{\bm{X}}$ and $H_{\bm{X}}$ are related via 
+\begin{align*}
+    \nu_{\bm{X}}(\{\bm{x}\in\mathbb{E}_0:\|\bm{x}\|>s,\bm{x}/\|\bm{x}\|\in\cdot\}) 
+    &= s^{-\alpha}H_{\bm{X}}(\cdot),\\ 
+    \nu_{\bm{X}}(\dee r\times \dee \bm{\theta})
+    &=\alpha r^{-\alpha-1}\dee r\,\dee H_{\bm{X}}(\bm{\theta}).
+\end{align*}
+The probabilistic tail of $\bm{X}$ decomposes into a univariate $\alpha$-regularly varying radial component [@resnickHeavytailPhenomenaProbabilistic2007, Theorem 3.6], that is asymptotically independent of the angular component. The angular measure represents the limiting distribution of the angular component and encodes all information about the tail dependence structure. 
+
+The MRV property implies that the margins of $\bm{X}$ are heavy-tailed with a common tail index. Henceforth, assume that the components of $\bm{X}\in\mathrm{RV}_+^d(\alpha)$ are Fréchet distributed with shape parameter $\alpha$, that is $\mathbb{P}(X_i<x)=\Psi_{\alpha}(x):=\exp(-x^{-\alpha})$ for $x>0$ and $i=1,\ldots,d$. (The data for Challenges 3 and 4 are on Gumbel margins but can be accommodated into our framework following a suitable transformation.) Moreover, we choose $\|\cdot\|=\|\cdot\|_\alpha$, the $L_\alpha$-norm on $\R^d$, and specify that the normalising sequence in \eqref{eq-eva-polar-mrv} is $b_n=n^{1/\alpha}$. With these particular choices the marginal variables have unit scale  [@kluppelbergEstimatingExtremeBayesian2021, Definition 4] and $H_{\bm{X}}(\mathbb{S}_+^{d-1})=d$.
+
+The problem of modelling the angular measure has attracted considerable attention in recent years -- a survey of the related literature can be found in  @engelkeSparseStructuresMultivariate2021. One research avenue concerns learning which sets of variables may be concurrently extreme; this can be posed as a support detection problem [@goixSparseRepresentationMultivariate2017; @simpsonDeterminingDependenceStructure2020]. Consider the index set $\mathbb{V}(d):=\{1,\ldots,d\}$ and denote by $\mathcal{P}_d^\star=\mathcal{P}(\mathbb{V}(d))\setminus\emptyset$ its power set excluding the empty set. A set $\beta\in\mathcal{P}_d^\star$ is termed an extremal direction of $\bm{X}$ if $H_{\bm{X}}$ places mass on the subspace
+    \begin{equation*}
+    C_\beta = \{\bm{w}\in\mathbb{S}_+^{d-1} : w_i > 0 \iff i\in\beta \} \subseteq \mathbb{S}_+^{d-1}.
+\end{equation*}
+Another branch of research aims at developing dimension reduction techniques for analysing the angular measure in high dimensions. To this end, one often considers a summary of the full dependence structure encoded in a matrix of pairwise extremal dependence metrics. One such matrix, originally proposed in @larssonExtremalDependenceMeasure2012 and later popularised by @cooleyDecompositionsDependenceHighdimensional2019, is the tail pairwise dependence matrix (TPDM). The TPDM of $\bm{X}\in\mathrm{RV}_+^d(2)$ is the $d\times d$ matrix $\Sigma=(\sigma_{ij})$ with entries
+\begin{equation}\label{eq-eva-tpdm}
+    \sigma_{ij} = \int_{\mathbb{S}_+^{d-1}} \theta_i\theta_j \,\dee H_{\bm{X}}(\bm{\theta}), \qquad (i,j=1,\ldots,d).
+\end{equation}
+The diagonal entries are the squared marginal scales, i.e. $\sigma_{ii}=1$ for $i=1,\ldots,d$. The off-diagonal entries measure extremal dependence between the associated pairs of variables. In particular, $\sigma_{ij}=0$ if and only if $X_i$ and $X_j$ are asymptotically independent. For asymptotically dependent variables the magnitude of $\sigma_{ij}$ represents the dependence strength. An important property of the TPDM is its complete positivity [@cooleyDecompositionsDependenceHighdimensional2019, Proposition 5].
+
+:::{#def-eva-completely-positive}
+A matrix $S$ is *completely positive* if there exists a matrix $A$ with non-negative entries such that $S=AA^T$. We call $A$ (resp. $AA^T$) a *CP-factor* (resp. *CP-decomposition*) of $S$.
+:::
+
+This property connects the TPDM to the model class introduced in the following section.
+
+#### The max-linear model for multivariate extremes
+
+Our proposed methods for Challenges 3 and 4 employ the max-linear model, a parametric model based on the class of random vectors constructed by max-linear combinations of independent Fréchet random variables [@fougeresDenseClassesMultivariate2013]. This model is appealing for several reasons. First, it is flexible, in the sense that any regularly varying random vector can be arbitrarily well-approximated by a max-linear model with sufficiently many parameters [@fougeresDenseClassesMultivariate2013]. Since neither Challenge 3 nor Challenge 4 provide any prior information about the underlying data-generating processes, it is preferable to avoid imposing overly restrictive assumptions on the tail dependence structure. Secondly, although the number of parameters grows rapidly -- at least $\mathcal{O}(d)$ but often even $\mathcal{O}(d^2)$ -- efficient inference procedures are available even in high dimensions. Scalability is critical for Challenge 4. Finally, extremal directions and failure probabilities can be straightforwardly identified and computed directly from the model parameters  [@kirilioukEstimatingProbabilitiesMultivariate2022].
+
+:::{#def-eva-max-linear-model}
+For some $q\geq 1$ and $\alpha>0$, let $\bm{Z}=(Z_1,\ldots,Z_q)$ be a random vector with independent components $Z_1,\ldots,Z_q\sim\Psi_{\alpha}$ and let $A=(a_{ij})\in\R_+^{d\times q}$ be a deterministic matrix. If
+\begin{equation*}
+    X_i := \bigvee_{j=1}^q a_{ij}Z_j,\qquad (i=1,\ldots,d),
+\end{equation*}
+then $\bm{X}=(X_1,\ldots,X_d)$ is said to be *max-linear* with *noise coefficient matrix* $A$, denoted $\bm{X}\sim\mathrm{MaxLinear}(A;\alpha)$, and we write $\bm{X}=A \circ \bm{Z}$.
+::: 
+
+@cooleyDecompositionsDependenceHighdimensional2019 show that $\bm{X}=A\circ \bm{Z}\in\mathrm{RV}_+^d(\alpha)$ and
+\begin{equation}\label{eq-eva-max-linear-H}
+    H_{\bm{X}}(\cdot) = \sum_{j=1}^q \|\bm{a}_j\|_{\alpha}^{\alpha} \delta_{\bm{a}_j/\|\bm{a}_j\|_\alpha}(\cdot),
+\end{equation}
+where $\delta_{\bm{x}}(A):=\ind\{\bm{x}\in A\}$ is the Dirac mass function. The angles along which extremes can occur are (in the limit) precisely the $q$ self-normalised columns of $A$. Therefore $\beta\in\mathcal{P}_d^\star$ is an extremal direction of $\bm{X}$ if and only if there exists $j\in\{1,\ldots,q\}$ such that $\bm{a}_j/\|\bm{a}_j\|_\alpha\in C_\beta$. When it comes to model fitting, the testing procedure of @kirilioukHypothesisTestingTail2020 can provide guidance for choosing $q$; for our purposes, it either represents a tuning parameter (Challenge 3) or takes a fixed value owing to computational/algorithmic restrictions (Challenge 4). Substituting \eqref{eq-eva-max-linear-H} into \eqref{eq-eva-tpdm}, we observe that $\bm{X}\sim\mathrm{MaxLinear}(A,2)$ has TPDM $\Sigma_{\bm{X}}=AA^T$. In other words, the noise coefficient matrix is a CP-factor of the model TPDM. Conversely, given an arbitrary random vector $\bm{X}\in\mathrm{RV}_+^d(2)$ with TPDM $\Sigma$, any CP-factor $A$ of $\Sigma$ parametrises a max-linear model with identical pairwise tail dependence metrics to $\bm{X}$.
+
+@kirilioukEstimatingProbabilitiesMultivariate2022 give examples of classes of tail events $\mathcal{R}\subset\mathbb{E}_0$ for which $\mathbb{P}(\bm{X}\in\mathcal{R})$ can be well-approximated by a function of the parameter matrix $A$. With a view to Challenges 3 and 4, we focus on tail events where $\bm{X}$ is large in the $s\leq d$ components indexed by $\beta=\{\beta_1,\ldots,\beta_s\}\in\mathcal{P}_d^\star$, while all $d-s$ remaining components are of lower order. Formally, for $\bm{u}=(u_1,\ldots,u_s)\in\R_+^s$  a vector of high thresholds and $\bm{l}\in\R_+^{d-s}$ a vector of comparatively low thresholds, we consider
+\begin{equation*}
+    \mathcal{C}_{\beta,\bm{u},\bm{l}} := \{\bm{x}\in \mathbb{E}_0 : \bm{x}_{\beta} >\bm{u}, \bm{x}_{-\beta} < \bm{l} \},\qquad \mathbb{P}(\bm{X}\in \mathcal{C}_{\beta,\bm{u},\bm{l}}) = \mathbb{P}(\bm{X}_\beta > \bm{u},\bm{X}_{-\beta}<\bm{l}).
+\end{equation*} 
+When $\beta=\mathbb{V}(d)$ the threshold vector $\bm{l}$ is superfluous and is omitted. @kirilioukEstimatingProbabilitiesMultivariate2022 specify an approximate formula for $\mathbb{P}(A \circ \bm{Z}\in \mathcal{C}_{\mathbb{V}(d),\bm{u}})$ in terms of $A$. We derive an analogous formula for $\mathbb{P}(A \circ \bm{Z}\in \mathcal{C}_{\beta,\bm{u},\bm{l}})$ for general $\beta\in\mathcal{P}_d^\star$ stated as follows: if $\bm{X}\sim\mathrm{MaxLinear}(A;\alpha)$, then
+\begin{equation}\label{eq-eva-prob-approx-formula}
+    \mathbb{P}(\bm{X}\in\mathcal{C}_{\beta,\bm{u},\bm{l}}) \approx \hat{\mathbb{P}}(\bm{X}\in\mathcal{C}_{\beta,\bm{u},\bm{l}}) := \sum_{j:\frac{\bm{a}_j}{\|\bm{a}_j\|_\alpha}\in C_\beta} \min_{i=1,\ldots,s}\left(\frac{a_{\beta_i,j}}{u_i}\right)^\alpha.
+\end{equation}
+The approximation should be understood as being valid as $u_1,\ldots,u_s\to\infty$ while $\bm{l}$ remains fixed. Note that the entries of $\bm{l}$ do not appear in the right-hand side of \eqref{eq-eva-prob-approx-formula}. This reflects the fact that, asymptotically, the magnitude of the probability of the event $\{\bm{X}_\beta>\bm{u}\}\cap\{\bm{X}_{-\beta}<\bm{l}\}$ is predominantly determined by the threshold exceedance event $\{\bm{X}_\beta>\bm{u}\}$ while the relative contribution of the threshold non-exceedance event $\{\bm{X}_{-\beta}<\bm{l}\}$ vanishes. Henceforth, the threshold $\bm{l}$ may at times be suppressed for notational convenience.
+From \eqref{eq-eva-mrv} we have that, provided $u_1,\ldots,u_s$ are sufficiently large,
+\begin{equation*}
+    \mathbb{P}(\bm{X}\in\mathcal{C}_{\beta, \bm{u}, \bm{l}})
+    = \frac{1}{n}\left[n\mathbb{P}\left(\frac{\bm{X}}{n^{1/\alpha}}\in \frac{\mathcal{C}_{\beta, \bm{u}, \bm{l}}}{n^{1/\alpha}}\right)\right]
+    \approx \frac{1}{n}\nu_{\bm{X}}\left(\frac{\mathcal{C}_{\beta,\bm{u}, \bm{l}}}{n^{1/\alpha}}\right)
+    =\nu_{\bm{X}}(\mathcal{C}_{\beta,\bm{u}, \bm{l}}),
+\end{equation*}
+where the last step exploits homogeneity of the exponent measure. Transforming to pseudo-polar coordinates this becomes
+\begin{equation*}
+    \nu_{\bm{X}}(\mathcal{C}_{\beta,\bm{u}, \bm{l}})
+    = \int_{\left\lbrace (r,\bm{w})\,:\,r\bm{w}_\beta>\bm{u},\,r\bm{w}_{-\beta}<\bm{l}\right\rbrace} \alpha r^{-\alpha-1}\,\dee r\,\dee H_{\bm{X}}(\bm{w}).
+\end{equation*}
+Based on \eqref{eq-eva-max-linear-H}, there are only $q$ possible angles along which extremes can occur, but only those with $\bm{a}_j/\|\bm{a}_j\|_\alpha\in C_\beta$ will contribute to the integral. To see this, consider $\bm{w}=\bm{a}/\|\bm{a}\|_\alpha\in C_\gamma$, where $\bm{a}$ denotes an arbitrary column of $A$ and $\gamma\in\mathcal{P}_d^\star$. First, suppose $\gamma\subset\beta$ (strictly) so that there exists $i\in\beta$ such that $i\notin\gamma$. Then, for all $r>0$, we have $r\bm{w}_\beta\not >\bm{u}$, since $rw_i=0$. Similarly, suppose $\gamma\supset\beta$, in which case there exists $i\in\gamma$ with $i\notin\beta$. Let $\ell$ denote the entry of $\bm{l}$ corresponding to component $i$. An extreme event along $\bm{w}$ requires $rw_i<\ell$ and $r\bm{w}_\beta>\bm{u}$, but for $\bm{u}$ sufficiently large these inequalities have no solution $r>0$. On the other hand, if $\beta=\gamma$, then $\bm{w}_{-\beta}=\bm{0}\in\R^{d-s}$ and so
+\begin{equation*}
+    r\bm{w}_\beta>\bm{u},\,r\bm{w}_{-\beta}<\bm{l} 
+    \iff r\bm{w}_\beta>\bm{u}
+    \iff r > \max_{i=1,\ldots,s}\left(\frac{\|\bm{a}\|_\alpha u_i}{a_{\beta_i}}\right).
+\end{equation*}
+This yields the final result
+\begin{equation*}
+    \nu_{\bm{X}}(\mathcal{C}_{\beta,\bm{u}, \bm{l}}) = \sum_{j:\frac{\bm{a}_j}{\|\bm{a}_j\|_\alpha}\in C_\beta} \|\bm{a}_j\|_\alpha^\alpha \int_{\max_{i}\left(\frac{\|\bm{a}_j\|_\alpha u_i}{a_{\beta_i,j}}\right)}^\infty \alpha r^{-\alpha-1}\,\dee r 
+    =  \sum_{j:\frac{\bm{a}_j}{\|\bm{a}_j\|_\alpha}\in C_\beta} \min_{i=1,\ldots,s} \left(\frac{a_{\beta_i,j}}{u_i}\right)^\alpha.
+\end{equation*}
+For $\alpha=1$ we can establish the upper bound $\hat{\mathbb{P}}(\bm{X}\in\mathcal{C}_{\beta,u\bm{1}_s, \bm{l}})\leq H_{\bm{X}}(C_{\beta})/(su)$ with equality attained if and only if the angular measure places all of its mass on $C_\beta$ at the centroid $\bm{e}(\beta)/|\beta|$, where $\bm{e}(\beta):=(\ind\{i\in\beta\}:i=1,\ldots,d)\in\{0,1\}^d$. The form of this bound offers an intuitive interpretation as the limiting probability of the angular component lying in the required subspace multiplied by the survivor function of a $\mathrm{Pareto}(\alpha=1)$ random variable evaluated at the effective radial threshold $\|u\bm{1}_s\|_1=su$.
+
+#### Existing approaches to inference for max-linear models
+
+Suppose $\bm{X}\sim\mathrm{MaxLinear}(A,\alpha)$, where $\alpha$ is known and $A$ must be estimated from a sample $\{\bm{x}_t=(r_t,\bm{\theta}_t):t=1,\ldots,n\}$ of $\bm{X}=(R,\bm{\Theta})$. For $j\in\{1,\ldots,n\}$, let $r_{(j)}$ denote the $j$th upper order statistic of $\{r_1,\ldots,r_n\}$ and let $\bm{x}_{(j)}, \bm{\theta}_{(j)}$ denote the corresponding observation and angular component, respectively.
+
+One estimate of $A$ is motivated by \eqref{eq-eva-max-linear-H}, which says its normalised columns represent the set of realisable extremal angles [@cooleyDecompositionsDependenceHighdimensional2019]
+
+:::{#def-eva-empirical-A}
+The empirical estimate of $A$ based on $\bm{x}_1,\ldots,\bm{x}_n$ is $\hat{A}=(\hat{\bm{a}}_{1},\ldots,\hat{\bm{a}}_{k})\in\R_+^{d\times k}$, where $1\leq k \leq n$ and $\hat{\bm{a}}_{j} = (d/k)^{1/\alpha} \bm{\theta}_{(j)}$ for $j=1,\ldots,k$.
+:::
+
+The quantity $k$ is the customary tuning parameter that represents the number of 'extreme' observations with norm not less than the implied radial threshold $r_{(k)}$. The associated angular measure (for any $\alpha$) and TPDM (for $\alpha=2$) are given by
+\begin{align}
+\hat{H}_{\bm{X}}(\cdot) 
+&:= H_{\hat{A}\times_{\max}\bm{Z}}(\cdot)
+= \frac{d}{k}\sum_{t=1}^n \ind\{\bm{\theta}_t \in\cdot, r_t \geq r_{(k)}\} \label{eq-eva-empirical-H} \\
+\hat{\sigma}_{\bm{X}_{ij}} 
+&:= \sigma_{\hat{A}\times_{\max}\bm{Z},ij}
+= \frac{d}{k}\sum_{t=1}^n \theta_{ti}\theta_{tj}\ind\{r_t \geq r_{(k)}\}
+= [\hat{A}\hat{A}^T]_{ij}. \label{eq-eva-empirical-tpdm}
+\end{align}
+These are the empirical angular measure  [@einmahlMaximumEmpiricalLikelihood2009] and empirical TPDM [@cooleyDecompositionsDependenceHighdimensional2019], respectively. In view of \eqref{eq-eva-empirical-tpdm}, alternative estimates of $A$ can be obtained by CP decomposition of the empirical TPDM. 
+
+:::{#def-eva-cp-A}
+CP-factors of $\hat{\Sigma}_{\bm{X}}=(\hat{\sigma}_{\bm{X}_{ij}})$ are called CP-estimates of $A$, denoted $\tilde{A}$.
+:::
+
+An estimate $\tilde{A}$ induces a different angular measure $\tilde{H}_{\bm{X}}:=H_{\tilde{A}\times_{\max}\bm{Z}}$ but, by construction, the empirical and CP models share identical tail pairwise dependencies, since $\tilde{\Sigma}_{\bm{X}}:=\Sigma_{\tilde{A}\times_{\max}\bm{Z}}=\tilde{A}\tilde{A}^T=\hat{\Sigma}_{\bm{X}}$. Note that $\tilde{A}$ implicitly depends on the same tuning parameter $k$ as $\hat{A}$ via the empirical TPDM. All CP-estimates in this paper are obtained using the decomposition algorithm of @kirilioukEstimatingProbabilitiesMultivariate2022, which efficiently factorises moderate- to high-dimensional TPDMs. Their algorithm takes as input a strictly positive TPDM and a permutation $(i_1,\ldots,i_d)$ of $\mathbb{V}_d$ and (for some permutations) returns a square CP-factor $\tilde{A}\in\R_+^{d\times d}$ whose columns satisfy $\tilde{\bm{a}}_{j} / \|\tilde{\bm{a}}_{j}\|_2 \in C_{\mathbb{V}_d\setminus\{i_l \,:\, l < j\}}$ for $j=1,\ldots,d$.
+
+#### Inference for max-linear models based on sparse projections
+
+A limitation of $\hat{A}$ and $\tilde{A}$ is that they fail to capture the true extremal directions of $\bm{X}$. In the case of $\hat{A}$ this is because the angles $\bm{\Theta}=\bm{X}/\|\bm{X}\|$ lie in the simplex interior almost surely, meaning $\hat{\bm{a}}_1,\ldots,\hat{\bm{a}}_k\in\mathbb{V}_d$ and $\hat{\mathbb{P}}(\hat{A}\times_{\max}\bm{Z}\in\mathcal{C}_{\beta,\bm{u}})=0$ for any $\beta\neq\mathbb{V}_d$. The $d$ extremal directions of $\tilde{A}\times_{\max}\bm{Z}$ are fully determined by the input path $(i_1,\ldots,i_d)$ and need not bear any resemblance to the extremal directions suggested by the data. To address this gap, we propose augmenting the empirical estimate with an alternative notion of angle based on Euclidean projections onto the $L_1$-simplex [@meyer2023]. 
+
+:::{#def-eva-euclidean-projection}
+The Euclidean projection onto the $L_1$-simplex is defined by
+\begin{equation*}
+  \pi:\R_+^d\to\mathbb{S}_+^{d-1}, \qquad \pi(\bm{v})=\argmin_{\bm{w}\in\mathbb{S}_+^{d-1}}\|\bm{w} - \bm{v}\|_2^2.
+\end{equation*}
+:::
+
+This projection is useful because $\pi(\bm{v})$ may lie on a boundary of the simplex even if $\bm{v}/\|\bm{v}\|_1$ lies in its interior. Assume now that $\alpha=1$.
+
+:::{#def-eva-sparse-empirical-A}
+The *sparse empirical estimate* of $A$ based on $\bm{x}_1,\ldots,\bm{x}_n$ is $\hat{A}^\star=(\hat{\bm{a}}_{1}^\star,\ldots,\hat{\bm{a}}_{k}^\star)\in\R_+^{d\times k}$, where $1\leq k< n$ and $\hat{\bm{a}}_j^\star = (d/k)\pi(\bm{x}_{(j)}/r_{(k+1)})$ for $j=1,\ldots,k$.
+:::
+
+The corresponding angular measure
+\begin{equation*}
+  \hat{H}_{\bm{X}}^\star(\cdot)
+  :=H_{\hat{A}^\star\times_{\max}\bm{Z}}(\cdot) 
+  = \frac{d}{k} \sum_{j=1}^k \ind\{\pi\left(\bm{x}_{(j)}/r_{(k+1)}\right) \in\cdot\}
+\end{equation*}
+spreads mass across the subspaces $C_\beta\subseteq\mathbb{S}_+^{d-1}$ on which the projected data lie and $\hat{\mathbb{P}}(\hat{A}^\star\times_{\max}\bm{Z}\in\mathcal{C}_{\beta,\bm{u}})\neq 0$ for all corresponding $\beta$. A full study of the theoretical properties of $\hat{A}^\star$ has not been conducted. Having introduced our estimator and all the requisite theory, we are ready to present our methods for the multivariate challenges.
+
+### Challenge 3 {#sec-eva-c3}
+
+#### Data
+
+Challenge 3 considers a trivariate random vector $\bm{Y}=(Y_1,Y_2,Y_3)$ on standard Gumbel margins, i.e. $\mathbb{P}(Y_i<y)=G(y):=\exp(-\exp(-y))$ for $y\in\R$ and $i=1,2,3$. It entails estimating
+\begin{equation*}
+    p_1 := \mathbb{P}(Y_1 > 6, Y_2 > 6, Y_3 > 6), \qquad p_2:= \mathbb{P}(Y_1 > 7, Y_2 > 7, Y_3 < -\log(\log(2))).
+\end{equation*}
+The data comprise $n=21,000$ independent observations $\{\bm{y}_t=(y_{t1},y_{t2},y_{t3}):t=1,\ldots,n\}$ of $\bm{Y}$. The available covariate information is not leveraged by our method.
+
+#### Methodology
+
+Let $\bm{X}=(X_1,X_2,X_3)$ denote the random vector obtained by transforming $\bm{Y}$ to Fréchet margins with shape parameter $1$, i.e. $X_i=\Psi_1^{-1}(G(Y_i))=\exp(Y_i)\sim\Psi_1$ for $i=1,2,3$. The above probabilities can be expressed as
+\begin{equation}\label{eq-eva-c3-probabilities}
+    p_1 = \mathbb{P}(X_1 > e^6, X_2 > e^6, X_3 > e^6), \quad p_2= \mathbb{P}\left(X_1 > e^7, X_2 > e^7, X_3 < \frac{1}{\log 2}\right).
+\end{equation}
+The thresholds $e^6$, $e^7$, and $1/\log(2)$ correspond approximately to the 99.8\%, 99.9\% and 50\% quantiles of $\Psi_1$, respectively. Our solution models $\bm{X}$ as max-linear, infers $A$ using the sparse empirical estimator (for some hyperparameter $k$) and computes estimates for $p_1$ and $p_2$ via \eqref{eq-eva-prob-approx-formula}, that is
+\begin{equation}\label{eq-c3-probability-estimates}
+\hat{p}_1 = \hat{\mathbb{P}}(\hat{A}^\star\circ\bm{Z}\in\mathcal{C}_{\mathbb{V}(3),e^6}), \qquad \hat{p}_2 = \hat{\mathbb{P}}(\hat{A}^\star\circ\bm{Z}\in\mathcal{C}_{\{1,2\},e^7,1/\log(2)}).
+\end{equation}
+Inference is based on the transformed data $\{\bm{x}_t=(x_{t1},x_{t2},x_{t3}):t=1,\ldots,n\}$, where $x_{ti}:=\exp(y_{ti})$ for $t=1,\ldots,n$ and $i=1,2,3$. 
+
+#### Results
+
+```{r source-eva-challenge-3}
+#| include: false
+source(file.path("scripts", "eva-data-challenge", "challenge3.R"))
+```
+
+The results presented are based on $k=500 \approx 2.5\% \times n$. This value was used for our competition submission and the results' sensitivity to this choice will be examined later.
+
+The ternary plots in @fig-eva-c3-ternary depict the angular components associated with the $k$ largest observations in norm, i.e. exceeding the radial threshold $r_{(k+1)}\approx 138.77$. The left-hand plot represents the self-normalised vectors  $\bm{\theta}_{(1)},\ldots,\bm{\theta}_{(k)}$. We find points lying near the centre of the triangle and in the neighbourhood of all its edges and vertices. This suggests that the angular measure spreads mass across all seven faces of $\mathbb{S}_+^{2}$. However, we reiterate that no points lie *exactly* on the boundary. In contrast, the sparse angles $\{\pi(\bm{x}_{t}/r_{(k+1)}) : r_t > r_{(k+1)}\}$ in the right-hand plot lie in the interior (black, 40 points), along the edges (red, 139 points), and on the vertices (blue, 321 points) of the closed simplex. Only the 40 vectors in $C_{\mathbb{V}(3)}$ and 23 vectors in $C_{\{1,2\}}$ will enter into the estimates of \eqref{eq-eva-c3-probabilities}.
+
+```{r}
+#| label: fig-eva-c3-ternary
+#| fig-cap: "The angles $\\bm{x}_{(j)}/\\|\\bm{x}_{(j)}\\|_1\\in\\mathbb{S}_+^2$ (left) and Euclidean projections $\\pi(\\bm{x}_{(j)}/r_{(k+1})\\in\\mathbb{S}_+^2$ (right) for the 500 largest observations in Challenge 3. Points are coloured according to whether they lie in the interior (black), on an edge (red) or on a vertex (blue)."
+#| fig-scap: "Challenge 3: ternary plots of the empirical (sparse) extremal angles."
+#| fig-height: 4
+#| message: false
+
+library(ggtern)
+
+p1 <- A_hat %>%
+  t() %>%
+  as.data.frame() %>%
+  ggtern(aes(X1, X2, X3)) +
+  geom_mask() +
+  geom_point(colour = "black", size = 0.8) +
+  xlab("") +
+  ylab("") +
+  Llab(expression(X[1])) +
+  Tlab(expression(X[2])) +
+  Rlab(expression(X[3])) +
+  theme_hidegrid() +
+  theme_hidelabels()
+
+p2 <- A_hat_star %>%
+  t() %>%
+  as.data.frame() %>%
+  mutate(face_type = case_when(
+    (X1 > 0) + (X2 > 0) + (X3 > 0) == 3 ~ "3",
+    (X1 > 0) + (X2 > 0) + (X3 > 0) == 2 ~ "2",
+    .default = "1"
+  )) %>%
+  ggtern(aes(X1, X2, X3, colour = face_type)) +
+  geom_mask() +
+  geom_point(size = 0.8) +
+  xlab("") +
+  ylab("") +
+  Llab(expression(X[1])) +
+  Tlab(expression(X[2])) +
+  Rlab(expression(X[3])) +
+  labs(colour = expression("Subspace," ~ C[beta])) +
+  scale_colour_manual(labels = c(expression(bgroup("|",beta,"|") == 1),
+                                 expression(bgroup("|",beta,"|") == 2),
+                                 expression(bgroup("|",beta,"|") == 3)), values = c("blue", "red", "black")) +
+  theme_hidegrid() +
+  theme_hidelabels() +
+  theme(legend.position = "none")
+
+ggtern::grid.arrange(p1, p2, ncol = 2, nrow = 1)
+detach(package:ggtern, unload = TRUE)
+```
+
+The projected vectors are collated to form the $3\times 500$ matrix $\hat{A}^\star$. The first 100 columns of the matrices $\hat{A}$ and $\hat{A}^\star$ are represented visually in @fig-eva-c3-A-estimates. As expected, $\hat{A}$ is dense, albeit populated with small values, while $\hat{A}^\star$ exhibits a high degree of sparsity, in the sense that most of its columns satisfy $\|\hat{\bm{a}}_j^\star\|_0 < \|\hat{\bm{a}}_j\|_0=3$. Duplicated columns in $\hat{A}^\star$ could be merged and re-weighted to produce a compressed estimate $\hat{A}_{\mathrm{comp}}^\star$ with $q_{\mathrm{comp}}=40+139+3=182$ unique columns, but ultimately they parametrise identical models since $H_{\hat{A}^\star\circ\bm{Z}}=H_{\hat{A}_{\mathrm{comp}}^\star\circ\bm{Z}}$.
+
+```{r}
+#| label: fig-eva-c3-A-estimates
+#| fig-cap: "The first 100 columns of $\\hat{A}$ (left) and $\\hat{A}^\\star$ (right) for Challenge 3. The colour intensity of each cell represents the magnitude of the corresponding matrix entry."
+#| fig-scap: "Challenge 3: visual representations of $\\hat{A}$ and $\\hat{A}^{\\star}$."
+#| fig-height: 3
+
+fancy_scientific_short <- function(l) { 
+  l %>%
+    format(scientific = TRUE) %>%
+    gsub("^(.*)e", "e", .) %>%
+    gsub("e", "10^", .) %>%
+    parse(text = .) 
+}
+
+colpal <- colorspace::sequential_hcl(n = 7, "Oslo")
+ncolA <- 100 # number of columns of the A estimates to plot
+
+lattice.options(
+  layout.heights = list(bottom.padding = list(x = 0), top.padding = list(x = 0)),
+  layout.widths = list(left.padding = list(x = 0), right.padding = list(x = 0)),
+  axis.padding = list(factor = 0.5)
+)
+
+A_at <- c(0, 10^seq(from = -7, to = -2, by = 1))
+A_breaks <- c(-8, seq(from = -7, to = -2, by = 1))
+sci_A_at <- fancy_scientific_short(A_at)
+sci_A_at[1] <- "0"
+
+# left
+p1 <- levelplot(t(A_hat[3:1, 1:ncolA]), col.regions = colpal, at = A_at, xaxs="i", yaxs="i",
+                main = "", xlab = "", ylab = "",
+                colorkey = list(at = A_breaks, labels = list(at = A_breaks, labels = sci_A_at, cex = 1)),
+                scales = list(x = list(at = c(1, ncolA), labels = c(1, ncolA), cex = 1),
+                              y = list(labels = c("3", "2", "1"), cex = 1))) %>%
+  update(aspect = 0.6)
+
+p2 <- levelplot(t(A_hat_star[3:1, 1:ncolA]), col.regions = colpal, at = A_at,
+                main = "", xlab = "", ylab = "",
+                colorkey = list(at = A_breaks, labels = list(at = A_breaks, labels = sci_A_at, cex = 1)),
+                scales = list(x = list(at = c(1, ncolA), labels = c(1, ncolA), cex = 1),
+                              y = list(labels = c("3", "2", "1"), cex = 1))) %>%
+  update(aspect = 0.6)
+
+grid.arrange(p1, p2, ncol = 2, nrow = 1)
+```
+
+Substituting $\hat{A}^\star$ into \eqref{eq-eva-c3-probability-estimates} yields the final point estimates $\hat{p}_1=3.36\times 10^{-5}$ and $\hat{p}_2=2.76\times 10^{-5}$, to three significant figures. We are pleased to find that our estimates are very close to the true values given in @Rohr23. Furthermore, @fig-eva-c3-k-sensitivity shows that our estimates of $p_2$ are fairly stable across a range of `reasonable' choices of $k$, say, $1\%\leq k/n \leq 5\%$. When $k$ is smaller than this, the estimates become highly variable due to the limited effective sample size. If $k$ is too large, we risk introducing bias by including observations that do not reflect the true tail dependence structure. The estimates of $p_1$ exhibit greater sensitivity to the choice of threshold. The development of theoretically justified diagnostics/procedures for selecting the threshold represents an avenue for future work.
+
+```{r}
+#| label: fig-eva-c3-k-sensitivity
+#| fig-cap: "Challenge 3 results for different choices for the tuning parameter, $k$. The horizontal dashed lines indicate the estimands' true values. Our submitted solution was based on $k=500$ (vertical dashed line)."
+#| fig-scap: "Challenge 3: probability estimates against $k$."
+#| fig-height: 3
+#| fig-width: 6
+
+fancy_scientific_long <- function(l) { 
+  l %>%
+    format(scientific = TRUE) %>%
+    gsub("^(.*)e", "'\\1'e", .) %>%
+    gsub("e", "%*%10^", .) %>%
+    parse(text = .) 
+}
+
+pk %>% 
+  filter(k > 150) %>%
+  mutate(k_frac = k / 21000) %>%
+  tidyr::pivot_longer(c(p1, p2), names_to = "estimand", values_to = "estimate") %>%
+  mutate(truth = case_when(estimand == "p1" ~ 5.38e-5, .default = 2.98e-5)) %>%
+  tidyr::pivot_longer(c(estimate, truth), names_to = "prob_type", values_to = "value") %>%
+  ggplot(aes(x = k_frac, y = value, colour = estimand, linetype = prob_type)) +
+  geom_vline(xintercept = 500 / 21000, linetype = "dashed", colour = "black") +
+  geom_line() + 
+  xlab(expression(k/n)) +
+  ylab("Probability") +
+  labs(colour = "Estimand", linetype = "Quantity") +
+  scale_x_continuous(labels = scales::label_percent(), breaks = breaks_pretty(n = 5)) +
+  scale_color_manual(labels = c(expression(p[1]), expression(p[2])), values = c("red", "blue")) +
+  scale_linetype_manual(labels = c("Estimate", "Truth"), values = c(1, 2)) +
+  scale_y_continuous(labels = fancy_scientific_long, breaks = breaks_pretty(n = 7)) +
+  theme_light() +
+  theme(panel.grid.minor = element_blank())
+```
+
+### Challenge 4 {#sec-eva-c4}
+
+#### Data
+
+Challenge 4 regards a $d=50$ dimensional random vector $\bm{Y}$ on standard Gumbel margins. The components of $\bm{Y}$ are random variables $Y_{i,j}$ for $i=1,\ldots,25$ and $j=1,2$, representing the value of an environmental variable at the $i$th site in the administrative area of government area $j$. The joint exceedance probabilities
+\begin{align*}
+    p_1 &:= \mathbb{P}(Y_{i,j} > G^{-1}(1-\phi_j) : i=1,\ldots,25, \, j=1,2), \\
+    p_2 &:= \mathbb{P}(Y_{i,j} > G^{-1}(1-\phi_1) : i=1,\ldots,25, \, j=1,2),
+\end{align*}
+where $\phi_1=1/300$ and $\phi_2=12/300$, are to be estimated from $n=10,000$ independent observations $\{\bm{y}_t=(y_{t,i,j}:i=1,\ldots,25,\,j=1,2):t=1,\ldots,n\}$ of $\bm{Y}$.
+
+#### Methodology
+
+Let $\bm{X}=(X_1,\ldots,X_d)$ denote the random vector obtained from $\bm{Y}$ by re-indexing its variables and transforming to Fréchet margins with shape parameter $\alpha=2$, i.e.
+\begin{equation*}
+    X_{i+25(j-1)}:= \Psi_2^{-1}(G(Y_{i,j})) = \exp(Y_{i,j}/2)\sim\Psi_2, \qquad (i=1,\ldots,25,\,j=1,2).
+\end{equation*}
+The choice of $\alpha=2$ will be justified later. The data are transformed in an identical way yielding $\{\bm{x}_t=(x_{t1},\ldots,x_{td}):t=1,\ldots,n\}$, where $x_{t,i+25(j-1)}:=\exp(y_{t,i,j}/2)$ for $t=1,\ldots,n$, $i=1,\ldots,25$ and $j=1,2$. The estimands can now be expressed as
+\begin{align*}
+    p_1=\mathbb{P}(\bm{X}\in \mathcal{C}_{\mathbb{V}(d),\bm{u}_1}), \qquad & [\bm{u}_1]_i = 
+    \begin{cases}
+        \Psi_2^{-1}(1-\phi_1), & \text{if } 1 \leq i \leq 25 \\
+        \Psi_2^{-1}(1-\phi_2), & \text{if } 26 \leq i \leq 50
+    \end{cases}, \\
+    p_2=\mathbb{P}(\bm{X}\in \mathcal{C}_{\mathbb{V}(d),\bm{u}_2}), \qquad &\bm{u}_2 = \Psi_2^{-1}(1-\phi_1)\bm{1}_{50}.
+\end{align*}
+
+At a high level, our method proceeds in a similar vein to Challenge 3: we will model $\bm{X}$ as max-linear and compute estimates for $p_1$ and $p_2$ based on \eqref{eq-eva-prob-approx-formula}. However, our exploratory analysis revealed that not all components of $\bm{X}$ are asymptotically dependent, implying that $H_{\bm{X}}(\mathbb{V}(d))=0$. This has important ramifications for how we construct our solution. On the one hand, empirical or CP-estimates of $A$ will assert that $C_{\mathbb{V}(d)}$ is an extremal direction, resulting in a misspecified model. On the other hand, a model that correctly identifies $C_{\mathbb{V}(d)}$ as a $H_{\bm{X}}$-null set will yield $\hat{p}_1=\hat{p}_2=0$, despite the true values being non-zero [@Rohr23]. How do we resolve this difficulty? The key is to identify clusters of asymptotically dependent variables prior to model fitting and estimate the probability of concurrent joint exceedance events in all clusters. Our working hypothesis -- that the marginal variables can be partitioned such that asymptotic independence is present between clusters but not within them -- is formalised below.
+
+Assumption 1.
+: There exists $2\leq K \leq d$ and a partition $\beta_1,\ldots,\beta_K$ of $\mathbb{V}(d)$ such that the angular measure is supported on the closed subspaces $\bar{C}_{\beta_1},\ldots,\bar{C}_{\beta_K}\subset\mathbb{S}_+^{d-1}$, where $\bar{C}_\beta := \{C_{\beta'}:\beta'\subseteq\beta\}$ for any $\beta\in\mathcal{P}_d^\star$. That is, $H_{\bm{X}}(\cup_{l=1}^K \bar{C}_{\beta_l})=H_{\bm{X}}(\mathbb{S}_{+}^{d-1})$.
+
+This scenario has been considered before, cf. Assumption 1 in  @fomichovSphericalClusteringDetection2023. If $\bm{X}$ is max-linear with parameter $A=(\bm{a}_{1},\ldots,\bm{a}_{q})\in\R_{+}^{d\times q}$, we may restate the assumption as follows.
+
+Assumption 2.
+: There exist permutations $\pi:\mathbb{V}(d)\to\mathbb{V}(d)$ and $\phi:\mathbb{V}(q)\to\mathbb{V}(q)$ such that $\bm{X}_{\pi} := (X_{\pi(1)},\ldots, X_{\pi(d)}) \sim\mathrm{MaxLinear}(A_\phi;\alpha)$, where $A_\phi := ( \bm{a}_{\phi(1)},\ldots,\bm{a}_{\phi(q)})\in\R_{+}^{d\times q}$ is block-diagonal with $2\leq K\leq d$ blocks. For $l=1,\ldots,K$, the $l$th block matrix $A_\phi^{(l)}$ has $d_l= |\beta_l|$ rows, $1\leq q_l < q$ columns, and is such that the $q_l\times q_l$ matrix $A_\phi^{(l)}(A_\phi^{(l)})^T$ has strictly positive entries. The blocks' dimensions satisfy $\sum_{l=1}^K d_l = d$ and $\sum_{l=1}^K q_l = q$.
+
+Under Assumption 2, $\bm{X}$ divides into random sub-vectors $\bm{X}^{(1)},\ldots,\bm{X}^{(K)}$, where $\bm{X}^{(l)}:=(X_j:j\in\beta_l)\sim\mathrm{MaxLinear}(A_\phi^{(l)};\alpha)$ for $l=1,\ldots,K$. (Henceforth, assume for notational convenience that the columns of $A$ are already appropriately ordered, so that $A=A_\phi$.) While the clustering assumption is simplistic and cannot be expected to hold in general applications, it reflects what we suspect to be the true dependence structure for Challenge 4. Moreover, it is dimension reducing because the original $d$-dimensional problem is transformed to a set of $K$ independent problems with dimensions $d_1,\ldots,d_K<d$. This ameliorates the curse of dimensionality to some extent.
+
+In general, a joint exceedance event can be decomposed into concurrent joint exceedances in all $K$ clusters as $\{\bm{X}\in\mathcal{C}_{\mathbb{V}(d),\bm{u}}\}=\cap_{l=1}^K \{\bm{X}\in\mathcal{C}_{\mathbb{V}(d_l),\bm{u}^{(l)}}\}$, where each threshold sub-vector $\bm{u}^{(l)}$ is defined from $\bm{u}$ analogously to $\bm{X}^{(l)}$. Since we consider variables in different clusters to be asymptotically independent, we assume that for large, finite thresholds, joint exceedances in each cluster are approximately independent events, so that 
+\begin{equation*}
+    \mathbb{P}(\bm{X}\in\mathcal{C}_{\mathbb{V}(d),\bm{u}}) 
+    = \mathbb{P}\left(\bigcap_{l=1}^K \{\bm{X}^{(l)}\in\mathcal{C}_{\mathbb{V}(d_l),\bm{u}^{(l)}}\}\right) 
+    \approx \prod_{l=1}^K \mathbb{P}(\bm{X}^{(l)}\in\mathcal{C}_{\mathbb{V}(d_l),\bm{u}^{(l)}}).
+\end{equation*}
+Assuming $\bm{X}^{(l)}\sim\mathrm{MaxLinear}(A^{(l)};\alpha)$ for $l=1,\ldots,K$, each term in the product can be estimated using \eqref{eq:prob-approx-formula}, so that 
+\begin{equation}\label{eq-eva-c4-probability-estimates}
+    \mathbb{P}(\bm{X}\in\mathcal{C}_{\mathbb{V}(d),\bm{u}}) \approx \prod_{l=1}^K \hat{\mathbb{P}}(A^{(l)}\circ\bm{Z}\in\mathcal{C}_{\mathbb{V}(d_l),\bm{u}^{(l)}}).
+\end{equation}
+The final step is to replace $A^{(1)},\ldots,A^{(K)}$ with suitable estimates. We opted to use CP-estimates for two reasons: (i) they are rooted in the TPDM, which is geared towards high-dimensional settings, and (ii) their non-uniqueness enables us to compute numerous parameter/probability estimates, whose variation reflects the model uncertainty that arises from summarising dependence via the TPDM and thereby overlooking higher-order dependencies between components. The use of CP-estimates justifies our choosing $\alpha=2$ in the pre-processing step and throughout.
+
+#### Results
+
+```{r source-eva-challenge-4}
+#| include: false
+source(file.path("scripts", "eva-data-challenge", "challenge4.R"))
+```
+
+We now present our results for Challenge 4. First, the variables $X_1,\ldots,X_d$ are partitioned into $K$ groups based on asymptotic (in)dependence using the clustering algorithm of  @bernardClusteringMaximaSpatial2013. This entails constructing a distance matrix $\mathcal{D}=(\hat{d}_{ij})$, where $\hat{d}_{ij}$ denotes a non-parametric estimate of the F-madogram distance between variables $X_i$ and $X_j$. The distance metric is connected to the strength of extremal dependence between $X_i$ and $X_j$, with $\hat{d}_{ij}\approx 0$ implying strong asymptotic dependence and $\hat{d}_{ij}=1/6$ in the case of asymptotic independence. The partition around medoids (PAM) clustering algorithm [@kaufmanFindingGroupsData1990] returns a partition $\beta_1,\ldots,\beta_{K}$ of $\mathbb{V}(d)$ based on $\mathcal{D}$. The number of clusters $K$ is a pre-specified tuning parameter; we identify $K=5$ clusters whose sizes are given in @tbl-eva-c4-cluster-summary. By consulting @Rohr23, we have verified that our clustering was correct. Defining cluster membership variables $\mathcal{M}_1,\ldots,\mathcal{M}_d\in\{1,\ldots,K\}$ by $\mathcal{M}_i=l\iff i\in\beta_l$ for $i=1,\ldots,d$, we find that $\max\{\hat{d}_{ij}: \mathcal{M}_i=\mathcal{M}_j\} = 0.113 < 1/6$ and $\min\{\hat{d}_{ij}:\mathcal{M}_i\neq \mathcal{M}_j\} = 0.164 \approx 1/6$. These summary statistics are consistent with Assumption 1.
+
+```{r make-tbl-eva-c4-cluster-summary}
+#| label: tbl-eva-c4-cluster-summary
+#| tbl-cap: "Summary statistics for the Challenge 4 clusters and their empirical TPDMs."
+#| tbl-subcap: "Challenge 4: cluster summary statistics."
+
+Sigma_hat_clusters %>% 
+  lapply(FUN = function(S) unlist(S[upper.tri(S, diag = F)])) %>% 
+  enframe(name = "cluster", value = "sigma") %>%
+  unnest(sigma) %>%
+  group_by(cluster) %>%
+  summarise(min_sigma = min(sigma), median_sigma = median(sigma), max_sigma = max(sigma)) %>%
+  mutate(dl = as.numeric(table(Utopula_cluster))) %>%
+  mutate(U1_sites = as.numeric(table(Utopula_cluster[grepl("U1$", names(Utopula_cluster))]))) %>%
+  mutate(U2_sites = as.numeric(table(Utopula_cluster[grepl("U2$", names(Utopula_cluster))]))) %>%
+  relocate(dl, U1_sites, U2_sites, .after = cluster) %>%
+  kbl(col.names = c("Cluster", "Size", "U1 sites", "U2 sites", "Min.", "Median", "Max."),
+      booktabs = TRUE, digits = c(rep(0, 4), rep(2, 3)), escape = FALSE) %>%
+  add_header_above(c(' ' = 4, "$\\\\{\\\\hat{\\\\sigma}_{ij}:i\\\\neq j\\\\}$" = 3), line_sep = 1, escape = FALSE) %>%
+  kable_styling(latex_options = "striped")
+```
+
+Next, we compute the empirical TPDMs of $\bm{X}^{(1)},\ldots,\bm{X}^{(K)}$. For $l=1,\ldots,K$ and $t=1,\ldots,n$, define the observational sub-vector $\bm{x}_t^{(l)}=(x_{ti}:i\in\beta_l)$ and its radial and angular components $r_t^{(l)}=\|\bm{x}_t^{(l)}\|_2$, $\bm{\theta}_t^{(l)}=\bm{x}_t^{(l)}/\|\bm{x}_t^{(l)}\|_2$, respectively. Let $\bm{x}_{(j)}^{(l)}$, $r_{(j)}^{(l)}$ and $\bm{\theta}_{(j)}^{(l)}$ denote the vector, radius, and angle associated with the $j$th largest observation in norm among $\bm{x}_1^{(l)},\ldots,\bm{x}_n^{(l)}$. Choose a tuning parameter $1\leq k_l \leq n$ representing the number of extreme observations that enter into the estimate for cluster $l$. Then
+\begin{equation*}
+    \hat{A}^{(l)} = \left( \frac{d_l}{k_l}\bm{\theta}_{(1)}^{(l)} ,\ldots,\frac{d_l}{k_l}\bm{\theta}_{(k_l)}^{(l)}\right),\qquad \hat{\Sigma}_{\bm{X}^{(l)}}=\hat{A}^{(l)}(\hat{A}^{(l)})^T.
+\end{equation*}
+We set $k_1=\ldots=k_K=:k=250$, corresponding to a sampling fraction of $k/n=2.5\%$ for each cluster. The empirical TPDMs for the first two clusters are displayed in @fig-eva-c4-empirical-tpdm; summary statistics for all clusters' TPDMs are listed in @tbl-eva-c4-cluster-summary. Asymptotic dependence is strongest in clusters 2 and 3 and weakest in clusters 1 and 4.
+
+```{r}
+#| label: fig-eva-c4-empirical-tpdm
+#| fig-cap: "The estimated TPDMs for the first two clusters, $\\hat{\\Sigma}_{\\bm{X}^{(1)}}$ (left) and $\\hat{\\Sigma}_{\\bm{X}^{(2)}}$ (right), based on the $k=250$ most extreme observations in norm."
+#| fig-scap: "Challenge 4: empirical TPDMs for the first and second clusters."
+#| fig-height: 3.5
+
+colpal <- colorspace::sequential_hcl(n = 13, "Viridis")
+breaks <- lattice::do.breaks(c(0, 1.3), length(colpal))
+
+S1 <- t(Sigma_hat_clusters[[1]][nrow(Sigma_hat_clusters[[1]]):1, ])
+rownames(S1) <- paste0("X[", 1:50, "]")[Utopula_cluster == 1] %>% parse(text = .)
+colnames(S1) <- rev(rownames(S1))
+p1 <- lattice::levelplot(S1, col.regions = colpal, at = breaks,
+                         xlab = "", ylab = "",
+                         colorkey = TRUE,
+                         scales = list(x = list(cex = 0.8, labels = parse(text = rownames(S1))),
+                                       y = list(cex = 0.8, labels = parse(text = colnames(S1)))))
+
+S2 <- t(Sigma_hat_clusters[[2]][nrow(Sigma_hat_clusters[[2]]):1, ])
+rownames(S2) <- paste0("X[", 1:50, "]")[Utopula_cluster == 2] %>% parse(text = .)
+colnames(S2) <- rev(rownames(S2))
+p2 <- lattice::levelplot(S2, col.regions = colpal, at = breaks,
+                         xlab = "", ylab = "",
+                         colorkey = TRUE,
+                         scales = list(x = list(cex = 0.8, labels = parse(text = rownames(S2))),
+                                       y = list(cex = 0.8, labels = parse(text = colnames(S2)))))
+grid.arrange(p1, p2, ncol = 2)
+```
+
+
+By repeated application of the CP-decomposition algorithm of @kirilioukEstimatingProbabilitiesMultivariate2022 with randomly chosen inputs, we obtain $N_{\mathrm{cp}}=50$ CP-estimates of each matrix $A^{(l)}$. The resulting CP-factors are denoted by $\tilde{A}^{(l)}_1,\ldots,\tilde{A}^{(l)}_{N_{\mathrm{cp}}}$. Note that among $\tilde{A}^{(l)}_1,\ldots,\tilde{A}^{(l)}_{N_{\mathrm{cp}}}$ there are at most $d_l$ distinct leading columns, because there are only $d_l$ unique ways to initialise the (deterministic) algorithm. But $\hat{\mathbb{P}}(\tilde{A}\circ \bm{Z}\in\mathcal{C}_{\mathbb{V}(d),\bm{u}})$ is fully determined by $\tilde{\bm{a}}_1$, so in fact $\{\hat{\mathbb{P}}(\tilde{A}_r^{(l)}\circ \bm{Z}\in\mathcal{C}_{\mathbb{V}(d_l),\bm{u}^{(l)}}) : r=1,\ldots,N_{\mathrm{cp}}\}$ contains at most $d_l$ distinct values. These values are represented by black points in the left-hand plot in @fig-eva-c4-prob-estimates. Clusters 2 and 3 are deemed most likely to experience a joint extreme event, because they contain a small number ($d_2=d_3=8$) of highly dependent variables. The effect of changing the threshold from $\bm{u}_1$ to $\bm{u}_2$ is most pronounced in cluster 5, since it is primarily composed of sites in area U2.
+
+```{r make-fig-eva-c4-prob-estimates}
+#| label: fig-eva-c4-prob-estimates
+#| fig-cap: "Joint exceedance probability estimates for each cluster sub-vector (left) and the full vector (right) based on different estimators for the parameters $A^{(1)},\\ldots,A^{(5)}$."
+#| fig-scap: "Challenge 4: cluster/overall joint exceedance probability estimates."
+#| fig-height: 4
+
+fancy_scientific_short <- function(l) {
+  l %>%
+    format(scientific = TRUE) %>%
+    gsub("^(.*)e", "e", .) %>%
+    gsub("e", "10^", .) %>%
+    parse(text = .)
+}
+
+p1 <- bind_rows(
+  bind_rows(
+    enframe(p_u1_emp_clusters, name = "cluster", value = "p") %>% mutate(method = "empirical") %>% unnest(p),
+    enframe(p_u1_spemp_clusters, name = "cluster", value = "p") %>% mutate(method = "sparse_empirical") %>% unnest(p),
+    select(Theta_hat_kz, cluster, p_u1) %>% mutate(method = "cp") %>% rename(p = p_u1)
+  ),
+  bind_rows(
+    enframe(p_u2_emp_clusters, name = "cluster", value = "p") %>% mutate(method = "empirical") %>% unnest(p),
+    enframe(p_u2_spemp_clusters, name = "cluster", value = "p") %>% mutate(method = "sparse_empirical") %>% unnest(p),
+    select(Theta_hat_kz, cluster, p_u2) %>% mutate(method = "cp") %>% rename(p = p_u2)
+  ), .id = "threshold"
+) %>%
+  mutate(threshold = case_when(threshold == 1 ~ "bold(u)[1]", .default = "bold(u)[2]")) %>%
+  ggplot(aes(x = cluster,
+             y = p,
+             colour = factor(method, levels = c("cp", "empirical", "sparse_empirical", "true")),
+             shape = factor(method, levels = c("cp", "empirical", "sparse_empirical", "true")))) +
+  geom_point(show.legend = TRUE) +
+  facet_grid(~ threshold, labeller = label_parsed) +
+  xlab("Cluster") +
+  ylab("Probability") +
+  labs(colour = "Estimate", shape = "Estimate") +
+  scale_y_continuous(trans = log10_trans(), breaks = breaks_log(n = 4), labels = fancy_scientific_short) +
+  scale_color_manual(labels = c("CP", "Empirical", "Sparse empirical", "True"), values = c("black", "red", "blue", "purple"), drop = FALSE) +
+  scale_shape_manual(labels = c("CP", "Empirical", "Sparse empirical", "True"), values = c(1, 17, 15, 5), drop = FALSE) +
+  theme_light() +
+  theme(panel.grid.minor = element_blank())
+
+p2 <- bind_rows(enframe(p_u1_cp, value = "p"), enframe(p_u2_cp, value = "p"), .id = "threshold") %>%
+  select(-name) %>%
+  mutate(method = "cp") %>%
+  bind_rows(data.frame("threshold" = as.character(1:2),
+                       "p" = c(Reduce("*", p_u1_emp_clusters), Reduce("*", p_u2_emp_clusters)),
+                       method = "empirical"),
+            data.frame("threshold" = as.character(1:2),
+                       "p" = c(Reduce("*", p_u1_spemp_clusters), Reduce("*", p_u2_spemp_clusters)),
+                       method = "sparse_empirical"),
+            data.frame("threshold" = as.character(1:2),
+                       "p" = c(8.4e-23, 5.4e-25),
+                       method = "true")) %>%
+  distinct() %>%
+  ggplot(aes(x = threshold,
+             y = p,
+             colour = factor(method, levels = c("cp", "empirical", "sparse_empirical", "true")),
+             shape = factor(method, levels = c("cp", "empirical", "sparse_empirical", "true")))) +
+  geom_point() +
+  scale_x_discrete(labels = c(expression(bold(u)[1]), expression(bold(u)[2]))) +
+  scale_y_continuous(trans = log10_trans(), breaks = breaks_log(n = 8), labels = fancy_scientific_short) +
+  scale_color_manual(labels = c("CP", "Empirical", "Sparse empirical", "True"), values = c("black", "red", "blue", "purple"), drop = FALSE) +
+  scale_shape_manual(labels = c("CP", "Empirical", "Sparse empirical", "True"), values = c(1, 17, 15, 5), drop = FALSE) +
+  xlab("Threshold") +
+  ylab("Probability") +
+  labs(colour = "Estimate", shape = "Estimate") +
+  theme_light() +
+  theme(panel.grid.minor = element_blank())
+
+ggarrange(p1, p2, ncol = 2, nrow = 1, common.legend = TRUE, legend = "right", widths = c(1, 0.7))
+```
+
+Substituting each CP-estimate into \eqref{eq-eva-c4-probability-estimates} and enumerating over all possible combinations, we produce sets of estimates of $p_i$, for $i=1,2$, given by
+\begin{equation*}
+    \tilde{P}_i:=\{ \hat{\mathbb{P}}(\tilde{A}^{(1)}_{r_1}\circ\bm{Z}\in\mathcal{C}_{\mathbb{V}(d_1),\bm{u}_i^{(1)}}) \times \ldots \times \hat{\mathbb{P}}(\tilde{A}^{(K)}_{r_K}\circ\bm{Z}\in\mathcal{C}_{\mathbb{V}(d_K),\bm{u}_i^{(K)}}) : r_1,\ldots,r_K = 1,\ldots,N_{\mathrm{cp}} \}.
+\end{equation*}
+Each set has size $N_{\mathrm{cp}}^K\approx 3\times 10^8$ (including repeated values) and contains $\prod_{l=1}^K d_l=89,856$ distinct values. The distributions of the estimates are represented by the black points in the right-hand panel of @fig-eva-c4-prob-estimates. Our final point estimates are taken as the median values $\tilde{p}_1 := \mathrm{median}(\tilde{P}_1)=1.4\times 10^{-16}$ and $\tilde{p}_2 := \mathrm{median}(\tilde{P}_2)= 1.3\times 10^{-16}$, respectively, to two significant figures. 
+
+
+#### Improving performance using sparse empirical estimates
+
+Unfortunately, it transpires that our method dramatically over-estimated the true probabilities. In hindsight, this could have been anticipated in view of the simulation study in Section 5.1 in @kirilioukEstimatingProbabilitiesMultivariate2022, where the authors remark that failure regions of the the type $\mathcal{C}_{\mathbb{V}(d),\bm{u}}$ are poorly summarised by the TPDM. This prompts us to investigate whether using empirical or sparse empirical estimates instead of a CP-based approach would have improved our performance. For the former, this simply involves replacing $A^{(l)}$ with the precomputed matrix $\hat{A}^{(l)}$ in \eqref{eq-eva-c4-probability-estimates}. The approach based on sparse empirical estimates proceeds analogously except that we must revert to the $\alpha=1$ setting and transform the data and thresholds accordingly. The resulting estimates for the joint exceedance probabilities are represented by the red and blue points in @fig-eva-c4-prob-estimates. The values are smaller (better) in all clusters and consequently the final estimates are closer to the true event probabilities (purple). In fact, using sparse empirical estimates yields $\hat{p}_1^\star=5.1\times 10^{-23}$ and $\hat{p}_2^\star = 5.0\times 10^{-24}$, which are remarkably close to the correct solutions $p_1=8.4\times 10^{-23}$ and $p_2=5.4\times 10^{-25}$. Submitting these values would have significantly improved our ranking for this sub-challenge.
+
+## Conclusion {#sec-eva-conclusion}
+
+We propose four different methods in order to solve the EVA (2023) Conference Data Challenge. These methods allow for the estimation of extreme quantiles and probabilities. In the univariate cases, we estimate the conditional quantile by attempting to cluster the covariates to categorise the extremes. Once clustered, bootstrapping was used in order to estimate central 50\% confidence intervals of the extreme quantiles. In practice however, we found no clearly defined clusters and that the Gaussian mixture distribution was not able to capture the non-Gaussian distribution of the covariates. This could also be extended by using GPDs with covariate models for each cluster, to try to improve quantile estimates. In the second challenge, we were able to assess the GPD fit of a misspecified model and apply a correction to an initial fit where there was large uncertainty in the tail behaviour. This resulted in a change in the return level from an under-estimate to a potentially less-severe over-estimate. By using a more sophisticated model for the covariates, further work can be done to articulate the extent to which the correction was due to a bias in the model fit. 
+
+Our performance in the multivariate challenges demonstrates that the max-linear model provides a good framework for estimating tail event probabilities. By connecting this model with sparse simplex projections, one can achieve exceptional performance on both Challenges 3 and 4. Given these results, further research on the theoretical properties of the sparse empirical estimator $\hat{A}^\star$ is warranted. An obvious shortcoming of our Challenge 3 methodology is that it ignores the available covariate information. Incorporating covariates into the max-linear/TPDM framework remains an unexplored area. The upwards bias in our Challenge 4 probability estimates is partly caused by over-estimating the dependence strength between certain groups of variables. The empirical TPDM has a known tendency to over-estimate weak/moderate dependence [@fixSimultaneousAutoregressiveModels2021], as is the case in clusters 1, 3, and 5. A better TPDM estimator that takes this issue into account would likely improve our final results. In Challenges 3 and 4 we switch between $\alpha=1$ and $\alpha=2$ in a way that is somewhat unsatisfactory (mathematically and presentationally). In hindsight, employing a generalised version of the TPDM [@kirilioukEstimatingProbabilitiesMultivariate2022, Equation 4] would have allowed us to fix $\alpha=1$ throughout. Finally, uncertainty quantification is a crucial aspect of risk assessment in practice, especially when dealing with the exceedingly rare events encountered in Challenge 4. @fixSimultaneousAutoregressiveModels2021 utilise a bootstrapping procedure in the context of TPDM-based inference for extremes and their approach would transfer to our methods very naturally.  
