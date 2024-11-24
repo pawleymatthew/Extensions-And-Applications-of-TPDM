@@ -31,7 +31,7 @@ sapply(list.files(path = "R/changing-ext-dep", pattern = "*.R", full.names = TRU
 sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
 ```
 
-# Summary of @dreesStatisticalInferenceChanging2023
+# Summary of @dreesStatisticalInferenceChanging2023 {#sec-app-changing-ext-dep-drees}
 
 @dreesStatisticalInferenceChanging2023 tests \eqref{eq-changing-ext-dep-null-hyp} against \eqref{eq-changing-ext-dep-alt-hyp} via a large family $\mathcal{A}$ of subsets of $\mathbb{S}_+^{d-1}$ and suitably rescaled versions of stochastic processes
 \begin{equation}\label{eq-drees-test-process}
@@ -41,7 +41,7 @@ Here $\hat{H}(A;s)$ denotes a non-parametric estimate of the angular measure $H(
 
 Our approach mitigates this issue by concentrating on bivariate summaries of tail dependence instead of the full dependence structure. The $\mathcal{O}(d^2)$ coefficients of the TPDM encode second-order information about the local angular measure and can be more reliably estimated in high dimensions. The downside is that the TPDM contains incomplete information about the angular measure. This means our test is powerless in certain circumstances.
 
-# Empirical power for different tuning parameters $b$ and $k$
+# Additional results for @sec-changing-ext-dep {#sec-app-changing-ext-dep-additional-results}
 
 ```{r load-sim-results-appendix}
 sim_results <- list(file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed1.RDS"),

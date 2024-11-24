@@ -1,6 +1,6 @@
-# Properties of the TPDM
+# Properties of the TPDM {#sec-app-tpdm-properties}
 
-## Equivalence of TPDM definitions
+## Equivalence of TPDM definitions {#sec-app-tpdm-definitions}
 
 We aim to shed light on this matter by showing in the bivariate setting that the TPDM (with respect to some $\alpha\geq 1$) is independent of $\alpha$. The following lemma helps us achieve this: it gives the formula for transforming between angular densities defined with different $\alpha$ values.
 
@@ -88,7 +88,7 @@ Hüsler-Reiss angular density:
 \tilde{h}_1(\theta;\lambda) = \frac{\exp\left(-\lambda/4\right)}{4\lambda [\theta(1-\theta)]^{3/2}}\phi\left(\frac{1}{2\lambda}\log\left(\frac{\theta}{1-\theta}\right)\right)
 \end{equation*}
 
-## Formula for the asymptotic variance $\nu_{ij}^2$
+## Formula for the asymptotic variance $\nu_{ij}^2$ {#sec-app-tpdm-asymptotic-var}
 
 Adopting the notation of @prp-tpdm-h1-formula, the asymptotic variance can be expressed in terms of the angular density $\tilde{h}_1$ of $(X_,X_j)$. Using $\mathrm{Var}(Y)=\mathbb{E}[Y^2]-\mathbb{E}[Y]^2$, we have
 \begin{equation*}
@@ -102,7 +102,7 @@ Substituting $u=\theta^\alpha$ and using @prp-tpdm-h1-formula gives the final ex
 \end{equation}
 The asymptotic distribution of $\hat{\sigma}_{ij}$ does not depend on $\alpha$. 
 
-## Proof of @prp-empirical-tpdm-normality
+## Proof of @prp-empirical-tpdm-normality {#sec-app-tpdm-asy-normality-proof}
 
 ::: {.proof}
 We follow the proof of Theorem 5.23 in CITE Krali Thesis but adapt it to the general $\alpha$ case. By the Cramér-Wold device (CITE), it is sufficient to show asymptotic normality of $\sqrt{k}\bm{\beta}^T(\hat{\bm{\sigma}}-\bm{\sigma})$ for all $\bm{\beta}\in\R^{d\choose 2}$. For convenience, the components of $\bm{\beta}$ are indexed to match the sub-indices of $\bm{\sigma}$. Then
@@ -131,7 +131,7 @@ where $v(\bm{\beta}):=\mathrm{Var}_{\bm{\Theta}\sim H}(g(\bm{\Theta};\bm{\beta})
 \end{align*}
 :::
 
-## Derivation of $V$ under the max-linear model
+## Derivation of $V$ under the max-linear model {#sec-app-tpdm-V-max-linear}
 
 Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is max-linear with $q$ factors and parameter matrix $A$. Then, for any $i,j=1,\ldots,d$, we have $\sigma_{ij}=\sum_{l=1}^q a_{il}^{\alpha/2}a_{jl}^{\alpha/2}$ and
 \begin{equation*}
@@ -158,7 +158,7 @@ The expressions for $\nu_{ij}^2$ and $\rho_{ij,lm}$ can be summarised as
 \end{equation}
 
 
-# PCA in general finite-dimensional Hilbert spaces
+# PCA in general finite-dimensional Hilbert spaces {#sec-app-pca-hilbert}
 
 In classical multivariate analysis, principal component analysis (PCA) is the flagship method for reducing the dimension of a random vector. PCA identifies linear subspaces that minimise the distance between the data and its low-dimensional projections. This implicitly assumes an underlying algebraic-geometric structure. Specifically, PCA requires one to work in a Hilbert space $\mathcal{H}$. Without this theoretical foundation, it is meaningless to speak of principal components as orthogonal basis vectors or consider low-rank reconstructions as unique projections onto a subspace. A Hilbert space comprises a $d$-dimensional vector space with operations $\oplus$ and $\odot$ endowed with an inner product $\left\langle\cdot,\cdot\right\rangle_{\mathcal{H}}$. The induced norm and metric are $\|\cdot\|_{\mathcal{H}}=\left\langle\cdot,\cdot\right\rangle_{\mathcal{H}}^{1/2}$ and $d_{\mathcal{H}}(\bm{x},\bm{y})=\|\bm{x}\ominus\bm{y}\|_{\mathcal{H}}$, respectively. In most applications $\mathcal{H}=\R^d$ with the usual Euclidean geometry. This thesis will additionally consider PCA in alternative spaces, including $\R_+^d$ and $\mathbb{S}_{+(1)}^{d-1}$. However, in each case, the Hilbert space in question will be isometric to the usual Euclidean space $(\R^d, \left\langle\cdot,\cdot\right\rangle)$. That is, there exists an isomorphism $h:\mathcal{H}\to\R^d$ such that for any $\bm{x},\bm{y}\in\mathcal{H}$,
 \begin{equation*}
@@ -216,35 +216,7 @@ Usually the dimension of the target subspace (if it exists) is unknown, so the n
 
 If $\bm{Y}$ is mean-zero (or the $n\times d$ data matrix is column-centred in pre-processing), then $\Sigma$ is the covariance matrix of $\bm{Y}$ and the procedure is termed centred PCA. In this case, PCA can be equivalently reformulated in terms of finding low-dimensional projections that maximally preserve variance. In the non-centred case this interpretation is not valid, the projections merely maximise variability around the origin. A detailed comparison between centred PCA and non-centred PCA is conducted in @cadimaRelationshipsUncentredColumnCentred2009. They obtain relationships between and bounds on the eigenvectors/eigenvalues of the non-centred and standard covariance matrices. Based on their theoretical analysis and a series of example, they conclude that both types of PCA generally produce similar results. In particular, the leading eigenvector (up to sign and scaling) of the non-centred covariance matrix is very often close to the vector of the column means of the data matrix. Thus the first non-centred principal component essentially relates to the centre of the data.
 
-# Applications -- original write up, can be removed
-
-The PCA method of @cooleyDecompositionsDependenceHighdimensional2019 has been applied for exploratory purposes in the context of climatology [@jiangPrincipalComponentAnalysis2020; @szemkusSpatialPatternsIndices2024], finance [@cooleyDecompositionsDependenceHighdimensional2019] and sport [@russellAnalyzingDependenceMatrices2018]. 
-
-@jiangPrincipalComponentAnalysis2020 analyse the extremal behaviour of precipitation across the United States. They discover an increasing temporal trend in the coefficient of the first principal component $V_1$, and relate the eigenvectors to the El-Niño Southern Oscillation (ENSO), a cyclical phenomenon that is known to be a key climatological driver. They find that low-rank reconstructions of Hurricane Floyd broadly capture the event's large-scale structure, but a large number of eigenvectors are needed to recreate more localised features. The spatial extent of the study region and relatively localised behaviour of extreme behaviour leads them to consider a 'pairwise-thresholded' estimator of the TPDM instead of the usual estimator \eqref{eq-empirical-tpdm} thresholded on the norm of entire vector. This alternative estimator is given by
-\begin{equation*}
-    \tilde{\Sigma}=(\tilde{\sigma}_{ij}), \qquad \tilde{\sigma}_{ij} = \frac{2}{k} \sum_{l=1}^n \Theta_{li}\Theta_{lj}\ind\{R_l^{ij} > R_{(k+1)}^{ij}\},
-\end{equation*}
-where $R_l^{ij} = \|(X_{li},X_{lj})\|$ and $R_{(k+1)}^{ij}$ is the $(k+1)$th upper order statistic of $\{R_l^{ij}:l=1,\ldots,n\}$. The estimator $\tilde{\Sigma}$ is not positive semi-definite, so the PCA analysis is instead conducted using the nearest positive definite matrix in Frobenius norm. The ramifications of this ad-hoc step, in terms of the estimator's theoretical properties and practical performance, are not studied.
-
-@szemkusSpatialPatternsIndices2024 devise an extension of the TPDM, called the cross-TPDM, to study the joint extremal behaviour between two sets of variables. They analyse two meteorological variables -- daily maximum temperature and a measure of accumulated precipitation deficit -- to describe the dynamics of summer heatwaves in Europe. The cross-TPDM is the analogue of the cross-covariance matrix. Letting $\bm{X}=(X_1,\ldots,X_p)\in\mathrm{RV}_+^p(2)$ and $\bm{Y}=(Y_1,\ldots,Y_q)\in\mathrm{RV}_+^q(2)$, the cross-TPDM is defined as the $p\times q$ matrix with entries
-\begin{equation*}
-    \sigma_{ij}^{XY} = \int_{\mathbb{S}_+^{p+q-1}} \theta_i^X\theta_j^Y \,\dee H(\bm{\theta}),
-\end{equation*}
-where $H$ is the angular measure of $(\bm{X},\bm{Y})=(X_1,\ldots,X_p,Y_1,\ldots,Y_q)\in\mathrm{RV}_+^{p+q}(2)$ and the variable of integration is indexed as $\bm{\theta}=(\theta_1^X,\ldots,\theta_p^X,\theta_1^Y,\ldots,\theta_q^Y)$. (This definition could be extended to cater for an arbitrary tail index by introducing the usual $\alpha/2$ exponents in the integrand.) In the context of their climatological study, the entry $\sigma_{ij}^{XY}$ represents the strength of extremal dependence between the maximum temperature at location $i$ and the precipitation deficit at location $j$. The singular-value decomposition of the cross-TPDM is used to analyse the dynamics of compound extreme events. They devise extremal pattern indices to quantify whether particular patterns of interest -- those signified by the singular vectors of the cross-TPDM -- are highly pronounced.
-
-A more unusual application of the TPDM is found in @russellAnalyzingDependenceMatrices2018. Their study characterises the difference in performance between typical and elite-level National Football League (NFL) performers across the Scouting Combine event. The Combine comprises six physical tests: Bench Press, Vertical Jump, Broad Jump, 40-yard Sprint, the Shuttle Drill, and the Three Cone Drill. The tests afford teams the opportunity to gauge the athletic ability of prospective players, thereby influencing whether (or how highly) they are drafted for the upcoming season. @russellAnalyzingDependenceMatrices2018 explore how strongly player performance correlates across these tests. Intuitively, if two events exhibit strong association, then they may be measuring the same underlying skills (speed, strength, agility etc.). After standardising player performance to account for differences in playing position, they find significant differences between the bulk dependence structure and the extremal dependence structure. In particular, the leading eigenvectors of the covariance matrix reveal that the Combine events cluster into three distinct groups, corresponding to strength, agility, and explosiveness. On the other hand, the TPDM eigenvectors produce only two such groups: power and agility. This reveals differences between non-elite and elite performers; recommendations regarding the composition of the Combine events are made accordingly. 
-
-@rohrbeckSimulatingFloodEvent2023 move beyond the use of the extremal PCA for purely exploratory purposes and demonstrate how it be used to generate synthetic extreme events. Hazard event sets are widely used in catastrophe modelling to assess exposure to extreme events. Imagine an insurance company insures against damage to a portfolio of properties, and wishes to gauge its exposure to claims caused by flooding. Given (i) the spatial locations of these properties, (ii) other relevant characteristics such as property value and construction standard, and (iii) a set of simulated flood events, one can derive a probabilistic loss distribution. If the exposure is unacceptably high, they might adjust their underwriting strategy or purchase reinsurance. @rohrbeckSimulatingFloodEvent2023 show how to generate approximate samples from $H$, even in high-dimensions, by leveraging the PCA method of @cooleyDecompositionsDependenceHighdimensional2019. Their generative framework hinges on the fact that the leading components of $\bm{V}$ account for the greatest proportion of extremal behaviour of $\bm{X}$. Thus, efforts may be concentrated towards modelling the dependence structure of the sub-vector $(V_1,\ldots,V_p)$ for some appropriately chosen $p<d$. To achieve this, they use a spherical kernel density estimate to flexibly model the dependence between $V_1,\ldots,V_p$ and additionally between $(V_1,\ldots,V_p)$ and $(V_{p+1},\ldots,V_d)$. The dependence structure of $(V_{p+1},\ldots,V_d)$ is simply modelled by a nearest-neighbours approach. The number of components $p$ entering into the complex model is selected by a leave-one-out cross validation procedure. This involves discarding an extreme observation $\bm{x}_{(i)}$, generating a large number of samples $\tilde{\bm{x}}_1^{[p]},\ldots,\tilde{\bm{x}}_N^{[p]}$ for a range of values $p$, and then assessing whether any of the generated samples resemble the discarded event using
-\begin{equation*}
-    D_i(p) = \min_{l=1,\ldots,N} \varrho \left(\bm{x}_{(i)},\tilde{\bm{x}}_{l}^{[p]}\right),
-\end{equation*}
-where $\varrho(\cdot,\cdot)$ is an angular dissimilarity measure. After repeating for all extreme events $i=1\ldots,k$, one chooses the optimal $p$ as that which minimises the average error
-\begin{equation*}
-    \bar{D}(p) = \frac{1}{k}\sum_{i=1}^k D_i(p).
-\end{equation*}
-Their approach is illustrated using historical river flow data across $d=45$ gauges in northern England and southern Scotland. They select $p=7$ and find reasonable agreement between the observed river flow extreme events and the synthetic ones generated by their algorithm, e.g. by examining QQ-plots comparing the observed and sampled distributions of $\max_{j\in\mathcal{G}}X_j$ or $\|(X_i:i\in\mathcal{G})\|$ for selected groups of gauges $\mathcal{G}\subset \{1,\ldots,d\}$.
-
-# Review of clustering methods based on the TPDM
+# Literature review: clustering with the TPDM {#sec-app-tpdm-clustering}
 
 Within multivariate extremes, the umbrella term `clustering' has many meanings. To avoid confusion, we briefly describe these and clarify which type we are referring to. 
 

@@ -26,114 +26,115 @@ sapply(list.files(path = "R/compositional", pattern = "*.R", full.names = TRUE, 
 sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
 ```
 
-# Max-linear example with other combinations of $n$ and $k$
+# Additional results for @sec-compositional {#sec-app-compositional-additional-results}
 
-```{r make-fig-sim-pca-max-linear-loss-full}
-#| label: fig-sim-pca-max-linear-loss-full
-#| fig-cap: "PCA performance metrics based on trivariate max-linear data."
-#| fig-scap: "PCA performance metrics based on trivariate max-linear data."
+```{r make-fig-sim-pca-max-linear-loss-large-n}
+#| label: fig-sim-pca-max-linear-loss-large-n
+#| fig-cap: "@fig-sim-pca-max-linear-loss for a larger sample size $n=50,000$."
+#| fig-scap: "@fig-sim-pca-max-linear-loss for a larger sample size $n=50,000$."
 #| fig-height: 6
+#| message: false
 
-res <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az.RDS"))
+res <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az.RDS")) %>%
+  filter(n_train == 50000, k_frac == 0.01)
 
 p1 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
+  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Transformed-linear",
                                   .default = "Max-stable")) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
   mutate(n_train = as.factor(n_train), k_frac = as.factor(label_percent()(k_frac))) %>%
   rename('n' = n_train, 'k/n' = k_frac) %>%
   pivot_longer(cols = c(test_loss_aitchison, test_loss_euclidean), names_to = "loss_type", values_to = "test_loss") %>%
   filter(loss_type == "test_loss_aitchison") %>%
-  ggplot(aes(x = maxlin_model, y = test_loss, fill = pca_method, linetype = as.factor(n_pcs))) +
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = test_loss)) +
   geom_boxplot() +
-  facet_grid(`k/n` ~ `n`, labeller = purrr::partial(label_both, sep = " = ")) +
-  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  scale_x_discrete(labels = c("MS", "RV")) +
+  facet_grid(. ~ maxlin_model) +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 4)) +
+  scale_x_discrete(guide = "axis_nested") +
   labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Generative model",
-       y = "MSRE (Aitchison)") +
+       x = "",
+       y = "Aitchison reconstruction error") +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 
 p2 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
+  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Transformed-linear",
                                   .default = "Max-stable")) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
   mutate(n_train = as.factor(n_train), k_frac = as.factor(label_percent()(k_frac))) %>%
   rename('n' = n_train, 'k/n' = k_frac) %>%
   pivot_longer(cols = c(test_loss_aitchison, test_loss_euclidean), names_to = "loss_type", values_to = "test_loss") %>%
   filter(loss_type == "test_loss_euclidean") %>%
-  ggplot(aes(x = maxlin_model, y = test_loss, fill = pca_method, linetype = as.factor(n_pcs))) +
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = test_loss)) +
   geom_boxplot() +
-  facet_grid(`k/n` ~ `n`, labeller = purrr::partial(label_both, sep = " = ")) +
-  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  scale_x_discrete(labels = c("MS", "RV")) +
+  facet_grid(. ~ maxlin_model) +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 4)) +
+  scale_x_discrete(guide = "axis_nested") +
   labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Generative model",
-       y = "MSRE (Euclidean)") +
+       x = "",
+       y = "Euclidean reconstruction error") +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 
 p3 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
+  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Transformed-linear",
                                   .default = "Max-stable")) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
   mutate(n_train = as.factor(n_train), k_frac = as.factor(label_percent()(k_frac))) %>%
   rename('n' = n_train, 'k/n' = k_frac) %>%
-  ggplot(aes(x = maxlin_model, y = p_min_hat / 3, fill = pca_method, linetype = as.factor(n_pcs))) +
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = p_min_hat / 3)) +
   geom_boxplot() +
-  geom_hline(aes(yintercept = p_min / 3), colour = "black", linetype = "dashed") +
-  facet_grid(`k/n` ~ `n`, labeller = purrr::partial(label_both, sep = " = ")) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  scale_x_discrete(labels = c("MS", "RV")) +
+  facet_grid(. ~ maxlin_model) +
+  geom_hline(aes(yintercept = p_min / 3), colour = "blue", linetype = "dashed") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 4)) +
+  scale_x_discrete(guide = "axis_nested") +
   labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Generative model",
-       y = expression(lim(P(min(bold(X)) > u ~ "|" ~ "||"* bold(X) * "||"[1] > u), u %->% infinity))) +
+       x = "",
+       y = expression(hat(p)[min])) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 
 p4 <- res %>%
-  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Regular variation",
+  mutate(maxlin_model = case_when(maxlin_model == "cooley" ~ "Transformed-linear",
                                   .default = "Max-stable")) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
   mutate(n_train = as.factor(n_train), k_frac = as.factor(label_percent()(k_frac))) %>%
   rename('n' = n_train, 'k/n' = k_frac) %>%
-  ggplot(aes(x = maxlin_model, y = p_max_hat / 3, fill = pca_method, linetype = as.factor(n_pcs))) +
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = p_max_hat / 3)) +
   geom_boxplot() +
-  geom_hline(aes(yintercept = p_max / 3), colour = "black", linetype = "dashed") +
-  facet_grid(`k/n` ~ `n`, labeller = purrr::partial(label_both, sep = " = ")) +
-  scale_fill_manual(labels = c("CoDA", "D&S"), values = c("red", "blue")) +
-  scale_linetype_manual(labels = c("1", "2"), values = 1:2) +
-  scale_x_discrete(labels = c("MS", "RV")) +
+  facet_grid(. ~ maxlin_model) +
+  geom_hline(aes(yintercept = p_max / 3), colour = "blue", linetype = "dashed") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = breaks_extended(n = 4)) +
+  scale_x_discrete(guide = "axis_nested") +
   labs(fill = "PCA method",
-       linetype = "Number of PCs",
-       x = "Generative model",
-       y = expression(lim(P(max(bold(X)) > u ~ "|" ~ "||"* bold(X) * "||"[1] > u), u %->% infinity))) +
+       x = "",
+       y = expression(hat(p)[max])) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank()) +
-  theme_light()
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
 
-ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2, legend = "top", common.legend = TRUE)
+ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 ```
 
-### Computational details regarding the $k$-NN($\alpha$), $\alpha$-SVM and $\alpha$-RF classifiers
-
-*List the hyperparameters of each method, describe what they mean, list the ranges of values used, and give any relevant computational details. Refer to $\texttt{Compositional}$ and $\texttt{CompositionalML}$ packages.*
-
-### Training risk and test risk for classification
 
 ```{r make-fig-sim-classification-train-test-risk}
 #| label: fig-sim-classification-train-test-risk
 #| fig-cap: "Blah."
 #| fig-scap: "Blah."
 #| fig-height: 6
+
+# plot the training risk (based on k largest training angles) versus risk based on samples from H
 
 readRDS(file = file.path("scripts", "compositional", "results", "classification-sim-results-knn-svm-rf.RDS")) %>%
   mutate(nice_model = case_when(nice_model == "Symmetric" ~ "SL",
@@ -153,7 +154,7 @@ readRDS(file = file.path("scripts", "compositional", "results", "classification-
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.05)), breaks = breaks_pretty(n = 4), labels = label_percent()) +
   scale_colour_manual(values = c("red", "blue", "darkgreen"), labels = parse_format()) +
   scale_fill_manual(values = c("red", "blue", "darkgreen"), labels = parse_format()) +
-  scale_linetype_manual(values = 1:2, labels = c("Asymptotic (test set)", "Empirical at level t (train set)")) +
+  scale_linetype_manual(values = 1:2, labels = c("Asymptotic risk", "Empirical risk")) +
   xlab(expression(alpha)) +
   ylab("Risk") +
   labs(linetype = "Risk type", colour = "Classifier") +

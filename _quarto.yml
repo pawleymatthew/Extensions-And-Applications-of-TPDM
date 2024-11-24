@@ -58,7 +58,6 @@ format:
     mathspec: true
     template-partials:
       - partials/before-body.tex
-      - partials/toc.tex
     include-before-body: 
       - frontmatter.tex
 
