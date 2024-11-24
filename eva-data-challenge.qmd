@@ -1,4 +1,4 @@
-# EVA (2023) Data Challenge: Extreme value statistics for analysing simulated environmental extremes
+# EVA (2023) Data Challenge
 
 ```{r eva-data-challenge-load-packages}
 #| include: false
@@ -22,11 +22,36 @@ options(dplyr.summarise.inform = FALSE)
 options(knitr.kable.NA = "")
 ```
 
-## Preamble {#sec-eva-preliminary}
+## Preliminaries {#sec-eva-preliminary}
 
-*Write introductory page explaining context of the Data Challenge.*
+This chapter contains our paper, published in *Extremes* as *Extreme value statistics for analysing simulated environmental extremes*, based on our submission to the EVA (2023) Data Challenge. This section provides some background information and the context in which our research was produced. Full details of the competition are provided in @Rohr23. Readers familiar with the details of the EVA (2023) Data Challenge may skip to Section XX.
 
-\includepdf[pagecommand={}]{authorship-qa76b.pdf}
+Entrants are tasked with completing four problems, herein referred to as Challenges 1 to 4, and score points according to their ranking on each challenge. The tasks entail estimating quantiles/probabilities associated with extreme events. These are designed to reflect scenarios that might be encountered by applied statisticians analysing environmental extremes data. Specifically, environmental data are simulated from a fictional country, Utopia. Although the data represent an environmental variable (and related covariates) across Utopia, we are told that spatial information or knowledge about environmental processes is irrelevant. The generative processes used to produce the data were revealed in @Rohr23 after the competition concluded.
+
+Challenge 1 is a univariate task concerning the conditional distribution of $Y\mid\bm{X}$, where $Y$ represents the environmental variable at a fixed location and $\bm{X}$ is a vector of covariates (e.g. season and wind speed/direction). Teams submit point estimates and 50\% confidence intervals for the 99.99\% quantile of $Y\mid\bm{X}=\bm{x}$ for 100 given covariate combinations. Performance is assessed in terms of the intervals' coverage (with 50\% being optimal, of course). Challenge 2, asks teams to estimate the 200-year return level of $Y$. Accounting for the altered time-scales of Utopia, this corresponds to the quantile $q$ such that $\mathbb{P}(Y>q)=1/(6\times 10^4)$. Here, the performance metric is a loss function $L(q,\hat{q})$ quantifying the discrepancy between $q$ and the submitted estimate $\hat{q}$ in such a way that that under-estimation is penalised more harshly than over-estimation. 
+
+Challenge 3 is a three-dimensional, multivariate problem. We consider random variables $Y_1,Y_2,Y_3$ representing environmental variables at three sites in Utopia. The challenge involves estimating two probabilities corresponding to extreme events involving some/all of these variables. In particular, $p_1$ is the probability that all three variables exceed a given high threshold, and $p_2$ is the probability that $Y_1$ and $Y_2$ exceed a high threshold while $Y_3$ is below a low threshold. The accuracy of the estimates is quantified by a probability-based scoring rule. Challenge 4 is similar to Challenge 3, except now there are fifty random variables $Y_1,\ldots,Y_{50}$, corresponding to spatial locations spread across two administrative zones, 25 in U1 and 25 in U2. We estimate a pair of probabilities, $p_1$ and $p_2$, associated with joint threshold exceedance events at all fifty sites under two scenarios. Under the first (resp. second) scenario, the thresholds in each region are different (resp. the same), reflecting the design standards of the protective infrastructure in each zone. The same loss function as in Challenge 3 is used to assess estimates of $p_1$ and $p_2$.
+
+The team affiliated with the University of Bath, called 'Uniofbathtopia', comprised myself and H. Elsom. Given our respective research interests, H. Elsom focussed on the univariate problems (Challenges 1 and 2, Section XX), while I tackled the multivariate ones (Challenges 3 and 4, Section XX). The remaining sections of our co-authored paper were researched and written jointly. Our performance is summarised in @tbl-eva-ranking.
+
+```{r make-tbl-eva-ranking}
+#| label: tbl-eva-ranking
+#| tbl-cap: "EVA (2023) Data Challenge sub-challenge rankings and overall points totals."
+#| tbl-scap: "Rankings for the EVA (2023) Data Challenge."
+
+data.frame(Team = c("Yalla", "SHSmultiscale", "genEVA", "Yahabe", "Uniofbathtopia", "Lancopula University", "Wee-Extremes"),
+           C1 = c(2, 1, 5, 3, 7, 6, 4),
+           C2 = c(2, 6, 1, 3, 4, 5, 7),
+           C3 = c(2, 7, 4, 6, 1, 5, 3),
+           C4 = c(1, 2, 5, 4, 6, 3, 7),
+           Points = c(42, 31, 31, 28, 28, 25, 23)) %>%
+  kbl(booktabs = TRUE, linesep = "", escape = FALSE) %>%
+  kable_styling(latex_options = "striped")
+```
+
+\newpage
+
+\includepdf[pagecommand={}, scale=0.9]{authorship-eva.pdf}
 
 ## Abstract
 
@@ -34,12 +59,12 @@ We present the methods employed by team 'Uniofbathtopia' as part of a competitio
 
 ## Introduction 
 
-In recent decades, the field of environmental sciences has experienced significant advancements, particularly through the utilisation of sophisticated modelling techniques to better understand extreme events. Extreme value analysis is the branch of statistical modelling that focuses on quantifying the frequency and severity of very rare events. Notably, the Peaks over Threshold (PoT) approach [@DavSmith1990, @pickands75}, has played a pivotal role in enhancing our comprehension of extreme environmental phenomena. Within climate science, significant strides have been made in the modelling of a broad spectrum of variables, including temperature [@clarkson23], precipitation [@katz99], wind speeds [@Kunz2010,@FawWalsh06}, as well as other broader environmental topics including hydrology [@Towler10,@KATZ2002} and air pollution [@GOULD2022]. 
+In recent decades, the field of environmental sciences has experienced significant advancements, particularly through the utilisation of sophisticated modelling techniques to better understand extreme events. Extreme value analysis is the branch of statistical modelling that focuses on quantifying the frequency and severity of very rare events. Notably, the Peaks over Threshold (PoT) approach [@DavSmith1990, @pickands75], has played a pivotal role in enhancing our comprehension of extreme environmental phenomena. Within climate science, significant strides have been made in the modelling of a broad spectrum of variables, including temperature [@clarkson23], precipitation [@katz99], wind speeds [@Kunz2010,@FawWalsh06}, as well as other broader environmental topics including hydrology [@Towler10,@KATZ2002} and air pollution [@GOULD2022]. 
 
 
 In this paper, we outline the techniques utilised by the team 'Uniofbathtopia' for the data challenge organised for the 13$^{\text{th}}$ International Conference on Extreme Value Analysis (EVA2023). A full description of the tasks can be found in the editorial [@Rohr23]. We outline our methodologies for each of the four sub-challenges, in which we complement traditional methods from extreme value statistics with other statistical modelling techniques according to the requirements of each task. The challenges involve the estimation of extreme marginal quantiles, marginal exceedance probabilities and joint tail probabilities within the context of an environmental application, designed on the fictitious country of `Utopia'. The organisers of the competition simulated the data using known parameters, so that teams' models could be validated and compared, and in such a way as to mimic the rich, complex behaviour exhibited by real-world processes. Therefore, we expect that the performance of our proposed methods should extend to general settings and applications.
 
-In the univariate tasks we utilise the generalised Pareto distribution (GPD) and use model-based clustering methods including hierarchical models [@hastibfri2009] and mixture models [@fraley2002], as well as Markov chain Monte Carlo (MCMC) for parameter estimation [@coles1996@. We also use bootstrapping methods for confidence interval estimation [@gill2020]. For the multivariate problems our approaches are heavily based on the parametric family of max-linear combinations of regularly varying random variables [@fougeres2013]. We introduce novel methods for performing inference for these models, advancing existing approaches [@cooley2019, @kiriliouk2022] using modern statistical learning techniques including sparsity-inducing projections and clustering. The novel aspects of our work are: exploring MCMC parameter estimation bias for systems with large uncertainty in tail behaviour, and proposing a new estimator for the noise coefficient matrix of a max-linear model based on sparse projections onto the simplex.
+In the univariate tasks we utilise the generalised Pareto distribution (GPD) and use model-based clustering methods including hierarchical models [@hastibfri2009] and mixture models [@fraley2002], as well as Markov chain Monte Carlo (MCMC) for parameter estimation [@coles1996]. We also use bootstrapping methods for confidence interval estimation [@gill2020]. For the multivariate problems our approaches are heavily based on the parametric family of max-linear combinations of regularly varying random variables [@fougeres2013]. We introduce novel methods for performing inference for these models, advancing existing approaches [@cooley2019, @kiriliouk2022] using modern statistical learning techniques including sparsity-inducing projections and clustering. The novel aspects of our work are: exploring MCMC parameter estimation bias for systems with large uncertainty in tail behaviour, and proposing a new estimator for the noise coefficient matrix of a max-linear model based on sparse projections onto the simplex.
 
 The format of the paper is as follows: @sec-eva-univariate describes our solutions for the univariate challenges with each challenge split into methodology and results sections. @sec-eva-multivariate introduces the requisite background theory from multivariate extremes before outlining the methodological frameworks and the results attained for Challenges 3 and 4. We conclude with some final discussion of our performance in @sec-eva-conclusion.
 

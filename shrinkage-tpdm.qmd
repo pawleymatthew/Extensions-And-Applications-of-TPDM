@@ -570,10 +570,5 @@ There is ample opportunity to develop these methods further. In terms of our app
 \begin{equation*}
 K_p(\lambda) := \sum_{i=1}^p \sum_{j=1}^p \left\langle \tilde{\bm{u}}_i(\lambda),\bm{u}_j\right\rangle^2, \qquad (1\leq p\leq d), 
 \end{equation*}
-where $\tilde{\bm{u}}_i(\lambda)$ denotes the $i$th eigenvectors of $\tilde{\Sigma}(\lambda)$. Alternatively, some applications (e.g. clustering) might call for identification of the sparsity structure of $\Sigma$, i.e. the positions of its zero/non-zero entries. For this, one might adopt the performance criteria
-\begin{align}
-    \mathrm{TPR}(\lambda) &:= \frac{|\{(i,j) : i<j,\, \tilde{\sigma}_{ij}(\lambda)\neq 0,\, \sigma_{ij}\neq 0\}|}{|\{(i,j) : i<j,\, \sigma_{ij}\neq 0\}|}, \label{eq-tpr-lambda}\\
-    \mathrm{FPR}(\lambda) &:= \frac{|\{(i,j) : i<j,\, \tilde{\sigma}_{ij}(\lambda)\neq 0,\, \sigma_{ij} = 0\}|}{|\{(i,j) : i<j,\, \sigma_{ij} = 0\}|}, \label{eq-fpr-lambda}
-\end{align} 
-Note that this only makes sense for threshold-based estimates, since Ledoit-Wolf shrinkage does not produce zeroes unless $\lambda=1$. In such settings, the threshold $\lambda$ would typically be selected by inspecting a receiver operating characteristic (ROC) curve and/or maximising the area under the curve (AUC). The obvious impediment to this is that the true TPDM is unknown, so the TPR and FPR cannot be evaluated. To circumvent this, we suggest replacing $\Sigma$ in \eqref{eq-tpr-lambda} and \eqref{eq-fpr-lambda} with a modified version of the empirical TPDM based on Euclidean simplex projections. *I'll come back to this when I write up the future work section in Chapter 7, I think I'll just write down all my thoughts about the sparse TPDM there.* By conducting a series of appropriate experiments, one can ascertain with this pseudo-ROC curve is close to the true ROC curve, thereby providing a method for selecting the optimum threshold. 
+where $\tilde{\bm{u}}_i(\lambda)$ denotes the $i$th eigenvectors of $\tilde{\Sigma}(\lambda)$. 
 

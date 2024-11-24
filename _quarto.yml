@@ -6,7 +6,9 @@ book:
   author: 
     - name: Matthew Pawley
       url: https://people.bath.ac.uk/mtp34/
-      affiliation: University of Bath
+      affiliation:
+        - name: "University of Bath"
+          department: "Department of Mathematical Sciences"
   date: today
   date-format: long
   chapters:
@@ -17,11 +19,12 @@ book:
     - compositional.qmd
     - eva-data-challenge.qmd
     - shrinkage-tpdm.qmd
-    - references.qmd
+    - conclusion.qmd
   appendices:
     - appendix-background.qmd
     - appendix-changing-ext-dep.qmd
     - appendix-compositional.qmd
+    - references.qmd
   search:
     location: navbar
     type: overlay
@@ -39,11 +42,11 @@ fig-width: 8
 fig-cap-location: bottom
 fig-format: pdf
 
-toc: true
+toc: false
 toc-depth: 4
 
-lof: true
-lot: true
+lof: false
+lot: false
 
 include-before-body:
   text: |
@@ -53,6 +56,12 @@ format:
   pdf:
     documentclass: scrreprt
     mathspec: true
+    template-partials:
+      - partials/before-body.tex
+      - partials/toc.tex
+    include-before-body: 
+      - frontmatter.tex
+
     include-in-header: 
       - "_macros.tex"
       - text: |
@@ -73,4 +82,5 @@ format:
     biblatexoptions: maxcitenames=2, style=authoryear, date=year, doi=false, isbn=false, url=false, eprint=false
     
 editor: source
+
 

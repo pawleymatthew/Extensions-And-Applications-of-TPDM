@@ -1,0 +1,30 @@
+$if(has-frontmatter)$
+\frontmatter
+$endif$
+$if(title)$
+\cleardoublepage
+\thispagestyle{empty}
+\hbox{}\vskip 0cm plus 1fill
+{\centering\Huge\bfseries $title$ \par}
+$if(subtitle)$
+\vspace{3ex}
+{\centering\Large\bfseries $subtitle$ \par}
+$endif$
+\vspace{7ex}
+$for(by-author)$
+{\centering\LARGE\bfseries $by-author.name.literal$ \par}
+\vspace{11ex}
+{\centering\Large A thesis submitted for the degree of Doctor of Philosophy \par}
+\vspace{2ex}
+$for(by-author.affiliations)$%
+$if(it.department)$%
+{\centering\bfseries\Large $it.name$ \par}
+\vspace{2ex}
+$endif$%
+{\centering\Large $it.department$ \par}
+$endfor$$endfor$%
+\vspace{6ex}
+{\centering\bfseries\Large December 2024 \par}
+\vskip 0cm plus 2fill
+$endif$
+

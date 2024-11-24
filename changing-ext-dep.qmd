@@ -265,7 +265,7 @@ where
 :::
 
 ::: {.proof}
-Fix $t\in[0,1]$. The random vectors $\{\bm{X}(l/n):l\in\mathcal{I}(t)\}$ are independent and identically distributed with distribution $H(\cdot;t)$. The modified \eqref{eq-k-h-rate-conditions} ensure that the original rate conditions \eqref{eq-k-rate-conditions} are satisfied on the sub-interval $(t-h,t+h]$: the number of local observations $2nh(n)\to\infty$ and the extreme sampling fraction $k(n)/2nh(n)\to 0$ as $n\to\infty$. Thus, we may invoke asymptotic normality of the empirical TPDM (@prp-empirical-local-tpdm-normality) and the result follows immediately. 
+Fix $t\in[0,1]$. The random vectors $\{\bm{X}(l/n):l\in\mathcal{I}(t)\}$ are independent and identically distributed with distribution $H(\cdot;t)$. The modified \eqref{eq-k-h-rate-conditions} ensure that the original rate conditions \eqref{eq-k-rate-conditions} are satisfied on the sub-interval $(t-h,t+h]$: the number of local observations $2nh(n)\to\infty$ and the extreme sampling fraction $k(n)/2nh(n)\to 0$ as $n\to\infty$. Thus, we may invoke asymptotic normality of the empirical TPDM (@lem-empirical-local-tpdm-normality) and the result follows immediately. 
 :::
 
 We will always assume that $V(t)$ is invertible. (This would not be permissible if we had defined the $\mathrm{vecu}$ operator to include diagonal entries.) The above result means that, roughly speaking, the entries of $\hat{\Sigma}(t)$ behave like (correlated) normal random variables when $n$ is sufficiently large. The implication is that each entry $\psi_{ij}(t)$ of $\hat{\Psi}(t)$ is the weighted sum of independent, asymptotically normal random variables. With this intuition, we can apply a functional central limit theorem type argument to derive the asymptotic behaviour of the stochastic process $\{\hat{\bm{\psi}}(t):t\in[0,1]\}$.
@@ -384,7 +384,8 @@ expand_grid(d = c(2, 3, 4, 5, 10, 15, 20, 25),
   pivot_wider(names_from = c(alpha, type), values_from = crit_val) %>%
   kbl(col.names = c("$d$", "$\\mathcal{D}$", rep(c("CM", "KS"), 3)),
       booktabs = TRUE, linesep = "", digits = 3, escape = FALSE) %>%
-  add_header_above(c(' ' = 2, '$\\\\alpha=0.01$' = 2, '$\\\\alpha=0.05$' = 2, '$\\\\alpha=0.10$' = 2), line_sep = 1, escape = FALSE)
+  add_header_above(c(' ' = 2, '$\\\\alpha=0.01$' = 2, '$\\\\alpha=0.05$' = 2, '$\\\\alpha=0.10$' = 2), line_sep = 1, escape = FALSE) %>%
+  kable_styling(latex_options = "striped")
 ```
 
 It is only feasible to produce a table of critical values due to the inclusion of the `nuisance process' $\{V(t):t\in[0,1]\}$ in \eqref{eq-test-process}. Its role is to standardise and remove cross-correlation in $\hat{\bm{Z}}(t)$, ensuring a convenient asymptotic null distribution for our test statistics. In contrast, when $d\geq 3$ the critical values in @dreesStatisticalInferenceChanging2023 depend on the class of sets $\mathcal{A}$ under consideration, so one is forced to resort to (intensive) simulations. To deal with the nuisance process, we simply estimate it from the data under the assumption of stationarity. Under the null, $\{V(t):t\in[0,1]\}$ reduces to a single matrix, $V$, which we estimate as the sample covariance matrix of $\hat{\bm{\sigma}}=\hat{\bm{\sigma}}(t)$ based on the set of radial threshold exceedances over all blocks. That is
