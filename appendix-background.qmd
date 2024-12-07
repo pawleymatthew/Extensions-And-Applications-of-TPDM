@@ -2,10 +2,13 @@
 
 ## Equivalence of TPDM definitions {#sec-app-tpdm-definitions}
 
-We aim to shed light on this matter by showing in the bivariate setting that the TPDM (with respect to some $\alpha\geq 1$) is independent of $\alpha$. The following lemma helps us achieve this: it gives the formula for transforming between angular densities defined with different $\alpha$ values.
+The TPDM was originally defined by @cooleyDecompositionsDependenceHighdimensional2019 for multivariate random vectors with tail index $\alpha=2$ as in @def-tpdm. This was later generalised by @kirilioukEstimatingProbabilitiesMultivariate2022 to permit an arbitrary tail index $\alpha\geq 1$ (@def-tpdm-alpha). Beyond the fact that these definitions coincide when $\alpha=2$, it is not obvious why @def-tpdm-alpha is the natural generalisation to @def-tpdm. In this section, we provide some insight into this matter. In doing so, we show that the TPDM is independent of $\alpha$, enabling the tail index to be chosen without loss of generality. For example, in @sec-compositional and @sec-changing-ext-dep we fix $\alpha=1$ and $\alpha=2$, respectively. Moreover, the resulting formulae will be used throughout the thesis to compute the true TPDM under various parametric models.
+
+
+The following lemma provides a formula for the angular density (for arbitrary $\alpha$) in terms of the angular density when $\alpha=1$. We extend a result in the Supplementary Material of @fixSimultaneousAutoregressiveModels2021, which outlines how to transform from $\alpha=1$ to $\alpha=2$. 
 
 :::{#lem-angular-density-transformation}
-Suppose $\bm{X}=(X_i,X_j)\in\mathcal{RV}_+^2(\alpha)$ for some $\alpha\geq 1$. Let $H_\alpha$ denote the normalised angular measure with respect to $\|\cdot\|_\alpha$ and $h_\alpha:\mathbb{S}_{+(\alpha)}\to\R_+$ the corresponding angular density (assuming it exists). Moreover, we define
+Suppose $\bm{X}=(X_i,X_j)\in\mathcal{RV}_+^2(\alpha)$ for some $\alpha\geq 1$. Let $H_\alpha$ denote the normalised angular measure with respect to $\|\cdot\|_\alpha$ and $h_\alpha:\mathbb{S}_{+(\alpha)}\to\R_+$ the corresponding angular density (assuming it exists). Moreover, we define the re-parametrised density as
 \begin{equation*}
     \tilde{h}_\alpha:[0,1]\to\R_+, \qquad \theta \mapsto h_\alpha\left(\left(\theta,(1-\theta^\alpha)^{1/\alpha}\right)\right).
 \end{equation*}
@@ -16,7 +19,7 @@ Then
 :::
 
 ::: {.proof}
-The proof generalises the procedure described in Section 3.2 of the Supplementary Material of @fixSimultaneousAutoregressiveModels2021. First, we transform from $L_1$ polar coordinates $(r,\bm{\theta})$ to Cartesian coordinates $\bm{z}=(z_i,z_j)=(r\theta_i,r\theta_j)$. The Jacobian of the transformation is $\|\bm{z}\|_1^{-1}$ (CITE Prop 1in Cooley et al 2012). Using \eqref{eq-nu-H-relation} with $\alpha=1$ and $H_1(\dee \bm{\theta})=h_1(\bm{\theta})\dee \bm{\theta}$,
+The proof generalises the procedure described in Section 3.2 of the Supplementary Material of @fixSimultaneousAutoregressiveModels2021. First, we transform from $L_1$ polar coordinates $(r,\bm{\theta})$ to Cartesian coordinates $\bm{z}=(z_i,z_j)=(r\theta_i,r\theta_j)$. The Jacobian of the transformation is $\|\bm{z}\|_1^{-1}$. Using \eqref{eq-nu-H-relation} with $\alpha=1$ and $H_1(\dee \bm{\theta})=h_1(\bm{\theta})\dee \bm{\theta}$,
     \begin{align*}
         \nu(\dee r \times \dee \bm{\theta}) 
         &= r^{-2} h_1(\bm{\theta}) \, \dee r\,\dee\bm{\theta} \\
@@ -44,7 +47,7 @@ The proof generalises the procedure described in Section 3.2 of the Supplementar
     \end{equation*}
 :::
 
-In the trivial case $\alpha=1$ the formula reduces to $\tilde{h}_1(\theta) = \tilde{h}_1(\theta)$, as one would hope. Setting $\alpha=2$ yields $\tilde{h}_2(\theta) = 2\theta\tilde{h}_1(\theta^2)$, which matches the formula gives in @fixSimultaneousAutoregressiveModels2021. Note that $\tilde{h}_\alpha$ is well-defined (i.e. is a normalised density), since
+In the trivial case $\alpha=1$ the formula reduces to $\tilde{h}_1(\theta) = \tilde{h}_1(\theta)$, as one would hope. Setting $\alpha=2$ yields $\tilde{h}_2(\theta) = 2\theta\tilde{h}_1(\theta^2)$, which matches the formula in @fixSimultaneousAutoregressiveModels2021. Note that $\tilde{h}_\alpha$ is well-defined (i.e. is a normalised density), since
 \begin{equation*}
     \int_0^1 \tilde{h}_\alpha (\theta)\,\dee \theta = \int_0^1 \alpha\theta^{\alpha-1}\tilde{h}_1 (\theta^\alpha )\,\dee \theta = \int_0^1 \tilde{h}_1(\phi)\,\dee \phi = 1.
 \end{equation*}
@@ -53,7 +56,7 @@ We now apply the transformation formula to express the TPDM for any $\alpha\geq 
 :::{#prp-tpdm-h1-formula}
 Using the notation of @lem-angular-density-transformation, the off-diagonal entry in the TPDM of $\bm{X}$ is
 \begin{equation}\label{eq-tpdm-h1-formula}
-    \sigma_{ij} = m \int_0^1 \sqrt{u(1-u)} \, \tilde{h}_1(u)\,\dee \phi.
+    \sigma_{ij} = m \int_0^1 \sqrt{u(1-u)} \, \tilde{h}_1(u)\,\dee u.
 \end{equation}
 :::
 
@@ -73,24 +76,23 @@ The relation between the normalised measure $H_\alpha$ and the measure $H$ in @d
     \begin{equation*}
         \sigma_{ij} 
         = m \int_0^1 \theta^{\alpha/2} (1-\theta^\alpha)^{1/2} \alpha \theta^{\alpha-1}\tilde{h}_1(\theta^\alpha)\,\dee \theta 
-        = m \int_0^1 \sqrt{u(1-u)}\,\tilde{h}_1(u)\,\dee \phi.
+        = m \int_0^1 \sqrt{u(1-u)}\,\tilde{h}_1(u)\,\dee u.
     \end{equation*}
 :::
 
-Extra things to find a place for:
-
-Symmetric logistic angular density:
+Substituting the angular density of the bivariate symmetric logistic distribution
 \begin{equation*}
 \tilde{h}_1(\theta;\gamma) = \frac{1-\gamma}{2\gamma}[\theta(1-\theta)]^{\frac{1}{\gamma}-2}[\theta^{1/\gamma} + (1-\theta)^{1/\gamma}]^{\gamma-2}
 \end{equation*}
-Hüsler-Reiss angular density:
+or Hüsler-Reiss distribution
 \begin{equation*}
 \tilde{h}_1(\theta;\lambda) = \frac{\exp\left(-\lambda/4\right)}{4\lambda [\theta(1-\theta)]^{3/2}}\phi\left(\frac{1}{2\lambda}\log\left(\frac{\theta}{1-\theta}\right)\right)
 \end{equation*}
+into \eqref{eq-tpdm-h1-formula} yields the expressions given in @exm-symmetric-logistic-tpdm and @exm-husler-reiss-tpdm.
 
 ## Formula for the asymptotic variance $\nu_{ij}^2$ {#sec-app-tpdm-asymptotic-var}
 
-Adopting the notation of @prp-tpdm-h1-formula, the asymptotic variance can be expressed in terms of the angular density $\tilde{h}_1$ of $(X_,X_j)$. Using $\mathrm{Var}(Y)=\mathbb{E}[Y^2]-\mathbb{E}[Y]^2$, we have
+In this section, we derive a formula for the asymptotic variance $\nu_{ij}^2$ of $\hat{\sigma}_{ij}$ -- see @prp-empirical-tpdm-normality-entries in terms of the angular density $\tilde{h}_1$ of $(X_i,X_j)$. Using the identity $\mathrm{Var}(Y)=\mathbb{E}[Y^2]-\mathbb{E}[Y]^2$ and @prp-tpdm-h1-formula, we have
 \begin{equation*}
     \nu_{ij}^2 
     = m^2 \int_{\mathbb{S}_{+(\alpha)}^{d-1}}(\theta_i\theta_j)^\alpha \,\dee H_\alpha(\bm{\theta}) - \sigma_{ij}^2 
@@ -100,15 +102,15 @@ Substituting $u=\theta^\alpha$ and using @prp-tpdm-h1-formula gives the final ex
 \begin{equation}\label{eq-nu-squared-h1-formula}
     \nu_{ij}^2 = m^2 \int_0^1 u(1-u)\,\tilde{h}_1(u)\,\dee u - \left[m\int_0^1 \sqrt{u(1-u)}\,\tilde{h}_1(u)\,\dee u \right]^2.
 \end{equation}
-The asymptotic distribution of $\hat{\sigma}_{ij}$ does not depend on $\alpha$. 
+Again, we note that the result, in this case the asymptotic variance (and therefore distribution) of $\hat{\sigma}_{ij}$, does not depend on $\alpha$.
 
 ## Proof of @prp-empirical-tpdm-normality {#sec-app-tpdm-asy-normality-proof}
 
 ::: {.proof}
-We follow the proof of Theorem 5.23 in CITE Krali Thesis but adapt it to the general $\alpha$ case. By the Cramér-Wold device (CITE), it is sufficient to show asymptotic normality of $\sqrt{k}\bm{\beta}^T(\hat{\bm{\sigma}}-\bm{\sigma})$ for all $\bm{\beta}\in\R^{d\choose 2}$. For convenience, the components of $\bm{\beta}$ are indexed to match the sub-indices of $\bm{\sigma}$. Then
+We follow the proof of Theorem 5.23 in (CITE Krali Thesis) but adapt it to the general $\alpha$ case. By the Cramér-Wold device, it is sufficient to show asymptotic normality of $\sqrt{k}\bm{\beta}^T(\hat{\bm{\sigma}}-\bm{\sigma})$ for all $\bm{\beta}\in\R^{d\choose 2}$. For convenience, the components of $\bm{\beta}$ are indexed to match the sub-indices of $\bm{\sigma}$. Then
 \begin{equation*}
     \bm{\beta}^T\bm{\sigma}
-        = \sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\sigma_{ij} = \mathbb{E}_{\bm{\Theta}\sim H}\left[\sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\Theta_i^{\alpha/2}\Theta_j^{\alpha/2}\right] =: \mathbb{E}_{\bm{\Theta}\sim H}[g(\bm{\Theta};\bm{\beta})],
+        = \sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\sigma_{ij} = \mathbb{E}_{H}\left[\sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\Theta_i^{\alpha/2}\Theta_j^{\alpha/2}\right] =: \mathbb{E}_{H}[g(\bm{\Theta};\bm{\beta})],
     \end{equation*}
 where 
 \begin{equation*}
@@ -116,24 +118,24 @@ where
 \end{equation*}
 The corresponding empirical estimator is
 \begin{equation*}
-        \hat{\mathbb{E}}_{\bm{\Theta}\sim H}[g(\bm{\Theta};\bm{\beta})] = \frac{m}{k} \sum_{l=1}^{k}\sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\Theta_{(l),i}^{\alpha/2}\Theta_{(l),j}^{\alpha/2} = \sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\left(\frac{m}{k}\sum_{l=1}^k\Theta_{(l),i}^{\alpha/2}\Theta_{(l),j}^{\alpha/2} \right) = \bm{\beta}^T\hat{\bm{\sigma}}.
+        \hat{\mathbb{E}}_{H}[g(\bm{\Theta};\bm{\beta})] = \frac{m}{k} \sum_{l=1}^{k}\sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\Theta_{(l),i}^{\alpha/2}\Theta_{(l),j}^{\alpha/2} = \sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\left(\frac{m}{k}\sum_{l=1}^k\Theta_{(l),i}^{\alpha/2}\Theta_{(l),j}^{\alpha/2} \right) = \bm{\beta}^T\hat{\bm{\sigma}}.
 \end{equation*}
-Noting that $g(\cdot\,;\bm{\beta})$ is continuous and applying \autoref{prop-clt-extremes}, we have
+Noting that $g(\cdot\,;\bm{\beta})$ is continuous and applying @thm-clt-extremes, we have
 \begin{equation*}
-        \sqrt{k}\bm{\beta}^T (\hat{\bm{\sigma}}-\bm{\sigma}) = \sqrt{k}\left(\hat{\mathbb{E}}_{\bm{\Theta}\sim H}[g(\bm{\Theta};\bm{\beta})] - \mathbb{E}_{\bm{\Theta}\sim H}[g(\bm{\Theta};\bm{\beta})]\right) \to N(0,v(\bm{\beta})).
+        \sqrt{k}\bm{\beta}^T (\hat{\bm{\sigma}}-\bm{\sigma}) = \sqrt{k}\left(\hat{\mathbb{E}}_{H}[g(\bm{\Theta};\bm{\beta})] - \mathbb{E}_{H}[g(\bm{\Theta};\bm{\beta})]\right) \to N(0,v(\bm{\beta})).
 \end{equation*}
-where $v(\bm{\beta}):=\mathrm{Var}_{\bm{\Theta}\sim H}(g(\bm{\Theta};\bm{\beta}))$. The asymptotic normality of $\hat{\bm{\sigma}}$ follows by the Cramér-Wold device. The diagonal elements of the covariance matrix $V$ are as in @prp-empirical-tpdm-normality-entries. The off-diagonal entries are given by
+where $v(\bm{\beta}):=\mathrm{Var}_{H}(g(\bm{\Theta};\bm{\beta}))$. The asymptotic normality of $\hat{\bm{\sigma}}$ follows by the Cramér-Wold device. The diagonal elements of the covariance matrix $V$ are as in @prp-empirical-tpdm-normality-entries. The off-diagonal entries are given by
 \begin{align*}
         2\mathrm{Cov}\left(\sqrt{k}(\hat{\sigma}_{ij} - \sigma_{ij}),\sqrt{k}(\hat{\sigma}_{lm} - \sigma_{lm})\right) 
         &=2k\,\mathrm{Cov}(\hat{\sigma}_{ij}, \hat{\sigma}_{lm}) \\
         &= k\left[\mathrm{Var}(\hat{\sigma}_{ij} + \hat{\sigma}_{lm}) - \mathrm{Var}(\hat{\sigma}_{ij}) - \mathrm{Var}(\hat{\sigma}_{lm})\right] \\
-        &\to \mathrm{Var}_{\bm{\Theta}\sim H}(\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) - \nu_{ij}^2 - \nu_{lm}^2.
+        &\to \mathrm{Var}_{H}(\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) - \nu_{ij}^2 - \nu_{lm}^2.
 \end{align*}
 :::
 
 ## Derivation of $V$ under the max-linear model {#sec-app-tpdm-V-max-linear}
 
-Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is max-linear with $q$ factors and parameter matrix $A$. Then, for any $i,j=1,\ldots,d$, we have $\sigma_{ij}=\sum_{l=1}^q a_{il}^{\alpha/2}a_{jl}^{\alpha/2}$ and
+Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is max-linear with $q$ factors and parameter matrix $A\in\R_+^{d\times q}$. Then, for any $i,j=1,\ldots,d$, we have $\sigma_{ij}=\sum_{l=1}^q a_{il}^{\alpha/2}a_{jl}^{\alpha/2}$ and
 \begin{equation*}
         \nu_{ij}^2 
         = d \int_{\mathbb{S}_{+(\alpha)}^{d-1}} (\theta_i\theta_j)^\alpha \,\dee H(\bm{\theta}) - \sigma_{ij}^2 
@@ -142,7 +144,7 @@ Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is max-linear with 
 \end{equation*}
 For any pair of upper-triangular index pairs $(i,j)$ and $(l,m)$, we have
 \begin{align*}
-     \mathrm{Var}_{\bm{\Theta}\sim H} & (\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) \\
+     \mathrm{Var}_{H} & (\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) \\
      &= d \int_{\mathbb{S}_{+(\alpha)}^{d-1}} [(\theta_i\theta_j)^\alpha + 2(\theta_i\theta_j\theta_l\theta_m)^{\alpha/2} +(\theta_l\theta_m)^\alpha] \,\dee H(\bm{\theta}) - \left[ \sigma_{ij} + \sigma_{lm} \right]^2 \\
      &= d \sum_{s=1}^q \frac{(a_{is}a_{js})^\alpha + 2(a_{is}a_{js}a_{ls}a_{ms})^{\alpha/2} + (a_{ls}a_{ms})^\alpha}{\|\bm{a}_s\|_\alpha^\alpha} - \left[ \sigma_{ij} + \sigma_{lm} \right]^2 \\
      &= \nu_{ij}^2 + \nu_{lm}^2 + d \sum_{s=1}^q \frac{2(a_{is}a_{js}a_{ls}a_{ms})^{\alpha/2}}{\|\bm{a}_s\|_\alpha^\alpha} - 2\sigma_{ij}\sigma_{lm}
@@ -218,6 +220,8 @@ If $\bm{Y}$ is mean-zero (or the $n\times d$ data matrix is column-centred in pr
 
 # Literature review: clustering with the TPDM {#sec-app-tpdm-clustering}
 
+While clustering methods are not central to this thesis, only being used once in @sec-eva-c4, we consider it worthwhile to describe some TPDM-related clustering algorithms. The two algorithms described in this section are closely connected with other topics discussed in this thesis, such as principal components analysis and support identification. Therefore, reviewing these algorithms can enrich the reader's understanding of these other aspects.
+
 Within multivariate extremes, the umbrella term `clustering' has many meanings. To avoid confusion, we briefly describe these and clarify which type we are referring to. 
 
 - **Prototypical events.** Assume that the angular measure concentrates at/near a small number of points in $\mathbb{S}_{+}^{d-1}$. Then one might wish to identify cluster centres $\bm{w}_1,\ldots\bm{w}_K$ minimising some objective function of the form
@@ -246,7 +250,7 @@ Note that $\bm{u}_1\in\mathbb{S}_{+(2)}^{d-1}$ is assumed to be suitably normali
 \end{equation*}
 The matrix $\hat{\Sigma}^{[i]}$ represents the empirical TPDM (up to some multiplicative constant) based on the nearest neighbours of the $i$th centroid. @fomichovSphericalClusteringDetection2023 prove that, under certain conditions, the limiting centroids lie in a neighbourhood of the faces of interest $C_{\beta_1},\ldots,C_{\beta_K}$. Thresholding the centroid vectors yields the final partition $\beta_1,\ldots,\beta_K$.
 
-@richardsModernExtremeValue2024 apply hierarchical clustering using the empirical TPDM as the underlying similarity matrix. The clustering method constitutes a minor aspect of their submission to the EVA (2023) Data Challenge. Few methodological details are provided, so the following explanation constitutes our interpretation of their method, drawing on Figure 4 in @richardsModernExtremeValue2024 and the accompanying code made available at \url{https://github.com/matheusguerrero/yalla}. Define the dissimilarity between $X_i$ and $X_j$ as $\varrho_{ij} = 1 - \sigma_{ij}$. This satisfies the properties of a dissimilarity measure (CITE: A MATHEMATICAL THEORY FOR CLUSTERING IN METRIC SPACES):
+@richardsModernExtremeValue2024 apply hierarchical clustering using the empirical TPDM as the underlying similarity matrix. The clustering method constitutes a minor aspect of their submission to the EVA (2023) Data Challenge. Few methodological details are provided, so the following explanation constitutes our interpretation of their method, drawing on Figure 4 in @richardsModernExtremeValue2024 and the accompanying code made available at \url{https://github.com/matheusguerrero/yalla}. Define the dissimilarity between $X_i$ and $X_j$ as $\varrho_{ij} = 1 - \sigma_{ij}$. This satisfies the properties of a dissimilarity measure [@changMathematicalTheoryClustering2016]:
 \begin{equation*}
     \varrho_{ij} \geq 0, \qquad \varrho_{ii} = 0, \qquad \varrho_{ij}=\varrho_{ji}.
 \end{equation*}

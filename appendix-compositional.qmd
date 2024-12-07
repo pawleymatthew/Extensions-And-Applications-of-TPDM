@@ -34,6 +34,7 @@ sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recurs
 #| fig-scap: "@fig-sim-pca-max-linear-loss for a larger sample size $n=50,000$."
 #| fig-height: 6
 #| message: false
+#| warning: false
 
 res <- readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-az.RDS")) %>%
   filter(n_train == 50000, k_frac == 0.01)
@@ -127,6 +128,33 @@ p4 <- res %>%
 ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 ```
 
+```{r make-fig-sim-pca-hr-metrics-pmax}
+#| label: fig-sim-pca-hr-metrics-pmax
+#| fig-cap: "Blah."
+#| fig-scap: "CoDA- and DS-PCA Aitchison reconstruction errors for the three trivariate Hüsler-Reiss models."
+#| fig-height: 7
+
+res <- bind_rows(readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-threedim.RDS")),
+                 readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-highdim.RDS"))) %>%
+  mutate(vario_seed_index = case_when(is.na(vario_seed_index) ~ 4, .default = vario_seed_index))
+
+res %>%
+  mutate(d = case_when(vario_seed_index <= 3 ~ 3, .default = 10)) %>%
+  mutate(pca_method = case_when(pca_method == "coda" ~ "CoDA",
+                                .default = "DS")) %>%
+  mutate(vario_seed_index = paste0("Lambda[", vario_seed_index, "]")) %>%
+  ggplot(aes(x = interaction(as.factor(n_pcs), pca_method), y = p_max_hat / d)) +
+  geom_boxplot() +
+  geom_hline(aes(yintercept = p_max), colour = "blue", linetype = "dashed") +
+  facet_wrap(. ~ as.factor(vario_seed_index), scales = "free", labeller = label_parsed) +
+  scale_x_discrete(guide = "axis_nested") +
+  labs(x = "",
+       y = expression(hat(p)[max])) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank()) +
+  theme_light() +
+  theme(ggh4x.axis.nestline = element_line(linetype = 2))
+```
 
 ```{r make-fig-sim-classification-train-test-risk}
 #| label: fig-sim-classification-train-test-risk

@@ -232,19 +232,19 @@ The first-order optimality condition gives
     \implies \sum_{i<j} 2(\lambda-1)\mathbb{E}[\hat{\sigma}_{ij}^2] + 2\sigma_{ij}\mathbb{E}[\hat{\sigma}_{ij}] = 0 
     \implies \lambda^\star := \frac{\sum_{i<j}\left\lbrace\mathbb{E}[\hat{\sigma}_{ij}^2] - \sigma_{ij}\mathbb{E}[\hat{\sigma}_{ij}]\right\rbrace}{\mathbb{E}[\|\hat{\bm{\sigma}}\|_2^2]}.
 \end{equation*}
-It is simple to check that $\mathcal{R}''(\lambda)=\sum_{i<j}2\mathbb{E}[\hat{\sigma}_{ij}^2]>0$, confirming that $\lambda^\star$ is indeed the risk minimiser. The formula for $\lambda^\star$ still depends on the true TPDM, so this is not helpful by itself. However, we may recognise the numerator of $\lambda^\star$ as being related to the variance of $\hat{\sigma}_{ij}$ and recall from @prp-empirical-tpdm-normality-entries that the asymptotic variance of $\sqrt{k}\hat{\sigma}_{ij}$ is $\nu_{ij}^2$. For clarity, we now include dependence on the sample size $n$ explicitly. Assume the conditions of @prp-empirical-tpdm-normality-entries hold and also that for all $i\neq j$ there exists a constant $C_{ij}\geq 0$ such that
+It is simple to check that $\mathcal{R}''(\lambda)=\sum_{i<j}2\mathbb{E}[\hat{\sigma}_{ij}^2]>0$, confirming that $\lambda^\star$ is indeed the risk minimiser. The formula for $\lambda^\star$ still depends on the true TPDM, so this is not helpful by itself. However, we may recognise the numerator of $\lambda^\star$ as being related to the variance of $\hat{\sigma}_{ij}$ and recall from @prp-empirical-tpdm-normality-entries that the asymptotic variance of $\sqrt{k}\hat{\sigma}_{ij}$ is $\nu_{ij}^2$. For clarity, we now include dependence on the sample size $n$ explicitly. Assume the conditions of @prp-empirical-tpdm-normality-entries hold and also that for all $i\neq j$ there exists a constant $C_{ij}$ such that
 \begin{equation}\label{eq-sigma-rate-assumption}
-\mathbb{E}[\hat{\sigma}_{ij}(n)] - \sigma_{ij} = \frac{c_{ij}}{k} + \mathcal{O}(k^{-2}),
+\mathbb{E}[\hat{\sigma}_{ij}(n)] - \sigma_{ij} = \frac{C_{ij}}{k(n)} + \mathcal{O}(k(n)^{-2}),
 \end{equation}
-so that $k(n)\mathbb{E}[\hat{\sigma}_{ij}(n)] - \sigma_{ij}) \to c_{ij}$ as $n\to\infty$. The condition \eqref{eq-sigma-rate-assumption} ensures the rate of convergence of $\hat{\sigma}_{ij}$ to $\sigma_{ij}$ is sufficiently rapid. Then we have that
+so that $k(n)(\mathbb{E}[\hat{\sigma}_{ij}(n)] - \sigma_{ij}) \to C_{ij}$ as $n\to\infty$. The condition \eqref{eq-sigma-rate-assumption} ensures the rate of convergence of $\hat{\sigma}_{ij}$ to $\sigma_{ij}$ is sufficiently rapid. Then we have that
 \begin{align*}
     \lim_{n\to\infty} & k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n) \\
     &= \lim_{n\to\infty} \sum_{i<j}k(n)\left\lbrace \mathbb{E}[\hat{\sigma}_{ij}(n)^2] - \sigma_{ij}\mathbb{E}[\hat{\sigma}_{ij}(n)]\right\rbrace \\
     &= \lim_{n\to\infty} \sum_{i<j}k(n)\left\lbrace \mathbb{E}[\hat{\sigma}_{ij}(n)^2] - \mathbb{E}[\hat{\sigma}_{ij}(n)]^2 \right\rbrace + \lim_{n\to\infty}\sum_{i<j} k(n)\left\lbrace \mathbb{E}[\hat{\sigma}_{ij}(n)]^2 - \sigma_{ij}\mathbb{E}[\hat{\sigma}_{ij}(n)] \right\rbrace \\
     &= \lim_{n\to\infty} \sum_{i<j}k(n)\mathrm{Var}(\hat{\sigma}_{ij}(n)) + \lim_{n\to\infty} \sum_{i<j} \mathbb{E}[\hat{\sigma}_{ij}(n)] k(n) \left\lbrace \mathbb{E}[\hat{\sigma}_{ij}(n)] - \sigma_{ij} \right\rbrace \\
-    &= \sum_{i<j}(\nu_{ij}^2 + c_{ij}).
+    &= \sum_{i<j}(\nu_{ij}^2 + \sigma_{ij}C_{ij}).
 \end{align*}
-Since $\sum_{i<j}(\nu_{ij}^2+c_{ij})>0$ and $\|\hat{\bm{\sigma}}(n)\|_2^2>0$ almost surely, it follows that $\lambda^\star(n)>0$ for sufficiently large $n$. The above result gives that, asymptotically, the optimal shrinkage behaves as a constant divided by $k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]$. As the asymptotic constant is unknown, we eliminate it by taking take ratios at different values of $n$. Given a fixed proportion $\kappa \in (0,1)$, it is easy to see that
+Since $\sum_{i<j}(\nu_{ij}^2+C_{ij})>0$ and $\|\hat{\bm{\sigma}}(n)\|_2^2>0$ almost surely, it follows that $\lambda^\star(n)>0$ for sufficiently large $n$. The above result gives that, asymptotically, the optimal shrinkage behaves as a constant divided by $k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]$. As the asymptotic constant is unknown, we eliminate it by taking take ratios at different values of $n$. Given a fixed proportion $\kappa \in (0,1)$, it is easy to see that
 \begin{equation*}
     \lim_{n\to\infty} k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n) = \sum_{i<j}(\nu_{ij}^2 + c_{ij}) =
     \lim_{n\to\infty} k(\left\lfloor \kappa n \right\rfloor)\mathbb{E}[\|\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\|_2^2]\lambda^\star(\left\lfloor \kappa n \right\rfloor).
