@@ -29,7 +29,7 @@ book:
     location: navbar
     type: overlay
 
-bibliography: references.bib
+bibliography: phdreferences.bib
 
 execute:
   echo: false
@@ -52,6 +52,8 @@ include-before-body:
   text: |
     \pagenumbering{roman}
 
+pdf-engine: xelatex
+
 format:
   pdf:
     documentclass: scrreprt
@@ -60,7 +62,6 @@ format:
       - partials/before-body.tex
     include-before-body: 
       - frontmatter.tex
-
     include-in-header: 
       - "_macros.tex"
       - text: |
@@ -68,17 +69,20 @@ format:
          \usepackage[yyyymmdd,hhmmss]{datetime}
          \usepackage{textcase}
          \pagestyle{fancy}
-         \fancyhead[R]{\slshape\nouppercase{\leftmark}}
-         \fancyhead[L]{Compiled: \today}
+         \fancyhead[R]{\thepage}
+         \fancyhead[L]{\slshape\nouppercase{\leftmark}}
          \fancyfoot[C]{\thepage}
     linestretch: 1.5
+    linkcolor: Blue
+    urlcolor: Blue
+    citecolor: Blue
     geometry:
       - top=25mm
       - left=40mm
       - bottom=25mm
       - right=25mm
     cite-method: biblatex
-    biblatexoptions: maxcitenames=2, style=authoryear, date=year, doi=false, isbn=false, url=false, eprint=false
+    biblatexoptions: maxcitenames=2, mincitenames=1, maxbibnames=99, style=authoryear, date=year, doi=false, isbn=false, url=false, eprint=false, uniquename=false, giveninits=true, uniquelist=false
     
 editor: source
 

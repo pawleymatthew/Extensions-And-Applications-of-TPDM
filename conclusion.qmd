@@ -14,7 +14,7 @@ Inference in multivariate EVT is generally based on the $k$ largest pseudo-angle
 
 ## Future research ideas
 
-### Change-point detection 
+### Change-point detection {#sec-future-work-changepoint}
 
 @sec-changing-ext-dep detailed a procedure for detecting whether the extremal dependence structure is constant or changing over time. If a change is detected, a natural follow-up question is: when did the change occur? This question belongs to the realm of change-point detection and is the subject of an ongoing project in collaboration with Euan McGonigle (University of Southampton), Jordan Richards (University of Edinburgh) and Christian Rohrbeck (University of Bath). The high-level goal is to devise a change-point algorithm for estimating changes in extremal dependence, by extending the methods in @sec-changing-ext-dep or otherwise. Existing work on this topic is scarce and restricted to likelihood-ratio tests based on parametric models: @diasChangepointAnalysisDependence2004 consider the bivariate symmetric logistic model; @hazraEstimatingChangepointsExtremal2024 detect change-points in the Hüsler-Reiss parameter $\Lambda$. By leveraging the TPDM, we are able to operate in high dimensions and avoid restrictive parametric assumptions. 
 

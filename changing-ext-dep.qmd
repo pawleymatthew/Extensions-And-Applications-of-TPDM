@@ -38,7 +38,7 @@ Multivariate extreme value models typically assume that the data represent indep
 
 Before proceeding, we clarify an important distinction between *testing for* versus *modelling* non-stationary dependence. Both represent very challenging statistical problems: the underlying signal (e.g. climate change) may be very weak, perhaps only becoming apparent over very long observation periods. The latter task refers to the development of multivariate extreme value models that allow for temporal non-stationarity in the dependence structure. For example, the regression model of @castro-camiloTimevaryingExtremeValue2018 and the spectral density ratio model of @decarvalhoSpectralDensityRatio2014 can incorporate covariate effects, including time. These models rely on parametric assumptions and are restricted to a small number of dimensions. To the best of our knowledge, the only existing work on *testing* for changing dependence is @dreesStatisticalInferenceChanging2023. Roughly speaking, their procedure involves partitioning the observation period into temporal blocks and testing for deviations in the empirical angular measure $\hat{H}$ between blocks. This is very computationally intensive and thus is restricted to $d\leq 5$ in practice. 
 
-Our contribution is to devise a procedure that instead tests for changes in $\hat{\Sigma}$, the empirical TPDM. Considering pairwise dependencies instead of the full angular measure eases the computational burden significantly and enables testing even in high dimensions. @sec-changing-ext-dep-framework to @sec-changing-ext-dep-test-stats details our framework, which is then applied to simulated and Red Sea surface temperature data in @sec-changing-ext-dep-experiments and @sec-changing-ext-dep-red-sea, respectively. Our test achieves superior performance to @dreesStatisticalInferenceChanging2023 in many realistic scenarios, except when in certain circumstances e.g. when neglecting higher-order dependencies necessarily incurs a complete loss of information (@sec-changing-ext-dep-experiments-tpdm-invariant).  
+Our contribution is to devise a procedure that instead tests for changes in $\hat{\Sigma}$, the empirical TPDM. Considering pairwise dependencies instead of the full angular measure eases the computational burden significantly and enables testing even in high dimensions. @sec-changing-ext-dep-framework to @sec-changing-ext-dep-test-stats details our framework, which is then applied to simulated and Red Sea surface temperature data in @sec-changing-ext-dep-experiments and @sec-changing-ext-dep-red-sea, respectively. Our test achieves superior performance to @dreesStatisticalInferenceChanging2023 in many realistic scenarios, except when neglecting higher-order dependencies necessarily incurs a significant loss of information (@sec-changing-ext-dep-experiments-tpdm-invariant).  
 
 ## Framework {#sec-changing-ext-dep-framework}
 
@@ -66,7 +66,7 @@ The local TPDM of $\bm{X}(t)$ is the $d\times d$ matrix
 \end{equation}
 :::
 
-Since $H(\cdot\,;t)$ is a valid angular measure, the local TPDM possesses all the usual properties of a TPDM (@sec-background-tpdm). Its entries summarise the tail dependence strength between pairs of components of $\bm{X}(t)$. While our principle objective is to detect changes in the local TPDM, it is common to devise statistical tests based on integrated versions of the quantity of interest (CITE). This strategy is employed by @dreesStatisticalInferenceChanging2023, whose test statistics are not directly based on the angular measure, but rather on the integrated angular measure,
+Since $H(\cdot\,;t)$ is a valid angular measure, the local TPDM possesses all the usual properties of a TPDM (@sec-background-tpdm). Its entries summarise the tail dependence strength between pairs of components of $\bm{X}(t)$. While our principal objective is to detect changes in the local TPDM, @dreesStatisticalInferenceChanging2023 notes that it is common to devise statistical tests using integrated versions of the quantity of interest, and therefore ground their test statistics not on the angular measure, but rather the integrated angular measure,
 \begin{equation*}
 \mathrm{IH}(\cdot; t) := \int_0^t H(\cdot; s) \,\dee s.
 \end{equation*}
@@ -115,7 +115,7 @@ holds if and only if $f(x)=0$ for almost every $x\in[a,b]$. Applying this fact t
 \begin{equation*}
 \bm{y}^T\Psi(t)\bm{y} = \bm{y}^T \left( \int_0^t \Sigma(s) \,\dee s \right) \bm{y} = \int_0^t \bm{y}^T\Sigma(s)\bm{y} \,\dee s.
 \end{equation*}
-Positive semi-definiteness of $\Sigma(t)$ guarantees the integrand is non-negative. Therefore $\bm{y}^T\Psi(t)\bm{y} \geq 0$.
+Positive semi-definiteness of $\Sigma(t)$ guarantees the integrand is non-negative. Therefore $\bm{y}^T\Psi(t)\bm{y} \geq 0$. \qedhere
 :::
 
 Due to properties in @lem-integrated-tpdm-properties we may focus on vectorised forms of $\Sigma(t)$ and $\Psi(t)$ defined analogously to $\bm{\sigma}$ in \eqref{eq-vecu-sigma}, i.e. by row-wise flattening of the strictly upper-triangular elements of $\Sigma(t)$ and $\Psi(t)$:
@@ -129,7 +129,7 @@ Due to properties in @lem-integrated-tpdm-properties we may focus on vectorised 
 \end{align}
 Each vector has dimension $\mathcal{D}=\binom{d}{2}$.
 
-Using a simple example, we now sketch how the integrated TPDM will be used to test for non-stationary dependence. Suppose $\bm{X}(t)$ follows a symmetric logistic distribution with dependence parameter $\gamma(t)$. Consider the following two scenarios: $\gamma(t)=0.7$ (constant dependence) and $\gamma(t)=0.5+|t-0.5|$ (changing dependence). These cases correspond to the left- and right- plots in @fig-symmetric-logistic-sigma-psi, respectively, with $\gamma(t)$ represented by the blue line. The red and green lines depict the local TPDM $\sigma_{ij}(t)$ and integrated TPDM $\psi_{ij}(t)$, respectively, as functions of $t$. Under the symmetric logistic model all pairs are equivalent, so we may suppress the $ij$ subscript. In the left-hand plot, constant dependence manifests as a horizontal line for $\sigma(t)$ and a straight line for $\psi(t)$. In the right-hand plot, the dependence strength $\sigma(t)$ is greatest near the centre of the time interval and $\psi(t)$ is the time-integral of this non-linear function. Intuitively, our test works by quantifying whether (estimates of) $\psi_{ij}(t)$ deviate from straight lines. Mathematically it will prove more convenient to instead consider deviations of (estimates of) $\psi_{ij}(t) - t \psi_{ij}(1)$ from zero. The function $\psi(t)-t\psi(1)$ is plotted in black. In the constant dependence case, $\sigma(t)=\sigma$ for all $t\in[0,1]$, so
+Using a simple example, we now sketch how the integrated TPDM will be used to test for non-stationary dependence. Suppose $\bm{X}(t)$ follows a symmetric logistic distribution with dependence parameter $\gamma(t)$. Consider the following two scenarios: $\gamma(t)=0.7$ (constant dependence) and $\gamma(t)=0.5+|t-0.5|$ (changing dependence). These cases correspond to the left- and right-hand plots in @fig-symmetric-logistic-sigma-psi, respectively, with $\gamma(t)$ represented by the blue line. The red and green lines depict the local TPDM $\sigma_{ij}(t)$ and integrated TPDM $\psi_{ij}(t)$, respectively, as functions of $t$. Under the symmetric logistic model all pairs are equivalent, so we may suppress the $ij$ subscript. In the left-hand plot, constant dependence manifests as a horizontal line for $\sigma(t)$ and a straight line for $\psi(t)$. In the right-hand plot, the dependence strength $\sigma(t)$ is greatest near the centre of the time interval and $\psi(t)$ is the time-integral of this non-linear function. Intuitively, our test works by quantifying whether (estimates of) $\psi_{ij}(t)$ deviate from straight lines. Mathematically it will prove more convenient to instead consider deviations of (estimates of) $\psi_{ij}(t) - t \psi_{ij}(1)$ from zero. The function $\psi(t)-t\psi(1)$ is plotted in black. In the constant dependence case, $\sigma(t)=\sigma$ for all $t\in[0,1]$, so
 \begin{equation}\label{eq-psi-null}
 \psi(t) - t\psi(1) 
 = \int_0^t \sigma(s) \,\dee s - t \int_0^1 \sigma(s) \,\dee s 
@@ -195,7 +195,7 @@ Provided the tail distribution of $\bm{X}(t)$ varies sufficiently smoothly with 
 \begin{equation*}
     \mathcal{I}(t) := \{i\in\{1,\ldots,n\} : i/n \in(t-h, t+h]\}
 \end{equation*}
-the index set of observations in a $h$-neighbourhood of $t$. Among the observations $\{\bm{X}(i/n):i\in\mathcal{I}(t)\}$, only those whose norm exceeds some high radial threshold will enter into our estimator for $\Sigma(t)$. The threshold $\hat{u}(t)$ is set as the $(k+1)$th upper order statistic of $\{R(i/n):i \in \mathcal{I}(t)\}$, resulting in exactly $k$ radial threshold exceedances. @dreesStatisticalInferenceChanging2023 use the same setup to define the empirical local angular measure, which forms the basis of our estimator for the local TPDM.
+the index set of observations in a $h$-neighbourhood of $t$. Among $\{\bm{X}(i/n):i\in\mathcal{I}(t)\}$, only those whose norm exceeds some high radial threshold will enter into our estimator for $\Sigma(t)$. The threshold $\hat{u}(t)$ is set as the $(k+1)$th upper order statistic of $\{R(i/n):i \in \mathcal{I}(t)\}$, resulting in exactly $k$ radial threshold exceedances. @dreesStatisticalInferenceChanging2023 use the same setup to define the empirical local angular measure, which forms the basis of our estimator for the local TPDM.
 
 :::{#def-empirical-local-angular-measure}
 For any $t\in[0,1]$, the empirical local angular measure is the random measure on $\mathbb{S}_{+(2)}^{d-1}$ defined by
@@ -267,7 +267,7 @@ where
 :::
 
 ::: {.proof}
-Fix $t\in[0,1]$. The random vectors $\{\bm{X}(l/n):l\in\mathcal{I}(t)\}$ are independent and identically distributed with distribution $H(\cdot;t)$. The modified rate conditions \eqref{eq-k-h-rate-conditions} ensure that the original rate conditions \eqref{eq-k-rate-conditions} are satisfied on the sub-interval $(t-h,t+h]$: the number of local observations $2nh(n)\to\infty$ and the extreme sampling fraction $k(n)/2nh(n)\to 0$ as $n\to\infty$. Thus, we may invoke asymptotic normality of the empirical TPDM (@lem-empirical-local-tpdm-normality) and the result follows immediately. 
+Fix $t\in[0,1]$. The random vectors $\{\bm{X}(l/n):l\in\mathcal{I}(t)\}$ are independent and identically distributed with distribution $H(\cdot;t)$. The modified rate conditions \eqref{eq-k-h-rate-conditions} ensure that the original rate conditions \eqref{eq-k-rate-conditions} are satisfied on the sub-interval $(t-h,t+h]$: the number of local observations $2nh(n)\to\infty$ and the extreme sampling fraction $k(n)/2nh(n)\to 0$ as $n\to\infty$. Thus, we may invoke asymptotic normality of the empirical TPDM (@lem-empirical-local-tpdm-normality) and the result follows immediately. \qedhere
 :::
 
 We will always assume that $V(t)$ is invertible. (This would not be permissible if we had defined the $\mathrm{vecu}$ operator to include diagonal entries.) The above result means that, roughly speaking, the entries of $\hat{\Sigma}(t)$ behave like (correlated) normal random variables when $n$ is sufficiently large. The implication is that each entry $\psi_{ij}(t)$ of $\hat{\Psi}(t)$ is the weighted sum of independent, asymptotically normal random variables. With this intuition, we can apply a functional central limit theorem type argument to derive the asymptotic behaviour of the stochastic process $\{\hat{\bm{\psi}}(t):t\in[0,1]\}$.
@@ -297,7 +297,7 @@ converges to the process $\{\bm{Y}(t):t\in[0,1]\}$ defined in the statement of t
 \bm{Y}_N(t) 
 &= \sqrt{2h} \sum_{i=1}^{\lfloor t/(2h) \rfloor} \sqrt{k}(\hat{\bm{\sigma}}((2i-1)h)-\bm{\sigma}) \\
 &= \sqrt{2kh} \left(\frac{\hat{\psi}(t)}{2h} - \frac{t\bm{\sigma}}{2h}\right) \\
-&= \sqrt{\frac{k}{2h}} \left( \hat{\bm{\psi}}(t) - \bm{\psi}(t) \right).
+&= \sqrt{\frac{k}{2h}} \left( \hat{\bm{\psi}}(t) - \bm{\psi}(t) \right). \qedhere
 \end{align*}
 :::
 
@@ -328,7 +328,7 @@ i.e. a $\mathcal{D}$-dimensional standard Brownian motion. By \eqref{eq-psi-null
 &= \sqrt{\frac{k}{2h}} V^{-1/2}\left(\hat{\bm{\psi}}(t) - \bm{\psi}(t)\right)  - t \left[ \sqrt{\frac{k}{2h}} V^{-1/2}\left(\hat{\bm{\psi}}(t) - \bm{\psi}(1)\right) \right] \\
 &\to \bm{W}(t) - t \bm{W}(1),
 \end{align*}
-which is equivalent to a $\mathcal{D}$-dimensional standard Brownian bridge.
+which is equivalent to a $\mathcal{D}$-dimensional standard Brownian bridge. \qedhere
 :::
 
 This main result provides the foundation for our test. The test statistics defined in the following section will quantify whether the realised sample path of \eqref{eq-test-process} is consistent with a Brownian bridge. We are not the first to use Brownian bridges in hypothesis testing in extremes; @gadeikisEstimationChangepointTail2005 use the same principle to test for changes in the tail index. 
@@ -359,7 +359,7 @@ where $\bm{B}(t)=(B_{ij}(t) : i<j)$ denotes a standard $\mathcal{D}$-dimensional
 :::
 
 ::: {.proof}
-The asymptotic null distributions follows directly from @thm-empirical-integrated-tpdm-asymptotic. It is well known that $K_{ij}:=\sup_{t\in[0,1]} |B_{ij}(t)|$ follows a Kolmogorov distribution [@henzeAsymptoticStochasticsIntroduction2024, p. 328]. 
+The asymptotic null distributions follows directly from @thm-empirical-integrated-tpdm-asymptotic. It is well known that $K_{ij}:=\sup_{t\in[0,1]} |B_{ij}(t)|$ follows a Kolmogorov distribution [@henzeAsymptoticStochasticsIntroduction2024, p. 328]. \qedhere 
 :::
 
 Each test statistic $T^{(KS)}$ and $T^{(CM)}$ may be used to define an asymptotic test for constant dependence. For the KS test, the decision rule that rejects the null when
@@ -558,15 +558,14 @@ sim_results %>%
 
 ### Small sample performance {#sec-changing-ext-dep-experiments-small-sample}
 
-In finite sample settings, the empirical size of an asymptotic test will generally differ from its nominal size. The only guarantee is that the correct level is attained as $n\to\infty$. The hope is that convergence occurs with sufficient rapidity so that the difference between the prescribed and actual Type I error rates is acceptably small. To test this, we run simulations using the SL-constant ($\vartheta_0=2$) and HR-constant ($\vartheta_0=1$) models in dimensions $d\in\{2, 5, 10, 25\}$ with sample sizes $n\in\{2.5\times 10^3,5\times 10^3,10^4\}$. For each data set, we apply our method at the 5\% level. The number of blocks is $n/b\in\{25,50\}$ and the proportion of extreme observations within each block is $k/b\in\{0.05, 0.10, 0.15\}$. @tbl-type1 reports the empirical Type I error rates of these tests. Blank cells indicate that the corresponding combination of tuning parameters were excluded because they violate the rank condition \eqref{eq-rank-condition} or because $k\leq d$. Each value in the table is based on $N$ repeated simulations, where $N=10^3$ if $d\leq 5$ and $N=300$ otherwise. Results from the large sample experiments in dimensions $d\in\{2,5\}$ are included (bottom row) for completeness.
+In finite sample settings, the empirical size of an asymptotic test will generally differ from its nominal size. The only guarantee is that the correct level is attained as $n\to\infty$. The hope is that convergence occurs with sufficient rapidity so that the difference between the prescribed and actual Type I error rates is acceptably small. To test this, we run simulations using the SL-constant ($\vartheta_0=2$) and HR-constant ($\vartheta_0=1$) models in dimensions $d\in\{2, 5, 10, 25\}$ with sample sizes $n\in\{2.5\times 10^3,5\times 10^3,10^4\}$. For each data set, we apply our method at the 5\% level. The number of blocks is $n/b\in\{25,50\}$ and the proportion of extreme observations within each block is $k/b\in\{0.05, 0.10, 0.15\}$. @tbl-type1 reports the empirical Type I error rates of these tests. Blank cells indicate that the corresponding combination of tuning parameters was excluded because they violate the rank condition \eqref{eq-rank-condition} or because $k\leq d$. Each value in the table is based on $N$ repeated simulations, where $N=10^3$ if $d\leq 5$ and $N=300$ otherwise. Results from the large sample experiments in dimensions $d\in\{2,5\}$ are included (bottom row) for completeness.
 
 ```{r make-tbl-type1}
 #| label: tbl-type1
-#| tbl-cap: "Empirical Type I error rates (%) across repeated simulations. The number of simulations is $N=1000$ if $d\\leq 5$, or $N=300$ otherwise. All tests have nominal size 5%. The parameters of the SL-constant and HR-constant models are $\\vartheta_0=2$ and $\\vartheta_0=1$, respectively."
-#| tbl-scap: "Empirical Type I error rates under SL- and HR-constant models."
+#| tbl-cap: "Empirical Type I error rates (%). All tests have nominal size 5%."
 #| tbl-subcap:
-#|   - "SL-constant"
-#|   - "HR-constant"
+#|   - "SL-constant."
+#|   - "HR-constant."
 #| layout: "[[1], [-1], [1]]"
 
 sim_results %>%
@@ -733,7 +732,7 @@ A key advantage of our approach is that the computations are considerably less i
 ```{r make-fig-computation-time}
 #| label: fig-computation-time
 #| fig-cap: "Analysis of computation times across the numerical experiments described in @sec-changing-ext-dep-experiments-small-sample. Left: empirical distribution of run times when $d=2$, $n/b=50$, $k/b=0.1$. Right: median computation time for the test as a function of the total number of threshold exceedances."
-#| fig-scap: "Computation times versus $n$, $k_{\\mathrm{total}}$ and $d$."
+#| fig-scap: "Computation times as a function of $n$, $k_{\\mathrm{total}}$ and $d$."
 #| fig-height: 3.5
 #| warning: false
 
@@ -785,11 +784,11 @@ By @exm-max-linear-tpdm, the local TPDM is given by $\Sigma(t) = A(t)A(t)^T$. A 
 
 Suppose $A_0$ and $A_1$, with $A_0 \neq A_1$ including up to permutations of their columns, are such that $\Sigma(0)=\Sigma(1)$ and $V(0)=V(1)$. Then the alternative hypothesis \eqref{eq-changing-ext-dep-alt-hyp} is true but the asymptotic distributions of $T^{(KS)}$ and $T^{(CM)}$ are the null distributions in \eqref{eq-asymptotic-test-stat}. Clearly this presents an issue for our test. 
 
-To illustrate this problem empirically, we seek a pair of matrices $A_0,A_1$ with a common TPDM and asymptotic covariance. Constructing a non-trivial (i.e. $q>2$) pair by hand would be extremely laborious. Instead, we generate a large set of valid candidate matrices $A\in\R_+^{d\times q}$ with $d=2$ and $q=20$ and search for a suitable pair among these. This process yields the matrices shown in @fig-constant-tpdm-A. To emphasise that they parametrise different extreme value distributions, the matrices' columns are reordered so that $a_{11}<a_{12}<\ldots<a_{1q}$. Substituting these into \eqref{eq-time-dependent-max-linear} gives $\sigma_{12}(t)=0.100$ and $\nu_{12}^2=0.060(t)$ for all $t\in[0,1]$. 
+To illustrate this problem empirically, we seek a pair of matrices $A_0,A_1$ with a common TPDM and asymptotic covariance. Constructing a non-trivial (i.e. $q>2$) pair by hand would be extremely laborious. Instead, we generate a large set of valid candidate matrices $A\in\R_+^{d\times q}$ with $d=2$ and $q=20$ and search for a suitable pair among these. This process yields the matrices shown in @fig-constant-tpdm-A. To emphasise that they parametrise different extreme value distributions, the matrices' columns are reordered so that $a_{11}<a_{12}<\ldots<a_{1q}$. Substituting these into \eqref{eq-time-dependent-max-linear} gives $\sigma_{12}(t)=0.100$ and $\nu_{12}^2(t)=0.060$ for all $t\in[0,1]$. 
 
 ```{r make-fig-constant-tpdm-A}
 #| label: fig-constant-tpdm-A
-#| fig-cap: "A pair of max-linear parameter matrices $A_0$ (left) and $A_1$ (right) such that the process \\eqref{eq-time-dependent-max-linear} satisfies $\\sigma_{12}(t)=0.100$ and $\\nu_{12}^2=0.060(t)$."
+#| fig-cap: "A pair of max-linear parameter matrices $A_0$ (left) and $A_1$ (right) such that the process \\eqref{eq-time-dependent-max-linear} satisfies $\\sigma_{12}(t)=0.100$ and $\\nu_{12}^2(t)=0.060$ for all $t\\in[0,1]$."
 #| fig-scap: "Max-linear parameter matrices with common $\\Sigma$ and $V$."
 #| fig-height: 2.5
 
@@ -805,7 +804,7 @@ We generate 1,000 realisations of \eqref{eq-time-dependent-max-linear} with $n=1
 ```{r make-fig-counterexample-pawley}
 #| label: fig-counterexample-maxlinear-pawley
 #| fig-cap: "Diagnostic plots for our testing procedure based on one realisation of \\eqref{eq-time-dependent-max-linear} with $A_0$ and $A_1$ as shown in @fig-constant-tpdm-A and $n=10,000$. The tuning parameters are $b=400$ and $k=40$. Top-left: the empirical local TPDM $\\{\\hat{\\sigma}_{12}(t):t\\in[0,1]\\}$. Top-right: the empirical integrated TPDM $\\{\\hat{\\psi}_{12}(t):t\\in[0,1]\\}$. Bottom-left: the test process $\\{\\hat{Z}_{12}(t):t\\in[0,1]\\}$. Bottom-right: $\\int_0^t |\\hat{Z}_{12}(s)|^2\\,\\dee s$ (upper sub-panel) and $\\sup_{0\\leq s \\leq t} |\\hat{Z}_{12}(s)|$ (lower sub-panel) as functions of $t$ along with the CM and KS critical values at the 5\\% level (dashed line)."
-#| fig-scap: "Diagnostic plots for our test under a TPDM-invariant dependence change."
+#| fig-scap: "Diagnostics: our test under a TPDM-invariant dependence change."
 #| fig-height: 4.5
 
 readRDS(file = file.path("scripts", "changing-ext-dep", "results", "constant-tpdm-pawley-example.RDS")) %>%
@@ -822,7 +821,7 @@ These perform the same role as $\{\hat{Z}_{ij}(t):t\in[0,1]\}$ but are less stra
 ```{r make-fig-counterexample-maxlinear-drees}
 #| label: fig-counterexample-maxlinear-drees
 #| fig-cap: "Diagnostic plots for Drees' testing procedure based on one realisation of \\eqref{eq-time-dependent-max-linear} with $A_0$ and $A_1$ as shown in @fig-constant-tpdm-A and $n=10,000$. The tuning parameters are $b=400$ and $k=40$. Each curve represents a set $A_y$ with darker colours indicating larger values of $y$. Left: the empirical integrated angular measure $\\{\\widehat{\\mathrm{IH}}_{12}(A_y;t):t\\in[0,1]\\}$. Middle: the test process $\\{\\hat{Z}_{y}(t):t\\in[0,1]\\}$. Right: $\\int_0^t |\\hat{Z}_{y}(s)|^2\\,\\dee s$ (upper sub-panel) and $\\sup_{0\\leq s \\leq t} |\\hat{Z}_{y}(s)|$ (lower sub-panel) as functions of $t$ along with the CM and KS critical values at the 5\\% level (dashed line)."
-#| fig-scap: "Diagnostic plots for Drees' test under a TPDM-invariant dependence change."
+#| fig-scap: "Diagnostics: Drees' test under a TPDM-invariant dependence change."
 #| fig-height: 2.5
 
 readRDS(file = file.path("scripts", "changing-ext-dep", "results", "constant-tpdm-drees-example.RDS")) %>%
@@ -839,7 +838,7 @@ Detecting changes in extremal dependence in the Red Sea is of significant practi
 ```{r make-fig-redsea-sites}
 #| label: fig-redsea-sites
 #| fig-cap: "Locations of the 70 sites in each of the two sub-regions in the Red Sea."
-#| fig-scap: "Locations in the north and south sub-regions in the Red Sea."
+#| fig-scap: "Locations in the north/south sub-regions of the Red Sea."
 #| fig-height: 3.2
 
 redsea <- load_red_sea_temp(alpha = 2)
@@ -864,7 +863,7 @@ ggplot() +
         panel.grid.minor = element_blank())
 ```
 
-Before applying our test, we divide the spatial domain into northerly and southerly sub-regions, each comprising 70 sites as shown in @fig-redsea-sites. @simpsonConditionalModellingSpatiotemporal2021 advise treating these areas separately because surface temperature extremes exhibit differing behaviour in the north and south. Additionally, they show that, at any particular location, high temperatures may persist across several days resulting in (temporal) clusters of extremes of daily maxima. To eliminate serial dependence we instead work with weekly maxima, yielding $n=1605$ samples spanning approximately 31 years. Let $X_i^{(\text{north})}(t)$ and $X_i^{(\text{south})}(t)$ denote the surface temperature anomaly (on stationary 2-Fréchet margins) at site $i\in\{1,\ldots,70\}$ and time $t\in[0,1]$ in the two sub-regions. Our goal is to determine whether it is reasonable to assume stationary dependence for either/both of
+From the original gridded data set, we select 200 sites at random before dividing the spatial domain into northerly and southerly sub-regions, each comprising 70 sites as shown in @fig-redsea-sites. @simpsonConditionalModellingSpatiotemporal2021 advise treating these areas separately because surface temperature extremes exhibit differing behaviour in the north and south. Additionally, they show that, at any particular location, high temperatures may persist across several days resulting in (temporal) clusters of extremes of daily maxima. To eliminate serial dependence we instead work with weekly maxima, yielding $n=1605$ samples spanning approximately 31 years. Let $X_i^{(\text{north})}(t)$ and $X_i^{(\text{south})}(t)$ denote the surface temperature anomaly (on stationary 2-Fréchet margins) at site $i\in\{1,\ldots,70\}$ and time $t\in[0,1]$ in the two sub-regions. Our goal is to determine whether it is reasonable to assume stationary dependence for either/both of
 \begin{align*}
 \bm{X}^{(\text{north})}(t) &= \{X_i^{(\text{north})}(t):i=1,\ldots,70\}, \\ 
 \bm{X}^{(\text{south})}(t) &= \{X_i^{(\text{south})}(t):i=1,\ldots,70\}.
@@ -874,7 +873,7 @@ To this end, we run the test using 15 blocks of size $b=107$ and $k=20$, yieldin
 ```{r fig-redsea-p-values}
 #| label: fig-redsea-p-values
 #| fig-cap: "Empirical distributions of the p-values based on tests for changing dependence in the north and south regions of the Red Sea. The columns correspond to the number of re-sampled sites; the rows indicate the sub-region and the test type. The rejection rate at the 5\\% level is printed at the top of each panel."
-#| fig-scap: "Distribution of p-values for Red Sea tests."
+#| fig-scap: "Empirical distribution of p-values for Red Sea data."
 #| fig-height: 5
 
 data <- list(file.path("scripts", "changing-ext-dep", "results", "redsea-north-p-values.RDS"),
@@ -906,12 +905,13 @@ data %>%
 
 ## Conclusion and outlook
 
-In this chapter, we presented a new test for detecting changes in the extremal dependence structure over time. Compared to the test of @dreesStatisticalInferenceChanging2023, our method is less intensive computationally, applicable in higher dimensions, and is more powerful provided the dependence change is manifests as a change in the entries of TPDM. We anticipate that our test will be of use to applied statisticians seeking to validate key model assumptions and practitioners hoping to explore how climate change or regulatory changes have affected the stochastic behaviour of joint extremes over time. 
+In this chapter, we presented a new test for detecting changes in the extremal dependence structure over time. Compared to the test of @dreesStatisticalInferenceChanging2023, our method is less intensive computationally, applicable in higher dimensions, and is more powerful provided the dependence change manifests as a change in the entries of TPDM. We anticipate that our test will be of use to applied statisticians seeking to validate key model assumptions and practitioners hoping to explore how climate change or regulatory changes have affected the stochastic behaviour of joint extremes over time. 
 
-At present, their are several minor drawbacks with our proposed approach. In terms of computational complexity, the main bottleneck is inversion of the asymptotic covariance matrix $V$. To apply our test in very high dimensions it will be necessary to speed us this step, perhaps by making some additional assumptions about its structure. Secondly, the performance of our test is constrained by the performance of the TPDM estimator it is founded on. In situations where the empirical TPDM performs poorly, our test's performance will suffer accordingly. This is evidenced by the results of some preliminary simulation experiments in @sec-app-changing-ext-dep-bias-issue. The development of improved estimators, such as those in @sec-shrinkage-tpdm, should ameliorate this issue.  
+At present, there are several minor drawbacks to our proposed approach. In terms of computational complexity, the main bottleneck is inversion of the asymptotic covariance matrix $V$. To apply our test in very high dimensions it will be necessary to speed up this step, perhaps by making some additional assumptions (e.g. sparsity) about the structure of $V$. Secondly, the performance of our test is constrained by the performance of the TPDM estimator it is founded on. In situations where the empirical TPDM performs poorly, our test's performance may suffer accordingly. This is evidenced by the results of some preliminary simulation experiments -- see @sec-app-changing-ext-dep-bias-issue. The development of improved estimators, such as those in @sec-shrinkage-tpdm, should ameliorate this issue.  
 
-*Mention future work directions.*
+The theory underpinning our procedure holds for the general class of dependence measures of the form $\mathbb{E}_{H}[f(\bm{\Theta})]$, provided $f$ is continuous (@thm-clt-extremes). Thus, one is not necessarily wedded to the TPDM. It is conceivable that particular choices for $f$ are better-suited to detecting certain kinds of dependence changes. An exploration into this is beyond the scope of our present investigation. 
 
+An obvious extension to our framework is to consider *when* a change occurs, i.e. change point detection. This research direction is being actively pursued -- see @sec-future-work-changepoint for further details. 
 
 
 

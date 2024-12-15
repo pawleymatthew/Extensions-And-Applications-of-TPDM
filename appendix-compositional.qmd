@@ -1,3 +1,5 @@
+# Supplementary Material for @sec-compositional {#sec-app-compositional-additional-results}
+
 ```{r appendix-compositional-load-packages}
 #| include: false
 library(tidyverse)
@@ -26,12 +28,10 @@ sapply(list.files(path = "R/compositional", pattern = "*.R", full.names = TRUE, 
 sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recursive = TRUE), source)
 ```
 
-# Additional results for @sec-compositional {#sec-app-compositional-additional-results}
-
 ```{r make-fig-sim-pca-max-linear-loss-large-n}
 #| label: fig-sim-pca-max-linear-loss-large-n
-#| fig-cap: "@fig-sim-pca-max-linear-loss for a larger sample size $n=50,000$."
-#| fig-scap: "@fig-sim-pca-max-linear-loss for a larger sample size $n=50,000$."
+#| fig-cap: "Performance of CoDA-PCA and DS-PCA for the trivariate max-linear data. Results are based on 50 repeated simulations from the MS and TL processes with $n=50,000$ and $k/n=0.01$. Top row: the Aitchison reconstruction error \\eqref{eq-L-aitchison} and Euclidean reconstruction error \\eqref{eq-L-euclidean} against the number of retained components. Reconstruction errors are obtained from 10,000 samples from the true angular measure. Bottom row: estimates of $p_{\\min}$ (left) and $p_{\\max}$ (left) based on \\eqref{eq-prob-min-max-pca} against $p$, the rank of the principal subspace."
+#| fig-scap: "PCA performance metrics for trivariate max-linear data ($n=50,000$)."
 #| fig-height: 6
 #| message: false
 #| warning: false
@@ -130,8 +130,8 @@ ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 
 ```{r make-fig-sim-pca-hr-metrics-pmax}
 #| label: fig-sim-pca-hr-metrics-pmax
-#| fig-cap: "Blah."
-#| fig-scap: "CoDA- and DS-PCA Aitchison reconstruction errors for the three trivariate Hüsler-Reiss models."
+#| fig-cap: "Estimates of $p_{\\max}$ against the rank of the CoDA- or DS-PCA reconstruction for the four Hüsler-Reiss models. Results are based on 50 repeated simulations."
+#| fig-scap: "Estimates of $p_{\\max}$ for the Hüsler-Reiss models."
 #| fig-height: 7
 
 res <- bind_rows(readRDS(file = file.path("scripts", "compositional", "results", "sim-pca-hr-threedim.RDS")),
@@ -158,8 +158,8 @@ res %>%
 
 ```{r make-fig-sim-classification-train-test-risk}
 #| label: fig-sim-classification-train-test-risk
-#| fig-cap: "Blah."
-#| fig-scap: "Blah."
+#| fig-cap: "Median of the empirical classification risk (based on $k$ extremal angles) and the true asymptotic classification risk (based on the 'test' set of samples from $H$) against the transformation parameter $\\alpha$. Based on the experiments described in @sec-compositional-classification-experiments."
+#| fig-scap: "Comparison of the empirical and asymptotic classification risks."
 #| fig-height: 6
 
 # plot the training risk (based on k largest training angles) versus risk based on samples from H

@@ -5,7 +5,7 @@
 \chapter*{Copyright}
 
 Attention is drawn to the fact that copyright of this thesis rests with the author. 
-A copy of this thesis has been supplied on condition that anyone who consults it is 
+A copy of this thesis has been supplied on the condition that anyone who consults it is 
 understood to recognise that its copyright rests with the author and that they must 
 not copy it or use material from it except as permitted by law or with the consent of the author.
 
@@ -18,20 +18,57 @@ may be photocopied or lent to other libraries for the purposes of consultation.
 
 \section*{Declaration of any previous submission of the work}
 
-The material presented here for examination for the award of a research degree by research 
+The material presented here for examination for the award of a degree by research 
 has not been incorporated into a submission for another degree.
+
+\vspace{2em} 
+
+\textbf{Candidate's signature:} \dotfill
+
+\vspace{3em}
 
 \section*{Declaration of authorship}
 
 I am the author of this thesis, and the work described therein was carried out by myself personally, 
-with the exception of the article contained in Chapter 5, which was carried out in collaboration with Henry Elsom (University of Bath).
-I am grateful to Dr Daniela Castro-Camilo (University of Glasgow) for providing the pre-processed Red Sea data set that features in Chapter 3.
+with the exception of:
+\begin{itemize}
+\item The article contained in Chapter 5, which was carried out in collaboration (equal contribution) with Henry Elsom (University of Bath).
+\item The pre-processed Red Sea data (Chapter 3) was kindly provided Dr Daniela Castro-Camilo (University of Glasgow).
+\end{itemize}
+
+\vspace{2em} 
+\textbf{Candidate's signature:} \dotfill
 
 \newpage
 
 \chapter*{Abstract}
 
-Write summary of thesis here (in \texttt{frontmatter.tex}).
+\doublespacing
+
+The aim of this thesis is to present novel statistical methods for analysing extremal dependence using the tail pairwise dependence matrix (TPDM).
+In multivariate extreme value theory (MEVT), extremal dependence relates to the joint stochastic behaviour of extreme, rare events involving several random variables, which is critical for risk assessment in a range of application areas, such as climatology and finance. 
+The TPDM has proved a useful tool for analysing extremal dependence in high-dimensional settings, where the number of variables is large.
+Similar to the covariance matrix in non-extreme statistics, it provides a compact summary of the (potentially rather complicated) dependence structure and underpins a range of existing statistical methods.
+This thesis provides a new set of TPDM-based tools that may be used to validate key modelling assumptions and aid efficient statistical inference for rare events.
+
+Our first contribution is to devise a formal procedure to test for changes in extremal dependence over time. 
+In MEVT, it is typically assumed that extreme observations are identically distributed over time, despite the fact that climate change is known to induce non-stationary behaviour in extremes.
+Our test provides a simple way to validate this assumption.
+We devise a time-dependent extension to the TPDM and test for deviations in its empirical estimator.
+Since our procedure is rooted in the TPDM, it is applicable in high dimensions and is much less computationally intensive than existing methods.
+
+Next, we explore connections between MEVT and the statistical discipline of compositional data analysis (CoDA). 
+We discuss the common themes of these fields before providing concrete examples where CoDA methods may enhance inference for extremes: principal components analysis and classification. 
+Empirically, we find that CoDA yields more efficient dimension reduction and reduced classification error.
+
+A toolbox of TPDM-related methods for deriving data-driven predictions of environmental extremes is presented, resulting from participation in the EVA (2023) Data Challenge. 
+The techniques used include completely positive factorisations of the TPDM, max-linear models, clustering, and sparse simplex projections.
+
+Finally, we address a deficiency of the empirical TPDM estimator, whereby weak pairwise dependencies tend to be overestimated.
+We utilise regularisation techniques, including thresholding and Ledoit-Wolf linear shrinkage, to construct a broad class of flexible estimators that counteract the bias.
+A data-driven tuning procedure for selecting the Ledoit-Wolf regularisation parameter is proposed.
+
+Software to apply our methods (or reproduce the results of our simulation studies and real-world examples) is freely available in a GitHub repository \url{https://github.com/pawleymatthew/Extensions-And-Applications-of-TPDM}.
 
 \newpage
 
@@ -41,7 +78,7 @@ Write acknowledgements here (in \texttt{frontmatter.tex}).
 
 \newpage
 
-\setcounter{page}{5} % manually set what page number the TOC should be
+\setcounter{page}{6} % manually set what page number the TOC should be
 
 \tableofcontents
 \newpage

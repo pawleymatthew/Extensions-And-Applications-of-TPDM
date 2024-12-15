@@ -1,3 +1,5 @@
+# Supplementary Material for @sec-changing-ext-dep
+
 ```{r appendix-changing-ext-dep-load-packages}
 #| include: false
 library(tidyverse)
@@ -32,18 +34,18 @@ sapply(list.files(path = "R/general", pattern = "*.R", full.names = TRUE, recurs
 bb_L2 <- readRDS("scripts/changing-ext-dep/results/bb_L2.RDS")
 ```
 
-# Overview of @dreesStatisticalInferenceChanging2023 {#sec-app-changing-ext-dep-drees}
+## Overview of @dreesStatisticalInferenceChanging2023 {#sec-app-changing-ext-dep-drees}
 
 This appendix provides a concise overview of @dreesStatisticalInferenceChanging2023. The paper is rather technical, so we aim to provide a high-level summary allowing the reader to better understand the results presented in @sec-changing-ext-dep. 
 
-@dreesStatisticalInferenceChanging2023 test the hypotheses \eqref{eq-changing-ext-dep-null-hyp} and \eqref{eq-changing-ext-dep-alt-hyp} by detecting changes in the full angular measure, rather than a bivariate summary like the TPDM. Let $\mathcal{A}$ be a large family of Borel subsets of $\mathbb{S}_+^{d-1}$. Let $h$ and $k$ be the bandwidth and extremes per block. Then, suitably rescaled versions of the stochastic processes
+@dreesStatisticalInferenceChanging2023 test the hypotheses \eqref{eq-changing-ext-dep-null-hyp} and \eqref{eq-changing-ext-dep-alt-hyp} by detecting changes in the full angular measure, rather than a bivariate summary like the TPDM. Let $\mathcal{A}$ be a large family of Borel subsets of $\mathbb{S}_{+(2)}^{d-1}$. Then, suitably rescaled versions of the stochastic processes
 \begin{equation}\label{eq-drees-test-process}
-\left\lbrace\int_0^t \hat{H}(A;s)\,\dee s - t \int_0^1 \hat{H}(A;s)\,\dee s : t\in[0,1]\right\rbrace, \qquad (A\in\mathcal{A}).
+\left\lbrace\int_0^t \hat{H}(A;s)\,\dee s - t \int_0^1 \hat{H}(A;s)\,\dee s : t\in[0,1]\right\rbrace, \qquad A\in\mathcal{A},
 \end{equation}
-converge to a mean-zero Gaussian process with known covariance function. KS- and CM-type test statistics are defined analogously to \eqref{eq-test-stat-ks} and \eqref{eq-test-stat-cm} in terms of this Gaussian process. However, the covariance function depends on the true angular measure, so critical values must be obtained by simulation each time (except in the bivariate case, provided $\mathcal{A}$ satisfies certain properties). The null is rejected if any paths in \eqref{eq-drees-test-process} deviate from what would typically occur under the null. 
-If $\mathcal{A}$ is sufficiently rich, then very subtle dependence changes may be revealed. However, as the dimension $d$ increases the family of sets grows rapidly, typically $|\mathcal{A}|=\mathcal{O}(2^d)$. Consequently, computing the critical values become prohibitively intensive and the convergence $\hat{H(A;t)}\to H(A;t)$ of the non-parametric estimators is too slow to yield reliable results. Thus, their method is primarily intended for the bivariate setting and is restricted to $d\leq 5$ in practice. Fundamentally, the issue is that one needs to estimate a high-dimensional measure using a very small number of observations (extreme observations lying within small temporal neighbourhoods). Our approach mitigates this issue by concentrating on $\mathcal{O}(d^2)$ bivariate summaries of tail dependence instead of the full dependence structure.
+converge to a mean-zero Gaussian process whose covariance function depends on $H$. KS- and CM-type test statistics are defined analogously to \eqref{eq-test-stat-ks} and \eqref{eq-test-stat-cm} in terms of this Gaussian process. However, since the covariance function depends on the true angular measure, critical values must be obtained by simulation each time (except in the bivariate case, provided $\mathcal{A}$ satisfies certain properties). The null is rejected if any paths in \eqref{eq-drees-test-process} deviate from what would typically occur under the null. 
+If $\mathcal{A}$ is sufficiently rich, then very subtle dependence changes may be revealed. However, as the dimension $d$ increases the family of sets grows rapidly, typically $|\mathcal{A}|=\mathcal{O}(2^d)$. Consequently, computing the critical values become prohibitively intensive and the convergence $\hat{H}(A;t)\to H(A;t)$ of the non-parametric estimators is too slow to yield reliable results. Thus, their method is primarily intended for the bivariate setting and is restricted to $d\leq 5$ in practice. Fundamentally, the issue is that one needs to estimate a high-dimensional measure using a very small number of observations (the subset of extreme observations lying within a small temporal neighbourhood). Our approach mitigates this issue by concentrating on $\mathcal{O}(d^2)$ bivariate summaries of tail dependence instead of the full dependence structure.
 
-# Additional results for @sec-changing-ext-dep {#sec-app-changing-ext-dep-additional-results}
+## Additional figures {#sec-app-changing-ext-dep-additional-results}
 
 ```{r load-sim-results-appendix}
 sim_results <- list(file.path("scripts", "changing-ext-dep", "results", "sim-test-results-seed1.RDS"),
@@ -160,7 +162,7 @@ ggarrange(p1, p2, p3, p4, ncol = 2, nrow = 2, common.legend = TRUE)
 ```{r}
 #| label: fig-redsea-test-example-north-south
 #| fig-cap: "Diagnostic plots for our test, based $b=107$ and $k=20$, applied to data from $d=5$ randomly selected northerly (top two rows) and southerly (bottom two rows) sites in the Red Sea. The interpretation of each plot is the same as in @fig-counterexample-maxlinear-pawley, except now there are $\\mathcal{D}=10$ curves, one for each component pair. The variable pairs are coloured light to dark with respect to their lexicographical ordering. For the northerly (resp. southerly) sites there is sufficient (resp. insufficient) evidence to reject the null at the 5\\% level."
-#| fig-scap: "Diagnostic plots for our test with $d=5$ northerly/southerly sites in the Red Sea."
+#| fig-scap: "Diagnostics: our test with five northerly/southerly sites in the Red Sea."
 #| fig-height: 9
 
 redsea <- load_red_sea_temp(alpha = 2)
@@ -196,14 +198,14 @@ p2 <- redsea$X[1:1605, south_sites] %>%
 ggarrange(p1, p2, nrow = 2)
 ```
 
-# Effect of the bias issue on the power of the test {#sec-app-changing-ext-dep-bias-issue}
+## Effect of the bias of the empirical TPDM {#sec-app-changing-ext-dep-bias-issue}
 
 Since the empirical TPDM struggles to discriminate between differences in dependence strengths at weak levels (@fig-parametric-chi-tpdm-small-n), we find that the power of our test varies according to the underlying dependence strength. This phenomenon is illustrated in @fig-test-power-weak-dependence. The plots concern data generated from the SL-linear model with $d=3$. In the top plot, the dependence parameter $\gamma$ evolves linearly from $\gamma(0)=0.06$ (corresponding to $\sigma_{ij}(0)=0.998$) to $\gamma(1)=0.10$ (0.996). In the bottom plot, the corresponding values are $\gamma(0)=0.95$ (0.147) to $\gamma(1)=0.99$ (0.031). One might assume that the second dependence change is easier to detect, because the change in the TPDM is greater. However, the deficiencies of the empirical TPDM mean this is not the case. Indeed, the bottom-right sub-panels reveal that the null is only rejected for the first test. While we have not conducted a full study of the power, we expect this to replicate over repeated simulations. To address this shortcoming, one might consider employing a TPDM estimator with better finite-sample performance in weak dependence settings. Such an estimator is proposed in @sec-shrinkage-tpdm. In order to use this estimator in our test, one needs to undertake an asymptotic analysis analogous to @sec-changing-ext-dep-asymptotic-properties. We conjecture that the results will follow identically, so in effect the new estimator may simply be plugged in to our testing framework. 
 
 ```{r}
 #| label: fig-test-power-weak-dependence
 #| fig-cap: "Diagnostic plots for our test based on $n=5,000$ samples of SL-linear data in $d=3$ dimensions. For the interpretation of the plot, see the caption of @fig-counterexample-maxlinear-pawley. Top: a strong dependence scenario where $\\gamma(0)=0.06$ and $\\gamma(1)=0.10$. Bottom: a weak dependence scenario where $\\gamma(0)=0.95$ and $\\gamma(1)=0.99$."
-#| fig-scap: "Diagnostic plots for our test based on SL-linear data."
+#| fig-scap: "Diagnostics: our test with symmetric logistic data."
 #| fig-height: 7
 
 set.seed(1)
@@ -221,8 +223,6 @@ p2 <- sim_X_changing_dep(n = 5000, d = 3, model = "log", param0 = 1 / 0.95, para
   
 ggarrange(p1, p2, nrow = 2)
 ```
-
-Therefore power probably worse when dependence is weak. Fix this by using bias-corrected estimator.
 
 
 

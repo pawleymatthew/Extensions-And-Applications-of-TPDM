@@ -1,6 +1,8 @@
-# Properties of the TPDM {#sec-app-tpdm-properties}
+# Supplementary Material for @sec-background
 
-## Equivalence of TPDM definitions {#sec-app-tpdm-definitions}
+## Properties of the TPDM {#sec-app-tpdm-properties}
+
+### Equivalence of TPDM definitions {#sec-app-tpdm-definitions}
 
 The TPDM was originally defined by @cooleyDecompositionsDependenceHighdimensional2019 for multivariate random vectors with tail index $\alpha=2$ as in @def-tpdm. This was later generalised by @kirilioukEstimatingProbabilitiesMultivariate2022 to permit an arbitrary tail index $\alpha\geq 1$ (@def-tpdm-alpha). Beyond the fact that these definitions coincide when $\alpha=2$, it is not obvious why @def-tpdm-alpha is the natural generalisation to @def-tpdm. In this section, we provide some insight into this matter. In doing so, we show that the TPDM is independent of $\alpha$, enabling the tail index to be chosen without loss of generality. For example, in @sec-compositional and @sec-changing-ext-dep we fix $\alpha=1$ and $\alpha=2$, respectively. Moreover, the resulting formulae will be used throughout the thesis to compute the true TPDM under various parametric models.
 
@@ -33,7 +35,7 @@ The proof generalises the procedure described in Section 3.2 of the Supplementar
         = \left[\|\bm{y}\|_\alpha^{\alpha}\right]^{-3} h_1\left(\frac{y_i^\alpha}{\|\bm{y}\|_\alpha^{\alpha}},\frac{y_j^\alpha}{\|\bm{y}\|_\alpha^{\alpha}}\right) \alpha^2 y_i^{\alpha-1}y_j^{\alpha-1} \dee\bm{y} 
         = \nu(\dee \bm{y}).
     \end{equation*}
-    Finally, we transform to $L_\alpha$ polar coordinates $(s,\bm{\phi})$ with $s=\|\bm{y}\|_\alpha$ and $\bm{\phi}=(\phi_i,\phi_j)=\bm{y}/s$. By (CITE Lemma 1.1 in Song and Gupta (1997)), the Jacobian is $s(1 - \phi_i^\alpha)^{(1-\alpha)/a} = s\phi_j^{1-\alpha}$. We now have
+    Finally, we transform to $L_\alpha$ polar coordinates $(s,\bm{\phi})$ with $s=\|\bm{y}\|_\alpha$ and $\bm{\phi}=(\phi_i,\phi_j)=\bm{y}/s$. By Lemma 1.1 in @songL_pnormUniformDistribution1997, the Jacobian is $s(1 - \phi_i^\alpha)^{(1-\alpha)/a} = s\phi_j^{1-\alpha}$. We now have
     \begin{align*}
         \nu(\dee \bm{y}) 
         &= \left[s^{\alpha}\right]^{-3} h_1\left(\phi_i^\alpha,\phi_j^\alpha \right) \alpha^2 (s\phi_i)^{\alpha-1}(s\phi_j)^{\alpha-1} s\phi_j^{1-\alpha} \,\dee s \,\dee\bm{\phi} \\
@@ -43,7 +45,7 @@ The proof generalises the procedure described in Section 3.2 of the Supplementar
     \end{align*}
     where $h_\alpha(\bm{\phi}):=\alpha \phi_i^{\alpha-1} h_1\left(\phi_i^\alpha,\phi_j^\alpha \right)$. The final step is to compute $\tilde{h}_\alpha$ by projecting the density $h_\alpha$, which lives on $\mathbb{S}_{+(\alpha)}^1$, down to $[0,1]$. Writing $\bm{\phi}$ as $(\phi,(1-\phi^\alpha)^{1/\alpha})$ gives
     \begin{equation*}
-        \tilde{h}_{\alpha}(\phi) = h_\alpha\left(\left(\phi, (1-\phi^\alpha)^{1/\alpha}\right)\right) = \alpha \phi^{\alpha-1}h_1\left((\phi^\alpha, 1-\phi^\alpha)\right) = \alpha \phi^{\alpha-1} \tilde{h}_1(\phi^\alpha).
+        \tilde{h}_{\alpha}(\phi) = h_\alpha\left(\left(\phi, (1-\phi^\alpha)^{1/\alpha}\right)\right) = \alpha \phi^{\alpha-1}h_1\left((\phi^\alpha, 1-\phi^\alpha)\right) = \alpha \phi^{\alpha-1} \tilde{h}_1(\phi^\alpha). \qedhere
     \end{equation*}
 :::
 
@@ -76,7 +78,7 @@ The relation between the normalised measure $H_\alpha$ and the measure $H$ in @d
     \begin{equation*}
         \sigma_{ij} 
         = m \int_0^1 \theta^{\alpha/2} (1-\theta^\alpha)^{1/2} \alpha \theta^{\alpha-1}\tilde{h}_1(\theta^\alpha)\,\dee \theta 
-        = m \int_0^1 \sqrt{u(1-u)}\,\tilde{h}_1(u)\,\dee u.
+        = m \int_0^1 \sqrt{u(1-u)}\,\tilde{h}_1(u)\,\dee u. \qedhere
     \end{equation*}
 :::
 
@@ -90,7 +92,7 @@ or Hüsler-Reiss distribution
 \end{equation*}
 into \eqref{eq-tpdm-h1-formula} yields the expressions given in @exm-symmetric-logistic-tpdm and @exm-husler-reiss-tpdm.
 
-## Formula for the asymptotic variance $\nu_{ij}^2$ {#sec-app-tpdm-asymptotic-var}
+### Formula for the asymptotic variance $\nu_{ij}^2$ {#sec-app-tpdm-asymptotic-var}
 
 In this section, we derive a formula for the asymptotic variance $\nu_{ij}^2$ of $\hat{\sigma}_{ij}$ -- see @prp-empirical-tpdm-normality-entries in terms of the angular density $\tilde{h}_1$ of $(X_i,X_j)$. Using the identity $\mathrm{Var}(Y)=\mathbb{E}[Y^2]-\mathbb{E}[Y]^2$ and @prp-tpdm-h1-formula, we have
 \begin{equation*}
@@ -104,10 +106,10 @@ Substituting $u=\theta^\alpha$ and using @prp-tpdm-h1-formula gives the final ex
 \end{equation}
 Again, we note that the result, in this case the asymptotic variance (and therefore distribution) of $\hat{\sigma}_{ij}$, does not depend on $\alpha$.
 
-## Proof of @prp-empirical-tpdm-normality {#sec-app-tpdm-asy-normality-proof}
+### Proof of @prp-empirical-tpdm-normality {#sec-app-tpdm-asy-normality-proof}
 
 ::: {.proof}
-We follow the proof of Theorem 5.23 in (CITE Krali Thesis) but adapt it to the general $\alpha$ case. By the Cramér-Wold device, it is sufficient to show asymptotic normality of $\sqrt{k}\bm{\beta}^T(\hat{\bm{\sigma}}-\bm{\sigma})$ for all $\bm{\beta}\in\R^{d\choose 2}$. For convenience, the components of $\bm{\beta}$ are indexed to match the sub-indices of $\bm{\sigma}$. Then
+We follow the proof of Theorem 5.23 in @kraliCausalityEstimationMultivariate2018 but adapt it to the general $\alpha$ case. By the Cramér-Wold device, it is sufficient to show asymptotic normality of $\sqrt{k}\bm{\beta}^T(\hat{\bm{\sigma}}-\bm{\sigma})$ for all $\bm{\beta}\in\R^{d\choose 2}$. For convenience, the components of $\bm{\beta}$ are indexed to match the sub-indices of $\bm{\sigma}$. Then
 \begin{equation*}
     \bm{\beta}^T\bm{\sigma}
         = \sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\sigma_{ij} = \mathbb{E}_{H}\left[\sum_{i=1}^d\sum_{j=i}^d \beta_{ij}\Theta_i^{\alpha/2}\Theta_j^{\alpha/2}\right] =: \mathbb{E}_{H}[g(\bm{\Theta};\bm{\beta})],
@@ -129,11 +131,11 @@ where $v(\bm{\beta}):=\mathrm{Var}_{H}(g(\bm{\Theta};\bm{\beta}))$. The asymptot
         2\mathrm{Cov}\left(\sqrt{k}(\hat{\sigma}_{ij} - \sigma_{ij}),\sqrt{k}(\hat{\sigma}_{lm} - \sigma_{lm})\right) 
         &=2k\,\mathrm{Cov}(\hat{\sigma}_{ij}, \hat{\sigma}_{lm}) \\
         &= k\left[\mathrm{Var}(\hat{\sigma}_{ij} + \hat{\sigma}_{lm}) - \mathrm{Var}(\hat{\sigma}_{ij}) - \mathrm{Var}(\hat{\sigma}_{lm})\right] \\
-        &\to \mathrm{Var}_{H}(\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) - \nu_{ij}^2 - \nu_{lm}^2.
+        &\to \mathrm{Var}_{H}(\Theta_i^{\alpha/2}\Theta_j^{\alpha/2} + \Theta_l^{\alpha/2}\Theta_m^{\alpha/2}) - \nu_{ij}^2 - \nu_{lm}^2. \qedhere
 \end{align*}
 :::
 
-## Derivation of $V$ under the max-linear model {#sec-app-tpdm-V-max-linear}
+### Derivation of $V$ under the max-linear model {#sec-app-tpdm-V-max-linear}
 
 Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is max-linear with $q$ factors and parameter matrix $A\in\R_+^{d\times q}$. Then, for any $i,j=1,\ldots,d$, we have $\sigma_{ij}=\sum_{l=1}^q a_{il}^{\alpha/2}a_{jl}^{\alpha/2}$ and
 \begin{equation*}
@@ -160,7 +162,7 @@ The expressions for $\nu_{ij}^2$ and $\rho_{ij,lm}$ can be summarised as
 \end{equation}
 
 
-# PCA in general finite-dimensional Hilbert spaces {#sec-app-pca-hilbert}
+## PCA in general finite-dimensional Hilbert spaces {#sec-app-pca-hilbert}
 
 In classical multivariate analysis, principal component analysis (PCA) is the flagship method for reducing the dimension of a random vector. PCA identifies linear subspaces that minimise the distance between the data and its low-dimensional projections. This implicitly assumes an underlying algebraic-geometric structure. Specifically, PCA requires one to work in a Hilbert space $\mathcal{H}$. Without this theoretical foundation, it is meaningless to speak of principal components as orthogonal basis vectors or consider low-rank reconstructions as unique projections onto a subspace. A Hilbert space comprises a $d$-dimensional vector space with operations $\oplus$ and $\odot$ endowed with an inner product $\left\langle\cdot,\cdot\right\rangle_{\mathcal{H}}$. The induced norm and metric are $\|\cdot\|_{\mathcal{H}}=\left\langle\cdot,\cdot\right\rangle_{\mathcal{H}}^{1/2}$ and $d_{\mathcal{H}}(\bm{x},\bm{y})=\|\bm{x}\ominus\bm{y}\|_{\mathcal{H}}$, respectively. In most applications $\mathcal{H}=\R^d$ with the usual Euclidean geometry. This thesis will additionally consider PCA in alternative spaces, including $\R_+^d$ and $\mathbb{S}_{+(1)}^{d-1}$. However, in each case, the Hilbert space in question will be isometric to the usual Euclidean space $(\R^d, \left\langle\cdot,\cdot\right\rangle)$. That is, there exists an isomorphism $h:\mathcal{H}\to\R^d$ such that for any $\bm{x},\bm{y}\in\mathcal{H}$,
 \begin{equation*}
@@ -218,7 +220,7 @@ Usually the dimension of the target subspace (if it exists) is unknown, so the n
 
 If $\bm{Y}$ is mean-zero (or the $n\times d$ data matrix is column-centred in pre-processing), then $\Sigma$ is the covariance matrix of $\bm{Y}$ and the procedure is termed centred PCA. In this case, PCA can be equivalently reformulated in terms of finding low-dimensional projections that maximally preserve variance. In the non-centred case this interpretation is not valid, the projections merely maximise variability around the origin. A detailed comparison between centred PCA and non-centred PCA is conducted in @cadimaRelationshipsUncentredColumnCentred2009. They obtain relationships between and bounds on the eigenvectors/eigenvalues of the non-centred and standard covariance matrices. Based on their theoretical analysis and a series of example, they conclude that both types of PCA generally produce similar results. In particular, the leading eigenvector (up to sign and scaling) of the non-centred covariance matrix is very often close to the vector of the column means of the data matrix. Thus the first non-centred principal component essentially relates to the centre of the data.
 
-# Literature review: clustering with the TPDM {#sec-app-tpdm-clustering}
+## Literature review: clustering with the TPDM {#sec-app-tpdm-clustering}
 
 While clustering methods are not central to this thesis, only being used once in @sec-eva-c4, we consider it worthwhile to describe some TPDM-related clustering algorithms. The two algorithms described in this section are closely connected with other topics discussed in this thesis, such as principal components analysis and support identification. Therefore, reviewing these algorithms can enrich the reader's understanding of these other aspects.
 
@@ -226,14 +228,14 @@ Within multivariate extremes, the umbrella term `clustering' has many meanings. 
 
 - **Prototypical events.** Assume that the angular measure concentrates at/near a small number of points in $\mathbb{S}_{+}^{d-1}$. Then one might wish to identify cluster centres $\bm{w}_1,\ldots\bm{w}_K$ minimising some objective function of the form
 \begin{equation}\label{eq-clustering-objective-function}
-    \mathbb{E}_{\bm{\Theta}\sim H}\left[\min_{l=1,\ldots,K}\varrho(\bm{\Theta},\bm{w}_l)\right],
+    \mathbb{E}_{H}\left[\min_{l=1,\ldots,K}\varrho(\bm{\Theta},\bm{w}_l)\right],
 \end{equation}
 where $\varrho:\mathbb{S}_+^{d-1}\times \mathbb{S}_+^{d-1}\to[0,1]$ is some distance/dissimilarity function. The cluster centres can be interpreted as the directions of prototypical extremes events. See @chautruDimensionReductionMultivariate2015, @janssenKmeansClusteringExtremes2020 and @medinaSpectralLearningMultivariate2021 for further details.
 - **Identification of concomitant extremes.** Suppose that angular measure is supported on a set of $K\ll 2^{d-1}$ subspaces (faces) of the simplex $C_{\beta_1},\ldots,C_{\beta_K}$, where $\beta_1,\ldots,\beta_K\in\mathcal{P}(\{1,\ldots,d\})\setminus\emptyset$ and
 \begin{equation*}
     C_\beta = \{\bm{\theta}\in\mathbb{S}_+^{d-1}:\theta_i>0 \iff i\in\beta\}.
 \end{equation*}
-Only those groups (`clusters') of components indexed by $\beta_1,\ldots,\beta_K$ may be simultaneously extreme. Identification of the support of the angular measure is notoriously challenging because the extremal angles $\bm{\Theta}_{(1)},\ldots,\bm{\Theta}_{(k)}$ lie (almost surely) in the interior of the simplex. @goixSparseRepresentationMultivariate2017 and @simpsonDeterminingDependenceStructure2020 identify clusters according to whether observations fall within appropriately sized rectangular/conic neighbourhoods of the corresponding axis in $\R_+^d$. @meyerDetectionExtremalDirections2020 take a different approach, whereby the angular component is defined with respect to the Euclidean projection [@liuEfficientEuclideanProjections2009] rather than usual projection based on self-normalisation. The geometry of the projection is such that the projected data lie on subfaces of the simplex. The price paid is that the limiting conditional distribution of the angles is related to, but not identical to, the angular measure.
+Only those groups (`clusters') of components indexed by $\beta_1,\ldots,\beta_K$ may be simultaneously extreme. Identification of the support of the angular measure is notoriously challenging because the extremal angles $\bm{\Theta}_{(1)},\ldots,\bm{\Theta}_{(k)}$ lie (almost surely) in the interior of the simplex. @goixSparseRepresentationMultivariate2017 and @simpsonDeterminingDependenceStructure2020 identify clusters according to whether observations fall within appropriately sized rectangular/conic neighbourhoods of the corresponding axis in $\R_+^d$. @meyerSparseRegularVariation2021 take a different approach, whereby the angular component is defined with respect to the Euclidean projection [@liuEfficientEuclideanProjections2009] rather than usual projection based on self-normalisation. The geometry of the projection is such that the projected data lie on subfaces of the simplex. The price paid is that the limiting conditional distribution of the angles is related to, but not identical to, the angular measure.
 - **Partitioning into AD/AI groups components.** This notion of clustering is related to the previous type. We assume that the variables $X_1,\ldots,X_d$ can be partitioned into $K$ clusters, such that $X_i$ and $X_j$ are asymptotically dependent if and only if they belong to the same cluster. In other words, there exists $2\leq K \leq d$ and a partition $\beta_1,\ldots,\beta_K$ of $\{1,\ldots,d\}$ such that the angular measure is supported on $C_{\beta_1},\ldots,C_{\beta_K}$ or lower-dimensional subspaces thereof, i.e.
 \begin{equation*}
     H\left(\bigcup_{l=1}^K \bigcup_{\beta'_l\subseteq \beta_l} C_{\beta'_l}\right) = m.
@@ -242,7 +244,7 @@ The task of modelling the dependence structure of $\bm{X}$ can be divided into l
 
 @fomichovSphericalClusteringDetection2023 show that the latter kind of clustering may be performed using the framework of the first kind. They provide a link between the principal eigenvector $\bm{u}_1$ of the TPDM and the minimiser of the objective \eqref{eq-clustering-objective-function} with quadratic cost $\varrho(\bm{\theta},\bm{\phi})=\left\langle\bm{\theta},\bm{\phi}\right\rangle^2$ and $K=1$:
 \begin{equation*}
-    \min_{\bm{\theta}\in\mathbb{S}_{+(2)}^{d-1}} \mathbb{E}_{\bm{\Theta}\sim H}\left[\varrho(\bm{\Theta},\bm{\theta})\right] = \mathbb{E}_{\bm{\Theta}\sim H}\left[\varrho(\bm{\Theta},\bm{u}_1)\right].
+    \min_{\bm{\theta}\in\mathbb{S}_{+(2)}^{d-1}} \mathbb{E}_{H}\left[\varrho(\bm{\Theta},\bm{\theta})\right] = \mathbb{E}_{H}\left[\varrho(\bm{\Theta},\bm{u}_1)\right].
 \end{equation*}
 Note that $\bm{u}_1\in\mathbb{S}_{+(2)}^{d-1}$ is assumed to be suitably normalised with all entries being non-negative; the Perron-Frobenius theorem guarantees this is possible. This result informs an iterative clustering procedure called spherical $k$-principal-components. Consider a set of extremal angles $\bm{\theta}_{(1)},\ldots,\bm{\theta}_{(k)}\in\mathbb{S}_{+(2)}^{d-1}$ and current centroids $\hat{\bm{w}}_{1},\ldots,\hat{\bm{w}}_{K}\in\mathbb{S}_{+(2)}^{d-1}$. A single iteration of their procedure yields new centroids $\hat{\bm{w}}_{1}^\star,\ldots,\hat{\bm{w}}_{K}^\star\in\mathbb{S}_{+(2)}^{d-1}$ given by the respective principal eigenvectors of
 \begin{equation*}
@@ -250,7 +252,7 @@ Note that $\bm{u}_1\in\mathbb{S}_{+(2)}^{d-1}$ is assumed to be suitably normali
 \end{equation*}
 The matrix $\hat{\Sigma}^{[i]}$ represents the empirical TPDM (up to some multiplicative constant) based on the nearest neighbours of the $i$th centroid. @fomichovSphericalClusteringDetection2023 prove that, under certain conditions, the limiting centroids lie in a neighbourhood of the faces of interest $C_{\beta_1},\ldots,C_{\beta_K}$. Thresholding the centroid vectors yields the final partition $\beta_1,\ldots,\beta_K$.
 
-@richardsModernExtremeValue2024 apply hierarchical clustering using the empirical TPDM as the underlying similarity matrix. The clustering method constitutes a minor aspect of their submission to the EVA (2023) Data Challenge. Few methodological details are provided, so the following explanation constitutes our interpretation of their method, drawing on Figure 4 in @richardsModernExtremeValue2024 and the accompanying code made available at \url{https://github.com/matheusguerrero/yalla}. Define the dissimilarity between $X_i$ and $X_j$ as $\varrho_{ij} = 1 - \sigma_{ij}$. This satisfies the properties of a dissimilarity measure [@changMathematicalTheoryClustering2016]:
+@richardsModernExtremeValue2024 apply hierarchical clustering using the empirical TPDM as the underlying similarity matrix. The clustering method constitutes a minor aspect of their submission to the EVA (2023) Data Challenge. Few methodological details are provided, so the following explanation constitutes our interpretation of their method, drawing on Figure 4 in @richardsModernExtremeValue2024 and the accompanying code made available at [https://github.com/matheusguerrero/yalla](https://github.com/matheusguerrero/yalla). Define the dissimilarity between $X_i$ and $X_j$ as $\varrho_{ij} = 1 - \sigma_{ij}$. This satisfies the properties of a dissimilarity measure:
 \begin{equation*}
     \varrho_{ij} \geq 0, \qquad \varrho_{ii} = 0, \qquad \varrho_{ij}=\varrho_{ji}.
 \end{equation*}
