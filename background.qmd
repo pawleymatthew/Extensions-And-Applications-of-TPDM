@@ -29,7 +29,7 @@ This section provides a general overview of the key mathematical concepts and te
 
 ## Univariate extreme value theory {#sec-background-univariate}
 
-This section introduces the fundamentals of EVT for univariate random variables. Although this thesis primarily focuses on multivariate EVT -- the notion of extremal dependence is inherently multivariate -- it is necessary to introduce some prerequisites from the univariate setting. Moreover, in multivariate analyses, univariate EVT is often utilised during pre-processing (@sec-background-copulae). The theory presented herein largely follows @colesIntroductionStatisticalModeling2001; the reader is referred there for a more detailed treatment of this wide ranging topic. 
+This section introduces the fundamentals of EVT for univariate random variables. Although this thesis primarily focuses on multivariate EVT -- the notion of extremal dependence is inherently multivariate -- it is necessary to introduce some prerequisites from the univariate setting. Moreover, in multivariate analyses, univariate EVT is often utilised during pre-processing (@sec-background-copulae). The theory presented herein largely follows @colesIntroductionStatisticalModeling2001; the reader is referred there for a more detailed treatment of this wide-ranging topic. 
 
 ### Block maxima and the generalised extreme value (GEV) distribution
 
@@ -89,9 +89,9 @@ for any $\bm{x}=(x_1,\ldots,x_d)\in\R^d$. Let $\bm{X}_1,\bm{X}_2,\ldots$ be a se
 \begin{equation*}
     \bm{M}_n := \left( \bigvee_{i=1}^n X_{i1}, \ldots, \bigvee_{i=1}^n X_{id} \right). 
 \end{equation*}
-We say that $F$ lies in the multivariate MDA of a non-degenerate distribution $G$ if there exist $\R^d$-valued sequences $\{\bm{a}_n > \bm{0}\}$ and $\{\bm{b}_n \in \R^d\}$ such that
+Throughout this thesis, operations on vectors/matrices are to be applied componentwise, unless stated otherwise. We say that $F$ lies in the multivariate MDA of a non-degenerate distribution $G$ if there exist $\R^d$-valued sequences $\{\bm{a}_n > \bm{0}\}$ and $\{\bm{b}_n \in \R^d\}$ such that
 \begin{equation}\label{eq-multivariate-mda}
-    \mathbb{P}\left(\frac{\bm{M}_n - \bm{b}_n}{\bm{a}_n} \leq \bm{x} \right) \overset{d}{\to} G(\bm{x}), \qquad (n\to\infty).
+    \mathbb{P}\left(\frac{\bm{M}_n - \bm{b}_n}{\bm{a}_n} \leq \bm{x} \right) \to G(\bm{x}), \qquad (n\to\infty).
 \end{equation}
 Application of @thm-extremal-types to the marginal components implies that the margins of $G$ follow a univariate GEV distribution. The crucial difference to the univariate setting is that now the limit (joint) distribution $G$ sadly no longer admits a parametric representation. The problem of estimating/modelling $G$ is usually split into two steps that are performed sequentially. First, one models the margins to describe the extreme behaviour of each variable individually using univariate techniques. Then, one standardises to common margins and models the extremal dependence structure, i.e. the inter-relationships between extremes across multiple variables. Copula theory provides a rigorous justification for this two-step procedure.
 
@@ -762,7 +762,7 @@ Consider the limiting case of complete dependence as $\gamma\to 0$, whereby the 
 Let $\bm{X}\in\mathcal{RV}_+^d(\alpha)$ on Fréchet margins \eqref{eq-alpha-frechet} and let $H$ be the angular measure with respect to $\|\cdot\|_\alpha$ and normalising sequence $b_n=n^{1/\alpha}$. Let $\bm{X}_1,\ldots,\bm{X}_n$ be an iid sample of $\bm{X}$. The empirical TPDM estimator is the $d\times d$ matrix
 \begin{equation}\label{eq-empirical-tpdm}
   \hat{\Sigma} = (\hat{\sigma}_{ij}), \qquad 
-  \hat{\sigma}_{ij} := \hat{E}_H[\Theta_i^{\alpha/2}\Theta_j^{\alpha/2}]=\frac{d}{k}\sum_{l=1}^k \Theta_{(l),i}^{\alpha/2}\Theta_{(l),j}^{\alpha/2}.
+  \hat{\sigma}_{ij} := \hat{\mathbb{E}}_H[\Theta_i^{\alpha/2}\Theta_j^{\alpha/2}]=\frac{d}{k}\sum_{l=1}^k \Theta_{(l),i}^{\alpha/2}\Theta_{(l),j}^{\alpha/2}.
 \end{equation}
 :::
 

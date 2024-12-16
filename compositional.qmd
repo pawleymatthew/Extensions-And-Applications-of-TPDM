@@ -75,7 +75,7 @@ The CLR transformation is an isometry between the Aitchison simplex and the Eucl
 \end{equation*}
 passing through the origin and parallel to the simplex in $\R^d$. Therefore CoDA methods can be formulated in two equivalent ways: in terms of compositions in the Aitchison geometry (the in-the-simplex approach) or based on the CLR-transformed vectors in the Euclidean geometry (the out-of-the-simplex approach). If one chooses the in-the-simplex route, statistical and probabilistic concepts must be appropriately generalised. For example, @pawlowsky-glahnGeometricApproachStatistical2001 define measures of central tendency and total variability for compositions as
 \begin{align*}
-\mathrm{cen}_a(\bm{X}) &:= \argmin_{\bm{y}\in\mathbb{S}_+^{d-1}}\mathbb{E}[d_a^2(\bm{X},\bm{y})] = \mathcal{C}(\exp(\mathbb{E}[\log(\bm{X})]), \\
+\mathrm{cen}_a(\bm{X}) &:= \argmin_{\bm{y}\in\mathbb{S}_{+(1)}^{d-1}}\mathbb{E}[d_a^2(\bm{X},\bm{y})] = \mathcal{C}(\exp(\mathbb{E}[\log(\bm{X})]), \\
 \mathrm{totVar}_a(\bm{X}) &:= \mathbb{E}[d_a^2(\bm{X},\mathrm{cen}_a(\bm{X}))] = \sum_{j=1}^d \mathrm{Var}([\mathrm{clr}(\bm{X})]_j).
 \end{align*}
 

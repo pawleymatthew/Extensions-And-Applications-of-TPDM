@@ -13,7 +13,6 @@ book:
   date-format: long
   chapters:
     - index.qmd
-    - introduction.qmd
     - background.qmd
     - changing-ext-dep.qmd
     - compositional.qmd

@@ -64,7 +64,7 @@ Suppose $\bm{X}\in\mathcal{RV}_+^d(1)$ and let $\bm{x}_1,\ldots,\bm{x}_n$ be iid
   \hat{\Sigma}^\star = (\hat{\sigma}_{ij}^\star), \qquad 
   \hat{\sigma}_{ij}^\star := \hat{E}_{\hat{H}^\star}[\Theta_i^{1/2}\Theta_j^{1/2}]=\frac{d}{k}\sum_{l=1}^k [\pi(\bm{x}_{(l)}/r_{(k+1)})]_i^{1/2}[\pi(\bm{x}_{(l)}/r_{(k+1)})]_j^{1/2},
 \end{equation*}
-where $\hat{H}^\star$ is defined below @def-eva-sparse-empirical-A and $\pi$ is the Euclidean projection onto the simplex (@def-eva-euclidean-projection).
+where $\hat{H}^\star$ is defined below @def-eva-sparse-empirical-A.
 :::
 
 While the entries of the ordinary empirical TPDM are non-zero almost surely, the Euclidean projection yields projections lying on the simplex boundary. Consequently, the estimate $\hat{\Sigma}^\star$ is a sparse matrix. Due to the theoretical connection between $\Sigma^\star$ and $\Sigma$, the zero entries of $\hat{\Sigma}^\star$ can be used to estimate the zero entries of $\Sigma$. 

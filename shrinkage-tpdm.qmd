@@ -246,7 +246,7 @@ so that $k(n)(\mathbb{E}[\hat{\sigma}_{ij}(n)] - \sigma_{ij}) \to C_{ij}$ as $n\
 \end{align*}
 Assuming (as we are) that the bias of the TPDM is non-negative, then $C_{ij}\geq 0$. Then, noting that $\|\hat{\bm{\sigma}}(n)\|_2^2>0$ almost surely, it follows that $\lambda^\star(n)>0$ for sufficiently large $n$. The above result gives that, asymptotically, the optimal shrinkage behaves as a constant divided by $k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]$. As the asymptotic constant is unknown, we eliminate it by taking ratios at different values of $n$. Given a fixed proportion $\kappa \in (0,1)$, it is easy to see that
 \begin{equation*}
-    \lim_{n\to\infty} k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n) = \sum_{i<j}(\nu_{ij}^2 + c_{ij}) =
+    \lim_{n\to\infty} k(n)\mathbb{E}[\|\hat{\bm{\sigma}}(n)\|_2^2]\lambda^\star(n) = \sum_{i<j}(\nu_{ij}^2 + \sigma_{ij}C_{ij}) =
     \lim_{n\to\infty} k(\left\lfloor \kappa n \right\rfloor)\mathbb{E}[\|\hat{\bm{\sigma}}(\left\lfloor \kappa n \right\rfloor)\|_2^2]\lambda^\star(\left\lfloor \kappa n \right\rfloor).
 \end{equation*}
 and the algebra of limits then yields
