@@ -28,6 +28,10 @@ book:
     location: navbar
     type: overlay
 
+knitr:
+  opts_chunk:
+    fig.path: figures/
+
 bibliography: phdreferences.bib
 
 execute:

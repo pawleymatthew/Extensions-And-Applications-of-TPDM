@@ -41,35 +41,41 @@ The exact distribution of $M_n$ is given by
 \begin{equation*}
     \mathbb{P}(M_n \leq x) = \mathbb{P}(X_1\leq x,\ldots X_n \leq x) = \prod_{i=1}^n \mathbb{P}(X_i \leq x) = F^n(x), \qquad (x\in\R).
 \end{equation*}
-From a practical modelling perspective, this result is not particularly useful because $F$ is typically unknown. Instead, we study the limiting behaviour of $F^n$ as $n\to\infty$. Clearly the asymptotic distribution of $M_n$ is degenerate, since $M_n \overset{p}{\to} x_F:=\sup\{x:F(x)<1\}$, the (possibly infinite) upper end-point of $F$. However, the Extremal Types Theorem states that, with suitable rescaling, there are three classes of non-degenerate asymptotic distribution [@colesIntroductionStatisticalModeling2001, Theorem 3.1].
+From a practical modelling perspective, this result is not particularly useful because $F$ is typically unknown. Instead, we study the limiting behaviour of $F^n$ as $n\to\infty$. Clearly the asymptotic distribution of $M_n$ is degenerate, since $M_n \overset{p}{\to} x_F:=\sup\{x:F(x)<1\}$, the (possibly infinite) upper end-point of $F$. However, the Extremal Types Theorem of @pickandsiiiStatisticalInferenceUsing1975 states that, with suitable rescaling, there are three classes of non-degenerate asymptotic distribution [@colesIntroductionStatisticalModeling2001, Theorem 3.1].
 
 :::{#thm-extremal-types}
 Suppose there exist real sequences $\{a_n > 0\}$ and $\{b_n\in\R\}$ and a non-degenerate distribution function $G$ such that
 \begin{equation}\label{eq-extremal-types}
     \mathbb{P}\left(\frac{M_n - b_n}{a_n} \leq x \right) \to G(x), \qquad (n\to\infty).
 \end{equation}
-Then $G$ belongs to one of three parametric families: Gumbel, Fréchet or negative Weibull.
+Then $G$ belongs to one of three parametric families: Gumbel, Fréchet or negative Weibull (to be introduced below).
 :::
 
 When \eqref{eq-extremal-types} holds, we say that $F$ lies in the maximum domain of attraction (MDA) of $G$. The three families are unified by the Generalised Extreme Value (GEV) distribution with distribution function
 \begin{equation}\label{eq-gev}
     G(x) = \exp\left\lbrace - \left[ 1 + \xi \left(\frac{x-\mu}{\sigma}\right)\right]_+^{-1/\xi} \right\rbrace,
 \end{equation}
-where $[x]_+:=\max(0,x)$ denotes the positive part of $x$. The parameters $\mu\in\R$, $\sigma >0$ and $\xi\in\R$ are called the location, scale, and shape, respectively. The sign of the shape parameter determines the sub-class that $G$ belongs to: $\xi>0$ corresponds to the heavy-tailed Fréchet class, $\xi=0$ (with \eqref{eq-extremal-types} interpreted as $\xi\to 0$) corresponds the exponential-tailed Gumbel class, and $\xi<0$ is the negative Weibull class, which has a finite upper limit.
+where $[x]_+:=\max(0,x)$ denotes the positive part of $x$. The parameters $\mu\in\R$, $\sigma >0$ and $\xi\in\R$ are called the location, scale, and shape, respectively. The sign of the shape parameter determines the sub-class that $G$ belongs to: $\xi>0$ corresponds to the heavy-tailed Fréchet class, the exponential-tailed Gumbel class is attained in the limit as $\xi\to 0$, and $\xi<0$ is the negative Weibull class, which has a finite upper limit.
 
 The GEV distribution is used to model the upper tail of the distribution of $X$ via the block maxima approach [@colesIntroductionStatisticalModeling2001, Section 3.3]. Let $x_1,\ldots,x_n$ denote independent realisations of $X_1,\ldots,X_n$ and suppose these are partitioned into finite blocks of size $m$. Provided $m$ is sufficiently large, @thm-extremal-types gives that the maximum observation in each block is approximately GEV distributed. Once the block-wise maxima have been extracted, estimates of the GEV parameters may be obtained, e.g. by maximum likelihood inference. The performance of the fitted model is sensitive to the choice of block size. Selection of the tuning parameter $m$ requires managing a bias-variance trade-off. If the blocks are too small, then the underlying asymptotic approximation may not be valid and the maxima may not be representative of 'extreme' events, biasing the estimates. Taking larger blocks reduces the amount of data available for inference, resulting in a higher variance of the GEV parameter estimates.
 
 ### Threshold exceedances and the generalised Pareto distribution (GPD) {#sec-background-gpd}
 
-The block maxima procedure is considered inefficient, because it fails to exploit all the available information. Each block is summarised by a (single) maximum value, even if it contains other 'extreme' events that might be informative for the tail. The intimately related peaks-over-threshold method makes better use of the available data [@colesIntroductionStatisticalModeling2001, Sections 4.2 and 4.3]. If $X$ is in the maximum domain of attraction of a $\mathrm{GEV}(\mu,\sigma,\xi)$ distribution, then
+The block maxima procedure is considered inefficient, because it fails to exploit all the available information. Each block is summarised by a (single) maximum value, even if it contains other 'extreme' events that might be informative for the tail. This inefficiency may be remedied via sliding block methods [@bucherDisjointSlidingBlock2023] or by reverting to the intimately related peaks-over-threshold method. This approach makes better use of the available data [@colesIntroductionStatisticalModeling2001, Sections 4.2 and 4.3] and is underpinned by the Pickands-Balkema-de Haan theorem [@balkemaResidualLifeTime1974].
+
+:::{#thm-pickands-balkema-de-haan}
+If $X$ is in the maximum domain of attraction of a $\mathrm{GEV}(\mu,\sigma,\xi)$ distribution, then
 \begin{equation}\label{eq-gpd}
     \lim_{u\to\infty} \mathbb{P}(X-u>x \mid X>u) = \left[1+\frac{\xi x}{\tilde{\sigma}}\right]_+^{-1/\xi}, \qquad (x>0),
 \end{equation}
-where $\tilde{\sigma}=\sigma + \xi(u-\mu)$. This limiting conditional distribution is called the generalised Pareto distribution (GPD), which describes the distribution of excesses over a high threshold. Given observations $x_1,\ldots,x_n$, the peaks-over-threshold method assumes that exceedances of some pre-specified high threshold $u>0$ are approximately GPD distributed. Maximum likelihood or Bayesian inference procedures may be used to estimate the GPD parameters $\tilde{\sigma},\xi$. Threshold selection is subject to similar considerations as for the block size. Picking a low threshold risks model misspecification, causing bias in the fitted model. Choosing a high threshold directly reduces the number of threshold exceedances, increasing the uncertainty in the parameter estimates. Various diagnostics and procedures have been proposed to aid with this choice. Early approaches rely on inspecting diagnostic plots, such as mean residual life plots and parameter stability plots [@davisonModelsExceedancesHigh1990]. Automated selection procedures aim to remove subjectivity by optimising with respect to some criterion. These include change-point methods [@wadsworthExploitingStructureMaximum2016], cross-validation in a Bayesian framework [@northropCrossValidatoryExtremeValue2017], and minimising expected quantile discrepancies [@murphyAutomatedThresholdSelection2024]. 
+where $\tilde{\sigma}=\sigma + \xi(u-\mu)$.
+:::
+
+ This limiting conditional distribution is called the generalised Pareto distribution (GPD), which describes the distribution of excesses over a high threshold. Given independent observations $x_1,\ldots,x_n$, the peaks-over-threshold method assumes that exceedances of some pre-specified high threshold $u>0$ are approximately GPD distributed. Maximum likelihood or Bayesian inference procedures may be used to estimate the GPD parameters $\tilde{\sigma},\xi$. Threshold selection is subject to similar considerations as for the block size. Picking a low threshold risks model misspecification, causing bias in the fitted model. Choosing a high threshold directly reduces the number of threshold exceedances, increasing the uncertainty in the parameter estimates. Various diagnostics and procedures have been proposed to aid with this choice. Early approaches rely on inspecting diagnostic plots, such as mean residual life plots and parameter stability plots [@davisonModelsExceedancesHigh1990]. For example, choosing the threshold using parameter stability plots involves visually assessing the stability of parameter estimates across different threshold values. Automated selection procedures aim to remove subjectivity by optimising with respect to some criterion. These include change-point methods [@wadsworthExploitingStructureMaximum2016], cross-validation in a Bayesian framework [@northropCrossValidatoryExtremeValue2017], and minimising expected quantile discrepancies [@murphyAutomatedThresholdSelection2024]. A more comprehensive overview of threshold selection procedures can be found in Section 4 of @dreesExtremeValueAnalysis2012
 
 ### Non-stationary extremes {#sec-background-univariate-non-stationary}
 
-The block-maxima and peaks-over-threshold methods as presented above assume that the data are stationary over the observation period. In environmental applications, climate change threatens the validity of this assumption, with changes in the frequency and intensity of extreme weather events [@calvinIPCC2023Climate2023]. Non-stationary models accommodate such changes by allowing parameters to vary over time or in relation to covariates. For example, @vanemNonstationaryExtremeValue2015 incorporates trends into the GEV location and scale parameters by specifying
+The block-maxima and peaks-over-threshold methods as presented above assume that the data are identically distributed (stationary) over the observation period. In environmental applications, climate change threatens the validity of this assumption, with changes in the frequency and intensity of extreme weather events [@calvinIPCC2023Climate2023]. Non-stationary models accommodate changes in the distributional tail by allowing parameters to vary over time or in relation to covariates. For example, @vanemNonstationaryExtremeValue2015 incorporates trends into the GEV location and scale parameters by specifying
 \begin{equation}\label{eq-vanem}
 \mu(t)=\mu_0 + \mu_1 t,\qquad \sigma(t) = \exp(\sigma_0 + \sigma_1 t).
 \end{equation}
@@ -93,11 +99,11 @@ Throughout this thesis, operations on vectors/matrices are to be applied compone
 \begin{equation}\label{eq-multivariate-mda}
     \mathbb{P}\left(\frac{\bm{M}_n - \bm{b}_n}{\bm{a}_n} \leq \bm{x} \right) \to G(\bm{x}), \qquad (n\to\infty).
 \end{equation}
-Application of @thm-extremal-types to the marginal components implies that the margins of $G$ follow a univariate GEV distribution. The crucial difference to the univariate setting is that now the limit (joint) distribution $G$ sadly no longer admits a parametric representation. The problem of estimating/modelling $G$ is usually split into two steps that are performed sequentially. First, one models the margins to describe the extreme behaviour of each variable individually using univariate techniques. Then, one standardises to common margins and models the extremal dependence structure, i.e. the inter-relationships between extremes across multiple variables. Copula theory provides a rigorous justification for this two-step procedure.
+Here, non-degeneracy of $G$ means that all of its the univariate margins are non-degenerate (not concentrated at a single point). Application of @thm-extremal-types to the marginal components implies that the margins of $G$ follow a univariate GEV distribution. The crucial difference to the univariate setting is that now the limit (joint) distribution $G$ sadly no longer admits a parametric representation. The problem of estimating/modelling $G$ is usually split into two steps that are performed sequentially. First, one models the margins to describe the extreme behaviour of each variable individually using univariate techniques. Then, one standardises to common margins and models the extremal dependence structure, i.e. the inter-relationships between extremes across multiple variables. The following section provides a rigorous justification for this two-step procedure.
 
 ### Copulae and marginal standardisation {#sec-background-copulae}
 
-In multivariate statistics, Sklar's theorem [@sklarFonctionsRepartitionDimensions1959] allows for the separation of the marginal distributions of variables from their joint dependence structure through the use of a copula. It states that any multivariate distribution can be expressed in terms of the individual marginal distributions and a copula that captures the dependence between them.
+In multivariate statistics, Sklar's theorem [@sklarFonctionsRepartitionDimensions1959] allows for the separation of the marginal distributions of variables from their joint dependence structure through the use of a special distribution function called a copula.
 
 :::{#thm-sklar}
 Suppose $\bm{X}=(X_1,\ldots,X_d)$ has joint distribution function $F$ and continuous marginal distributions $X_i\sim F_i$ for $i=1,\ldots,d$. Then there exists a unique copula $C:[0,1]^d \to [0,1]$ such that
@@ -106,17 +112,17 @@ Suppose $\bm{X}=(X_1,\ldots,X_d)$ has joint distribution function $F$ and contin
 \end{equation}
 :::
 
-The copula $C$ characterises the dependence structure of the variables, and represents the distribution function of $\bm{X}$ after transforming to standard uniform margins. Uniform margins are a standard choice in multivariate statistics, but copulae may be defined with alternative marginal distributions. In MEVT, it is common to use Fréchet, exponential or Gumbel margins. The different choices accentuate particular features of the extreme values. For example, heavy-tailed Fréchet margins serve to highlight the most extreme values, while Gumbel or exponential margins are often favoured for conditional extremes modelling [@heffernanConditionalApproachMultivariate2004]. Although the marginal distribution is an important modelling choice, ultimately all choices are valid/equivalent in the sense that monotonic transformations of the univariate marginals do not change the nature of tail dependence [@resnickHeavytailPhenomenaProbabilistic2007].
+The copula $C$ characterises the dependence structure of the variables, and represents the distribution function of $\bm{X}$ after transforming to standard uniform margins. Uniform margins are a standard choice in multivariate statistics, but copulae may be defined with alternative marginal distributions. In MEVT, it is common to use Fréchet, exponential or Gumbel margins, with the different choices accentuating particular features of the extreme values. For example, heavy-tailed Fréchet margins serve to highlight the most extreme values, while Gumbel or exponential margins are often favoured for conditional extremes modelling [@heffernanConditionalApproachMultivariate2004]. Although the marginal distribution is an important modelling choice, ultimately all choices are valid/equivalent in the sense that monotonic transformations of the univariate marginals do not change the nature of tail dependence [@resnickHeavytailPhenomenaProbabilistic2007]. Further theoretical details concerning copulae in multivariate extremes are presented in Chapter 1 of @ruschendorfMathematicalRiskAnalysis2013.
 
 There are broadly two ways of performing the preliminary marginal standardisation. If the functions $F_1,\ldots,F_d$ are known, then the marginal distributions can be transformed to some common target distribution $F_\star$ via the probability integral transform:
 \begin{equation}\label{eq-marginal-transformation}
-    X_i \mapsto F_\star^{-1}(F_i(X_i)) \sim F_\star, \qquad (i=1,\ldots,d).
+    X_i \mapsto F_\star^{-1}(F_i(X_i)) \sim F_\star, \qquad i=1,\ldots,d.
 \end{equation}
 If the marginal distributions are unknown, as is usually the case, then $F_1,\ldots,F_d$ are replaced with estimates $\hat{F}_1,\ldots,\hat{F}_d$ in \eqref{eq-marginal-transformation}. A standard choice for $\hat{F}_i$ is the empirical cumulative distribution function (non-parametric), perhaps with GPD tails above a high threshold (semi-parametric). Examples of these two approaches can be found in @russellAnalyzingDependenceMatrices2018 and @rohrbeckSimulatingFloodEvent2023, respectively. Throughout this thesis, uncertainty arising from estimation of the marginal distributions shall be neglected. Relaxing this assumption, as in @clemenconConcentrationBoundsEmpirical2023, represents an avenue for future work. 
 
 ### The exponent measure and angular measure {#sec-background-exponent-angular-measure}
 
-Suppose $\bm{X}$ is on unit Fréchet margins, that is
+Suppose $\bm{X}$ is on unit Fréchet margins, that is,
 \begin{equation}\label{eq-unit-frechet}
     \mathbb{P}(X_i<x) = \exp(-1/x), \qquad (x>0),
 \end{equation}
@@ -126,7 +132,7 @@ for $i=1,\ldots,d$. This corresponds to a GEV distribution with $\mu=\sigma=\xi=
 \end{equation}
 where $\bm{x}=(x_1,\ldots,x_d)$ and $x_i>0$ for $i=1,\ldots,d$. The exponent measure $V$ is a function of the form
 \begin{equation}\label{eq-exponent-measure}
-    V(\bm{x}) = d \int_{\mathbb{S}_{+(1)}^{d-1}} \bigvee_{i=1}^d \left(\frac{\theta_i}{x_i}\right)\,\dee H(\bm{\theta}),
+    V(\bm{x}) = d \int_{\bm{\theta}\in\mathbb{S}_{+(1)}^{d-1}} \bigvee_{i=1}^d \left(\frac{\theta_i}{x_i}\right)\,\dee H(\bm{\theta}),
 \end{equation}
 where
 \begin{equation}\label{eq-Lp-simplex}
@@ -140,15 +146,15 @@ of $\R^d$ and the angular measure $H$ is a probability measure on $\mathbb{S}_{+
 \begin{equation}\label{eq-H-mean-constraints}
     \int_{\mathbb{S}_{+(1)}^{d-1}} \theta_i \,\dee H(\bm{\theta}) = 1/d, \qquad i=1,\ldots,d.
 \end{equation}
-Our notation for the simplex is borrowed from @fixSimultaneousAutoregressiveModels2021. The exponent $d-1$ highlights the fact that the simplex is a $(d-1)$-dimensional set embedded in the $d$-dimensional space $\R^d$. The $+$ and $(p)$ in the subscript convey that the set is restricted to the non-negative orthant and is with respect to the $L_p$-norm. The constraints on $H$ arise due to tail equivalence of the margins. Functions $G$ satisfying \eqref{eq-mevd}-\eqref{eq-H-mean-constraints} are called multivariate extreme value distributions. If $V$ is differentiable, then the density $h$ of $H$ exists in the interior and on the low-dimensional boundaries of the simplex. The relation between $V$ and $h$ is given by
+In our notation, the exponent $d-1$ highlights the fact that the simplex is a $(d-1)$-dimensional set embedded in the $d$-dimensional space $\R^d$. The $+$ and $(p)$ in the subscript convey that the set is restricted to the non-negative orthant and is with respect to the $L_p$-norm. The constraints on $H$ arise due to tail equivalence of the margins. Functions $G$ satisfying \eqref{eq-mevd}-\eqref{eq-H-mean-constraints} are called multivariate extreme value distributions. If $H$ places no mass outside the simplex interior and $V$ is differentiable in the interior of the positive orthant of $\R^d$, then the density $h$ of $H$ exists in the interior and on the low-dimensional boundaries of the simplex. In this case, the relation between $V$ and $h$ is given by
 \begin{equation}
-    h\left(\frac{\bm{x}}{\|\bm{x}\|_1}\right) = -\frac{\|\bm{x}\|_1^{d+1}}{d}\frac{\partial^d}{\partial x_1\cdots \partial x_d} V(\bm{x}).
+    h\left(\frac{\bm{x}}{\|\bm{x}\|_1}\right) = -\frac{\|\bm{x}\|_1^{d+1}}{d}\frac{\partial^d}{\partial x_1\cdots \partial x_d} V(\bm{x}), \qquad \bm{x}\in\R_+^d.
 \end{equation}
 Models for $G$ are typically specified in terms of $V$ or $H$. Crucially, the extremal dependence structure of $\bm{X}$ is completely characterised by $H$: the angular measure determines $V$ via \eqref{eq-exponent-measure} and subsequently $G$ via \eqref{eq-mevd}. Modelling the angular measure now becomes our primary focus.
 
 ### Parametric multivariate extreme value models {#sec-background-parametric-models}
 
-The class of valid dependence structures is in direct correspondence to the infinite-dimensional class of valid measures $H$. The lack of a finite-dimensional representative class greatly hinders efforts to perform statistical inference: efficient estimation via likelihood inference, hypothesis testing, and inclusion of covariates all become unavailable. 
+The class of extremal dependence structures is in one-to-one correspondence with the infinite-dimensional class of angular measures $H$ satisfying the moment constraint. The lack of a finite-dimensional representative class greatly hinders efforts to perform statistical inference: efficient estimation via likelihood inference, hypothesis testing, and inclusion of covariates all become unavailable. 
 
 Of course, we may revert to the parametric paradigm by postulating a suitable parametric sub-family. Ideally the chosen sub-family generates a wide class of valid dependence structures. A detailed review of popular models can be found in @gudendorfExtremeValueCopulas2010. There are several drawbacks to this approach. First, working with a parametric model instead of the general class runs the risk of model misspecification. Second, generating valid models is a challenging endeavour due to the moment constraints, resulting in models that are either overly simplistic or have unwieldy distribution functions and parameter constraints. Third, striking a balance between flexibility and parsimony becomes especially tricky in high dimensions (i.e. when $d$ is large). For these reasons, parametric models are not a primary focus of this thesis. Nevertheless, we now review a small selection of models. These primarily feature as data-generating processes for our numerical experiments. The R package \texttt{mev} provides functionality for generating independent observations $\bm{x}_1,\ldots,\bm{x}_n$ of $\bm{X}$ or $\bm{\theta}_1,\ldots,\bm{\theta}_n\sim H$ based on the sampling algorithms formulated in @dombryExactSimulationMaxstable2016. 
 
@@ -163,7 +169,7 @@ The exponent measure of a random vector $\bm{X}=(X_1,\ldots,X_d)$ following the 
 \end{equation}
 :::
 
-The single dependence parameter $\gamma\in(0,1]$ characterises the strength of the association between all variables. Independence occurs when $\gamma=1$ and the variables approach complete dependence as $\gamma\to 0$. All variables are exchangeable, since the distribution function is invariant under coordinate permutation. A flexible extension is the asymmetric logistic model of @tawnModellingMultivariateExtreme1990. Greater control over the dependence structure is achieved by increasing the number of parameters.
+The single dependence parameter $\gamma\in(0,1]$ characterises the strength of the association between all variables. Independence occurs when $\gamma=1$ and the variables approach complete dependence as $\gamma\to 0$. All variables are exchangeable, since $V(\bm{x})$ is invariant to any relabelling of the variables, indicating that the symmetric logistic model is too restrictive to be realistic in most practical scenarios. A flexible extension is the asymmetric logistic model of @tawnModellingMultivariateExtreme1990. Greater control over the dependence structure is achieved by increasing the number of parameters.
 
 :::{#def-asymmetric-logistic}
 The exponent measure of a random vector $\bm{X}=(X_1,\ldots,X_d)$ following the asymmetric logistic distribution is 
@@ -183,27 +189,34 @@ The set of parameters $\{\gamma_\beta:\beta\in \mathcal{P}(\{1,\ldots,d\})\setmi
 
 #### The Brown-Resnick process and Hüsler-Reiss distribution {#sec-background-hr-br}
 
-The Brown-Resnick process of @brownExtremeValuesIndependent1977 is a class of stochastic processes commonly used to model the extremal dependence structure of spatial phenomena, including rainfall [@davisonStatisticalModelingSpatial2012], snow depths [@schellanderModelingSnowDepth2018] and wind gusts [@oestingStatisticalPostprocessingForecasts2017]. It is naturally defined through a transformation of a Gaussian process -- a formal construction can be found in @kabluchkoStationaryMaxstableFields2009. Let $\Omega\in\R^2$ be a spatial domain. Consider a Brown-Resnick process $\{X(\bm{s}):\bm{s}\in\Omega\}$ with semi-variogram
+The Brown-Resnick process of @brownExtremeValuesIndependent1977 is a class of stochastic processes commonly used to model the extremal dependence structure of spatial phenomena, including rainfall [@davisonStatisticalModelingSpatial2012], snow depths [@schellanderModelingSnowDepth2018] and wind gusts [@oestingStatisticalPostprocessingForecasts2017]. It is naturally defined through a transformation of a Gaussian process -- a formal construction can be found in @kabluchkoStationaryMaxstableFields2009. Let $\Omega\subset\R^p$ be a spatial domain, where $p\geq 2$. Consider a Brown-Resnick process $\{X(\bm{s}):\bm{s}\in\Omega\}$ with semi-variogram
 \begin{equation}\label{eq-fractal-variogram}
     \gamma(\bm{s}, \bm{s}') = (\|\bm{s}-\bm{s}'\|_2/\rho)^\kappa, \qquad \rho>0, \kappa\in(0,2].
 \end{equation} 
-Semi-variograms of this form are called fractal semi-variograms and the associated process $\{X(\bm{s}):\bm{s}\in\Omega\}$ is stationary and isotropic [@engelkeEstimationHuslerReissDistributions2015]. Stationarity and isotropy mean that the statistical properties of the spatial process are invariant under translation and rotation. Specifically, the dependence between two sites only depends on the distance between them, not the direction or their position within the spatial domain. The parameters $\rho$ and $\kappa$ in \eqref{eq-fractal-variogram} are termed the range and smoothness, respectively. The range parameter determines how quickly the dependence strength decreases over distance, while the smoothness parameter governs the regularity of the process and affects its local behaviour.
+Semi-variograms of this form are called fractal semi-variograms and the associated process $\{X(\bm{s}):\bm{s}\in\Omega\}$ is stationary and isotropic [@engelkeEstimationHuslerReissDistributions2015]. Specifically, the dependence between two sites only depends on the distance between them, not the direction or their position within the spatial domain. The parameters $\rho$ and $\kappa$ in \eqref{eq-fractal-variogram} are termed the range and smoothness, respectively. The range parameter determines how quickly the dependence strength decreases over distance, while the smoothness parameter governs the regularity of the process and affects its local behaviour.
 
 Let $\bm{s}_i,\bm{s}_j\in\Omega$ be a pair of spatial locations and define random variables $X_i=X(\bm{s}_i)$ and $X_j=X(\bm{s}_j)$. The exponent measure of the bivariate random vector $(X_i,X_j)$ is 
 \begin{equation}\label{eq-brown-resnick-V}
     V(x_i,x_j) = \frac{1}{x_i} \Phi\left(\frac{a_{ij}}{2} + \frac{1}{a_{ij}}\log\frac{x_j}{x_i}\right) + \frac{1}{x_j} \Phi\left(\frac{a_{ij}}{2} + \frac{1}{a_{ij}}\log\frac{x_i}{x_j}\right),
 \end{equation}
-where $a_{ij} = \sqrt{\gamma(\bm{s}_i,\bm{s}_j)}$ [@huserCompositeLikelihoodEstimation2013]. The stationary/isotropic nature of the underlying process is apparent because $V$ depends on $\bm{s}_i$ and $\bm{s}_j$ only through $\|\bm{s}_i-\bm{s}_j\|_2$.
+where $a_{ij} = \sqrt{\gamma(\bm{s}_i,\bm{s}_j)}$ [@huserCompositeLikelihoodEstimation2013].
 
-The Brown-Resnick process is intimately related to the Hüsler-Reiss distribution of @huslerMaximaNormalRandom1989. The Hüsler-Reiss distribution is of fundamental importance in multivariate extremes, fulfilling "a similar role as Gaussian distributions in the non-extreme world" [@engelkeGraphicalModelsExtremes2019]. In $d\geq 2$ dimensions the distribution is parametrised by a matrix $\Lambda=(\lambda_{ij}^2)_{1\leq i,j\leq d}$ belonging to the class of symmetric, strictly conditionally negative definite matrices
+The finite dimensional distributions of a Brown-Resnick process are equivalent to the Hüsler-Reiss distribution of @huslerMaximaNormalRandom1989. The Hüsler-Reiss distribution is of fundamental importance in multivariate extremes, fulfilling "a similar role as Gaussian distributions in the non-extreme world" [@engelkeGraphicalModelsExtremes2019]. In $d\geq 2$ dimensions the distribution is parametrised by a matrix $\Lambda=(\lambda_{ij}^2)_{1\leq i,j\leq d}$ belonging to the class of symmetric, strictly conditionally negative definite matrices
 \begin{equation*}
     \mathcal{M}_{\mathrm{SND}} := \left\lbrace M \in \R_+^{d\times d} \, : \, M=M^T,\, \mathrm{diag}(M)=\bm{0},\, \bm{x}^TM\bm{x} < 0 \,\forall \bm{x}\in\R^d\setminus\{\bm{0}\} \text{ such that } \sum_{j=1}^d x_j=0\right\rbrace.
 \end{equation*}
-The class of Hüsler-Reiss distributions is closed in the sense that if $\bm{X}=(X_1,\ldots,X_d)$ follows a Hüsler-Reiss distribution with parameter matrix $\Lambda$, then any random sub-vector $(X_i,X_j)$ is also Hüsler-Reiss distributed with parameter $\lambda_{ij}^2$. This permits very flexible control over the pairwise dependence structure. The dependence between any pair of variables $X_i$ and $X_j$ can be adjusted by modifying the corresponding parameter $\lambda_{ij}$, subject to the constraint $\Lambda\in\mathcal{M}_{\mathrm{SND}}$. The finite-dimensional distribution of a Brown-Resnick process at locations $\bm{s}_1,\ldots,\bm{s}_d$ is precisely the Hüsler-Reiss distribution with $\Lambda = (\gamma(\bm{s}_i,\bm{s}_j)/4)_{1\leq i,j \leq d}$ [@engelkeEstimationHuslerReissDistributions2015]. Due to this link, the exponent measure of $(X_i,X_j)$ is given by \eqref{eq-brown-resnick-V} with $a_{ij}$ replaced by $2\lambda_{ij}$.
+The class of Hüsler-Reiss distributions is closed in the sense that if $\bm{X}=(X_1,\ldots,X_d)$ follows a Hüsler-Reiss distribution with parameter matrix $\Lambda$, then any random sub-vector $(X_i,X_j)$ is also Hüsler-Reiss distributed with parameter $\lambda_{ij}^2$. This permits very flexible control over the pairwise dependence structure. The dependence between any pair of variables $X_i$ and $X_j$ can be adjusted by modifying the corresponding parameter $\lambda_{ij}$, subject to the constraint $\Lambda\in\mathcal{M}_{\mathrm{SND}}$. The finite-dimensional distribution of a Brown-Resnick process at locations $\bm{s}_1,\ldots,\bm{s}_d$ is precisely the Hüsler-Reiss distribution with $\Lambda = (\gamma(\bm{s}_i,\bm{s}_j)/4)_{1\leq i,j \leq d}$ [@engelkeEstimationHuslerReissDistributions2015]. 
+
+
+:::{#def-hr}
+The exponent measure of a bivariate random vector $\bm{X}=(X_i,X_j)$ following the Hüsler-Reiss distribution with parameter $\Lambda$ is given by \eqref{eq-brown-resnick-V} with $a_{ij}$ replaced by $2\lambda_{ij}$.
+:::
+
+In practice, the parameter matrix $\Lambda$ is typically estimated using composite (pairwise) likelihood methods [@engelkeEstimationHuslerReissDistributions2015].
 
 #### The max-linear model
 
-The final parametric model we consider is the max-linear (factor) model, a simple but flexible class possessing important theoretical properties [@einmahlMestimatorTailDependence2012; @fougeresDenseClassesMultivariate2013; @yuenCRPSMestimationMaxstable2014]. Any discrete angular measure concentrating on finitely many points corresponds to a max-linear model [@yuenCRPSMestimationMaxstable2014]. Due to its flexibility and theoretical properties, the max-linear model has enjoyed widespread use across several areas of extremes, including clustering [@janssenKmeansClusteringExtremes2020; @avella-medinaSpectralLearningMultivariate2024], graphical modelling for causal inference [@gissiblIdentifiabilityEstimationRecursive2020; @gissiblMaxlinearModelsDirected2018; @tranCausalDiscoveryRiver2021] and tail event probability estimation [@kirilioukEstimatingProbabilitiesMultivariate2022]. In future sections/chapters, the max-linear model will be applied in more general settings where the marginal distributions are Fréchet with shape parameter $\alpha\geq 1$ and the angular measure is defined with respect to the $L_\alpha$-norm on $\R^d$. In anticipation of this, we define the max-linear model in this more general setting.
+The final parametric model we consider is the max-linear (factor) model, a simple but flexible class possessing important theoretical properties [@einmahlMestimatorTailDependence2012; @fougeresDenseClassesMultivariate2013; @yuenCRPSMestimationMaxstable2014]. Any discrete angular measure concentrating on finitely many points corresponds to a max-linear model [@yuenCRPSMestimationMaxstable2014]. Due to its flexibility and theoretical properties, the max-linear model has enjoyed widespread use across several areas of extremes, including clustering [@janssenKmeansClusteringExtremes2020; @avella-medinaSpectralLearningMultivariate2024], graphical modelling for causal inference [@gissiblIdentifiabilityEstimationRecursive2020; @gissiblMaxlinearModelsDirected2018; @tranCausalDiscoveryRiver2021] and tail event probability estimation [@kirilioukEstimatingProbabilitiesMultivariate2022]. In future sections/chapters, the max-linear model will be applied in more general settings where the marginal distributions are Fréchet with shape parameter $\alpha\geq 1$ and the angular measure is defined with respect to the $L_\alpha$-norm on $\R^d$. In anticipation of this, we define the max-linear model in this more general setting, even though strictly speaking the underlying concepts have only been defined for $\alpha=1$.
 
 :::{#def-max-linear}
 Let $A=(\bm{a}_1,\ldots,\bm{a}_q)\in\R_+^{d\times q}$ for some $q\geq 1$. Assume that $\bm{a}_j\neq\bm{0}$ for all $j=1,\ldots,q$ and each row has unit $L_\alpha$-norm, i.e. $\sum_{j=1}^q a_{ij}^\alpha =1$ for $i=1,\ldots,d$. A random vector $\bm{X}=(X_1,\ldots,X_d)$ with discrete probability angular measure
@@ -220,17 +233,18 @@ The row-wise unit-norm constraint on $A$ ensures the marginal components are Fr�
     = \frac{\sum_{j=1}^q a_{ij}}{\sum_{i=1}^d \sum_{j=1}^q  a_{ij}} 
     = \frac{1}{d}.
 \end{equation*}
-The number of free parameters is $d\times(q-1)$ and the order of the columns of $A$ is inconsequential. The factors $\bm{a}_1,\ldots,\bm{a}_q$ correspond to the possible directions that extremal observations may take, with the column norms $\|\bm{a}_1\|_{\alpha},\ldots,\|\bm{a}_q\|_{\alpha}$ determining the respective weights assigned to these directions. There is a direct correspondence between the class of discrete angular measures placing mass on $q<\infty$ points and the class of max-linear random vectors with $q$ factors [@yuenCRPSMestimationMaxstable2014]. Moreover, the class of angular measures \eqref{eq-max-linear-H} is dense in the class of valid angular measures [@fougeresDenseClassesMultivariate2013]. In other words, any extremal dependence structure can be arbitrarily well-approximated by that of a max-linear model with sufficiently many factors. This makes max-linear modelling a versatile and powerful framework, despite its simplicity.
+The number of free parameters is $d\times(q-1)$ and the order of the columns of $A$ is inconsequential. The factors $\bm{a}_1,\ldots,\bm{a}_q$ correspond to the possible directions that extremal observations may take, with the column norms $\|\bm{a}_1\|_{\alpha},\ldots,\|\bm{a}_q\|_{\alpha}$ determining the respective weights assigned to these directions. There is a direct correspondence between the class of discrete angular measures placing mass on $q<\infty$ points and the class of max-linear random vectors with $q$ factors [@yuenCRPSMestimationMaxstable2014]. Moreover, the class of angular measures \eqref{eq-max-linear-H} is dense in the class of valid angular measures [@fougeresDenseClassesMultivariate2013]. In other words, any extremal dependence structure can be arbitrarily well-approximated by that of a max-linear model with sufficiently many factors.
 
-There are several ways to construct a random vector $\bm{X}=(X_1,\ldots,X_d)$ with angular measure \eqref{eq-max-linear-H}. This thesis employs two constructions. Letting $Z_1,\ldots,Z_q$ be independent Fréchet random variables with unit scale and shape parameter $\alpha$ and $\bm{Z}=(Z_1,\ldots,Z_q)$, these are
+We refer to a random vector $\bm{X}=(X_1,\ldots,X_d)$ with angular measure given by \eqref{eq-max-linear-H} as a max-linear random vector. There are several ways to construct such random vectors. This thesis employs two constructions. The resulting random vectors are not identically distributed, but have identical angular measures. Letting $Z_1,\ldots,Z_q$ be independent Fréchet random variables with unit scale and shape parameter $\alpha$ and $\bm{Z}=(Z_1,\ldots,Z_q)$, these are
 \begin{equation}\label{eq-max-linear-X}
     \bm{X} = A \times_{\max} \bm{Z} := \left( \bigvee_{j=1}^q a_{1j}Z_j, \ldots, \bigvee_{j=1}^q a_{dj}Z_j \right)
 \end{equation}
 and
 \begin{equation}\label{eq-max-linear-X-cooley}
-    \bm{X} = A \otimes \bm{Z} := \bigoplus_{j=1}^q (\bm{a}_j \odot Z_j).
+    \bm{X} = A \otimes \bm{Z} := \bigoplus_{j=1}^q (\bm{a}_j \odot Z_j),
 \end{equation}
-Adopting the terminology of @cooleyDecompositionsDependenceHighdimensional2019, we refer to these as the max-stable and transformed-linear constructions, respectively. Under the max-stable construction, each component $X_i$ is the maximum of linear combinations of the heavy-tailed latent variables $Z_1,\ldots,Z_q$. The second construction is defined in terms of transformed-linear vector space operations $\oplus$ and $\odot$ defined by @cooleyDecompositionsDependenceHighdimensional2019. These operations will be defined explicitly and discussed later in @sec-background-pca. The difference between the two constructions manifests in their realisations, as illustrated in Figure 7 in the Supplementary Material of @cooleyDecompositionsDependenceHighdimensional2019. The directions of large realisations of the max-stable construction tend to correspond almost exactly to the points $\bm{a}_1/\|\bm{a}_1\|_{\alpha},\ldots,\bm{a}_q/\|\bm{a}_q\|_{{\alpha}}$. Under the transformed-linear construction, the directions of extreme events tend to lie in a neighbourhood of, but not exactly on, these discrete locations. 
+where the transformed-linear vector space operations $\oplus$ and $\odot$ are defined in \eqref{eq-cooley-vector-ops}.
+Adopting the terminology of @cooleyDecompositionsDependenceHighdimensional2019, we refer to these as the max-stable and transformed-linear constructions, respectively. Under the max-stable construction, named as such because the resulting random vector is max-stable, each component $X_i$ is the maximum of linear combinations of the heavy-tailed latent variables $Z_1,\ldots,Z_q$. The second construction is defined in terms of transformed-linear vector space operations $\oplus$ and $\odot$ defined by @cooleyDecompositionsDependenceHighdimensional2019. These operations will be defined explicitly and discussed later in @sec-background-pca. The difference between the two constructions manifests in their realisations, as illustrated in Figure 7 in the Supplementary Material of @cooleyDecompositionsDependenceHighdimensional2019. The directions of large realisations of the max-stable construction tend to correspond almost exactly to the points $\bm{a}_1/\|\bm{a}_1\|_{\alpha},\ldots,\bm{a}_q/\|\bm{a}_q\|_{{\alpha}}$. Under the transformed-linear construction, the directions of extreme events tend to lie in a neighbourhood of, but not exactly on, these discrete locations. 
 
 Computing joint tail event probabilities is straightforward under the max-linear model. Suppose $\bm{X}$ is max-linear with parameter matrix $A$. Consider the extreme failure region
 \begin{equation*}
@@ -262,7 +276,7 @@ A function $f:\R_+\to\R_+$ is regularly varying with index $\alpha\in\R$ if, for
 If $\alpha=0$, then $f$ is called slowly-varying. Intuitively, a regularly varying function is one that behaves like a power function as the argument approaches infinity. This notion is generalised to random variables by taking the distributional tail as the function of interest. 
 
 :::{#def-regular-variation-random-variable}
-A non-negative random variable $X$ is regularly varying with tail index $\alpha \geq 0$ if the right-tail of its distribution function is regularly varying with index $-\alpha$, i.e. for all $x>1$,
+A non-negative random variable $X$ is regularly varying with tail index $\alpha>0$ if the right-tail of its distribution function is regularly varying with index $-\alpha$, i.e. for all $x>1$,
     \begin{equation*}
         \lim_{t\to\infty} \mathbb{P}(X > tx \mid X > t) = x^{-\alpha}.
     \end{equation*}
@@ -278,31 +292,31 @@ for some slowly-varying function $L$ [@jessenRegularlyVaryingFunctions2006]. Reg
 \end{equation*}
 The ubiquity of regular variation in extreme value statistics is due to this homogeneity property. Under regular variation, the probability law of $X$ at some level $\lambda x$ is identical to the probability law at level $x$, up to some constant factor. An analogous interpretation holds when regular variation is generalised to multivariate random vectors, where the joint tail distribution is represented by a homogeneous limit measure.
 
-Although MRV can be formulated more generally -- see Section 6.5.5 in @resnickHeavytailPhenomenaProbabilistic2007 -- we exclusively focus on random vectors $\bm{X}$ taking values on the positive orthant $\R_+^d:=[0,\infty)^d$. This common assumption is not as restrictive as it might initially seem. In most applications, the risk being assessed is directional. For example, a climatologist might model the lows or the highs of precipitation records depending on whether they are analysing drought risk or flood risk. Without loss of generality and by means of a transformation if necessary, this direction of interest can be defined as ‘positive’. The two equivalent definitions below express the MRV property in terms of vague convergence to some limiting measure. Similar to univariate regular variation (@def-regular-variation-random-variable), the salient property of these limit measures is their power law behaviour.
+Although MRV can be formulated more generally -- see Section 6.5.5 in @resnickHeavytailPhenomenaProbabilistic2007 -- we exclusively focus on random vectors $\bm{X}$ taking values on the positive orthant $\R_+^d:=[0,\infty)^d$. This common assumption is not as restrictive as it might initially seem. In most applications, the risk being assessed is directional. For example, a climatologist might model the lows or the highs of precipitation records depending on whether they are analysing drought risk or flood risk. Without loss of generality and by means of a transformation if necessary, this direction of interest can be defined as ‘positive’. The two equivalent definitions below express the MRV property in terms of vague convergence to some limiting measure. Roughly speaking, vague convergence means that integrals of bounded continuous test functions converge; a full theorerical treatment is given in the preliminary chapters of @resnickHeavytailPhenomenaProbabilistic2007. Similar to univariate regular variation (@def-regular-variation-random-variable), the salient property of these limit measures is their power law behaviour.
 
 :::{#def-mrv}
 A random vector $\bm{X}=(X_1,\ldots,X_d)$ is multivariate regularly varying with tail index $\alpha>0$, denoted $\bm{X}\in\mathcal{RV}_+^d(\alpha)$, if it satisfies the following (equivalent) statements [@resnickHeavytailPhenomenaProbabilistic2007]: 
 
 1. There exists a sequence $b_n\to\infty$ and a non-negative Radon measure $\nu$ on $\mathbb{E}_0:=[0,\infty]^d\setminus\{\bm{0}\}$ such that
 \begin{equation}\label{eq-mrv}
-n\mathbb{P}(b_n^{-1}\bm{X} \in \cdot) \stackrel{\mathrm{v}}{\rightarrow} \nu(\cdot),\qquad (n\to\infty),
+n\mathbb{P}(b_n^{-1}\bm{X} \in \cdot) \stackrel{\mathrm{v}}{\rightarrow} \nu(\cdot),\qquad n\to\infty,
 \end{equation}
 where $\stackrel{\mathrm{v}}{\rightarrow}$ denotes vague convergence in the space of non-negative Radon measures on $\mathbb{E}_0$. The exponent measure $\nu$ is homogeneous of order $-\alpha$, that is, for any $s>0$,
 \begin{equation}
     \nu(s\,\cdot)=s^{-\alpha}\nu(\cdot).
 \end{equation}
-2. Let $\|\cdot\|$ be an arbitrary norm on $\R^d$. Denote the radial and angular components of $\bm{X}$ by $R:=\|\bm{X}\|$ and $\bm{\Theta}:=\bm{X}/\|\bm{X}\|$. Then there exists a sequence $b_n\to\infty$ and a finite measure $H$ on the simplex
+2. Let $\|\cdot\|$ be an arbitrary norm on $\R^d$. Denote the radial and angular components of $\bm{X}$ by $R:=\|\bm{X}\|$ and $\bm{\Theta}:=\bm{X}/\|\bm{X}\|$. Then there exists a sequence $b_n\to\infty$ and a unique finite measure $H$ on the simplex
     \begin{equation}\label{eq-general-simplex}
         \mathbb{S}_{+}^{d-1}:=\{\bm{x}\in\R_+^d:\|\bm{x}\|=1\}
     \end{equation}
     such that
 \begin{equation}\label{eq-polar-mrv}
-n\mathbb{P}((b_n^{-1}R,\bm{\Theta}) \in \cdot) \stackrel{\mathrm{v}}{\rightarrow} \nu_{\alpha}\times H(\cdot),\qquad (n\to\infty),
+n\mathbb{P}((b_n^{-1}R,\bm{\Theta}) \in \cdot) \stackrel{\mathrm{v}}{\rightarrow} \nu_{\alpha}\times H(\cdot),\qquad n\to\infty,
 \end{equation}
 in the space of non-negative Radon measures on $(0,\infty]\times\mathbb{S}_{+}^{d-1}$, where $\nu_{\alpha}((x,\infty))=x^{-\alpha}$ for any $x>0$.
 :::
 
-The limit measures $\nu$ and $H$ in \eqref{eq-mrv} and \eqref{eq-polar-mrv} are related via 
+When $\|\cdot\|$ is the $L_1$-norm, the measure $H$ in @def-mrv coincides with the angular measure discussed earlier in the context of max-stable models and satisfies the associated moment constraint. This provides a bridge between the two frameworks -- max-stability and multivariate regular variation -- allowing us to tacitly assume that the measures/models introduced earlier carry over to the MRV setting. The limit measures $\nu$ and $H$ in \eqref{eq-mrv} and \eqref{eq-polar-mrv} are related via 
 \begin{equation}\label{eq-nu-H-relation}
     \nu(\{\bm{x}\in\mathbb{E}_0:\|\bm{x}\| > s,\bm{x}/\|\bm{x}\|\in\cdot\}) 
     = s^{-\alpha}H(\cdot),\qquad  \nu(\dee r\times \dee \bm{\theta})
@@ -312,7 +326,7 @@ The attractive feature of MRV is best represented by its pseudo-polar formulatio
 
 The MRV property implicitly requires that the marginal components $X_1,\ldots,X_d$ are heavy-tailed with a shared tail index. Standard practice is to standardise the margins prior to modelling the dependence structure (@sec-background-copulae), so this is not restrictive. In this thesis, we will always choose Fréchet margins with unit scale and shape parameter $\alpha>0$, that is
 \begin{equation}\label{eq-alpha-frechet}
-    \mathbb{P}(X_i<x) = \exp(-x^{-\alpha}), \qquad (x>0).
+    \mathbb{P}(X_i<x) = \exp(-x^{-\alpha}), \qquad x>0.
 \end{equation}
 An MRV random vector on $\alpha$-Fréchet margins \eqref{eq-alpha-frechet} has tail index $\alpha$. Thus, as before, fixing the margins deals with the tail index and the angular measure becomes the object of interest.
 
@@ -322,7 +336,7 @@ The angular measure is unique only with respect to a pre-specified norm $\|\cdot
 \end{equation}
 with \eqref{eq-Lp-simplex} the corresponding simplex. The mass of the angular measure is $m:=H(\mathbb{S}_{+}^{d-1})\in(0,\infty)$. The sequence $\{b_n\}$ and the quantity $m$ are jointly determined by \eqref{eq-polar-mrv}. Replacing $\{b_n\}$ by $\{sb_n\}$ for some $s>0$ yields a new angular measure $H'=s^{-\alpha}H$ whose mass is $m'=s^{-\alpha}m$. We are free to choose whether the scaling information is contained in $\{b_n\}$ or $m$. Possible reasons for preferring one over the other are discussed in @fougeresDenseClassesMultivariate2013, but ultimately it is an arbitrary modelling choice. In previous sections, $H$ was normalised to be a probability measure with $m=1$. Henceforth, we will tend to specify $\{b_n\}$ and push the scaling information onto $H$. With $\bm{X}$ standardised to $\alpha$-Fréchet margins, the centre of mass of $H$ must lie in the simplex interior:
 \begin{equation}\label{eq-H-mean-constraints-general}
-    \int_{\mathbb{S}_{+}^{d-1}} \theta_i \,\dee H(\bm{\theta}) = \mu > 0, \qquad (i=1,\ldots,d).
+    \int_{\mathbb{S}_{+}^{d-1}} \theta_i \,\dee H(\bm{\theta}) = \mu > 0, \qquad i=1,\ldots,d.
 \end{equation}
 Were this not the case it would imply that at least one variable can never be extreme, contradicting the assumption that all variables have equally heavy tails. The value of $\mu$ depends on the choice of norm and the mass of $H$. If $\|\cdot\|=\|\cdot\|_1$, then $\mu=m/d$ in accordance with \eqref{eq-H-mean-constraints}. If $\|\cdot\|=\|\cdot\|_2$, then $m/d\leq \mu \leq m/\sqrt{d}$ according to Lemma 2.1 in @fomichovSphericalClusteringDetection2023. The lower and upper bounds are attained when $H$ places all its mass at the vertices of the simplex or at its centre, respectively. These can be understood as the limiting cases of extremal dependence, which is formalised in the next section.
 
@@ -335,14 +349,14 @@ The extremal dependence structure of a random vector $\bm{X}$ can be quantified 
 Extremal dependence is analogous to, but separate from, the notion of statistical dependence in non-extreme statistics. In particular, two random processes might appear independent in the bulk of the distribution but exhibit dependence in their extremes, or vice versa. The extremal dependence structure may be very complex; angular measures form an infinite-dimensional class subject only to a set of moment constraints. For example, suppose $X_i$ and $X_j$ represent the recorded values of a meteorological variable measured at two spatial locations. The extremal dependence between $X_i$ and $X_j$ may depend on the spatial proximity of the sites, the topography of the spatial domain, the physics of the climatological process, and a multitude of other factors. The complexity grows as more variables are introduced, as higher-order dependencies come into play. Extremal dependence measures aim to provide summary information about particular aspects of the dependence structure. One such measure is the tail dependence coefficient.
 
 :::{#def-chi}
-Let $\bm{X}=(X_1,\ldots,X_d)$ with $X_i\sim F_i$ for $i=1,\ldots,d$. Let $\beta\subseteq\{1,\ldots,d\}$ with $|\beta|\geq 2$ and define $\bm{X}_\beta := \{X_i : i\in\beta\}$. The tail dependence coefficient associated with $\beta$ is [@simpsonDeterminingDependenceStructure2020]
+Let $\bm{X}=(X_1,\ldots,X_d)$ with $X_i\sim F_i$ for $i=1,\ldots,d$. Let $\beta\subseteq\{1,\ldots,d\}$ with $|\beta|\geq 2$ and define $\bm{X}_\beta := \{X_i : i\in\beta\}$. The tail dependence coefficient associated with $\beta$ is [@simpsonDeterminingDependenceStructure2020; @yuenUpperBoundsValueatrisk2014]
 \begin{equation}
     \chi_\beta = \lim_{u\to 1} \chi_\beta (u) = \lim_{u\to 1} \frac{\mathbb{P}(F_i(X_i) > u : i \in \beta)}{1-u}.
 \end{equation}
 When $\beta=\{i,j\}$ for $i\neq j$, we write $\chi_\beta=:\chi_{ij}$.
 :::
 
-We say that $X_i$ and $X_j$ are asymptotically independent (AI) if and only if $\chi_{ij}=0$. Asymptotic independence means that both variables cannot take extreme values simultaneously. If $\chi_{ij}\in(0,1]$, then the variables are asymptotically dependent (AD) and may be simultaneously extreme. The interpretation of $\chi_\beta$ for $|\beta|>2$ is more subtle. If $\chi_\beta\in(0,1]$, then all components of $\bm{X}_\beta$ may be simultaneously large. If $\chi_\beta=0$, then the corresponding variables may not be concomitantly extreme, but this does not preclude the possibility that $\chi_{\beta'}>0$ for some $\beta'\subset\beta$ with $|\beta'|\geq 2$.
+The tail dependence coefficient can be equivalently expressed as $\chi_{\beta}=\int_{\mathbb{S}_{+}^{d-1}}\min_{i\in\beta}\theta_i \dee H(\bm{\theta})$, where $H$ is the normalised angular measure with respect to the $L_1$ norm. We say that $X_i$ and $X_j$ are asymptotically independent (AI) if and only if $\chi_{ij}=0$. Asymptotic independence means that both variables cannot take extreme values simultaneously. If $\chi_{ij}\in(0,1]$, then the variables are asymptotically dependent (AD) and may be simultaneously extreme. The interpretation of $\chi_\beta$ for $|\beta|>2$ is more subtle. If $\chi_\beta\in(0,1]$, then all components of $\bm{X}_\beta$ may be simultaneously large. If $\chi_\beta=0$, then the corresponding variables may not be concomitantly extreme, but this does not preclude the possibility that $\chi_{\beta'}>0$ for some $\beta'\subset\beta$ with $|\beta'|\geq 2$. For example, it is possible that $\chi_\beta =0$ even if $\chi_{ij}>0$ for all distinct $i,j\in\beta$.
 
 Whether a particular tail dependence coefficient is zero or non-zero is determined by which subspaces of the simplex are charged with $H$-mass. Specifically, $\chi_\beta >0$ if and only if there exists $\beta'\supseteq\beta$ such that
 \begin{equation}\label{eq-asy-dep-chi-H}
@@ -417,7 +431,7 @@ taildep(X, meas = "chi", qlim = c(0.8, 0.995), plot = FALSE)$chi %>%
 
 Estimation of $\chi_\beta$ for $|\beta| > 2$ is more complicated and is related to the task of determining the support of the angular measure [@goixSparseRepresentationMultivariate2017; @meyerMultivariateSparseClustering2023; @simpsonDeterminingDependenceStructure2020]. This thesis primarily concerns dependence at the pairwise level, so we direct the reader to the aforementioned papers and the review in @engelkeSparseStructuresMultivariate2021 for further details.
 
-Let $\chi=(\chi_{ij})$ denote the Tail Dependence Matrix (TDM) of bivariate tail dependence coefficients with diagonal entries $\chi_{ii}:=1$. The TDM provides a high level summary of the extremal dependence structure. It has been applied for exploratory analysis [@huangNewExploratoryTools2019] and considered as a tool for clustering [@fomichovSphericalClusteringDetection2023]. @shyamalkumarTailDependenceMatrices2020 conjecture that the 'realisation problem' -- determining whether a given matrix is a valid TDM -- is NP-complete; this was recently proved by @janssenTaildependenceExceedanceSets2023. By establishing a correspondence between the class of TDMs and a metric space, @janssenTaildependenceExceedanceSets2023 also show that, in certain cases, higher order tail-dependence is fully determined by the bivariate TDM. @sec-background-tpdm introduces a similar (and almost identically named) matrix, the Tail *Pairwise* Dependence Matrix (TPDM), which is the eponym of this thesis. Rather than the tail dependence coefficient $\chi_{ij}$, the TPDM is founded on an alternative bivariate summary measure called the Extremal Dependence Measure (EDM).
+Let $\chi=(\chi_{ij})$ denote the Tail Dependence Matrix (TDM) of bivariate tail dependence coefficients with diagonal entries $\chi_{ii}:=1$. The TDM provides a high level summary of the extremal dependence structure. It has been applied for exploratory analysis [@huangNewExploratoryTools2019] and considered as a tool for clustering [@fomichovSphericalClusteringDetection2023]. @shyamalkumarTailDependenceMatrices2020 conjecture that the 'realisation problem' -- determining whether a given matrix is a valid TDM -- is NP-complete [@embrechtsBernoulliTaildependenceCompatibility2016; @fiebigRealizationProblemTail2017]; this was recently proved by @janssenTaildependenceExceedanceSets2023. By establishing a correspondence between the class of TDMs and a metric space, @janssenTaildependenceExceedanceSets2023 also show that, in certain cases, higher order tail-dependence is fully determined by the bivariate TDM. @sec-background-tpdm introduces a similar (and almost identically named) matrix, the Tail *Pairwise* Dependence Matrix (TPDM), which is the eponym of this thesis. Rather than the tail dependence coefficient $\chi_{ij}$, the TPDM is founded on an alternative bivariate summary measure called the Extremal Dependence Measure (EDM).
 
 #### Extremal dependence measure
 
@@ -430,23 +444,27 @@ Let $\bm{X}\in\mathcal{RV}_+^d(\alpha)$ with angular measure $H$. The EDM betwee
 \end{equation}
 :::
 
-The EDM depends on the choice of norm via the angular measure, but @larssonExtremalDependenceMeasure2012 show that EDMs under different norms are equivalent in a certain sense. The EDM was originally defined by @resnickExtremalDependenceMeasure2004 for bivariate random vectors $\bm{X}=(X_1,X_2)$. In their definition, the integrand is
+The EDM depends on the choice of norm via the angular measure, but @larssonExtremalDependenceMeasure2012 show that EDMs under different norms are equivalent with respect to an equivalence relation defined therein. The EDM was originally defined by @resnickExtremalDependenceMeasure2004 for bivariate random vectors $\bm{X}=(X_1,X_2)$. In their definition, the integrand is
 \begin{equation}
 \left(\frac{4}{\pi}\right)^2 \arctan\left(\frac{\theta_2}{\theta_1}\right)\left[\frac{\pi}{2} - \arctan\left(\frac{\theta_2}{\theta_1}\right) \right]
 \end{equation}
-rather than $\theta_1\theta_2$. The original and refined versions are also equivalent. 
+rather than $\theta_1\theta_2$. The dependence measures defined using these two different integrands are also equivalent under the aforementioned equivalence relation. 
 
 Being explicitly defined in terms of the angular measure, the EDM's interpretation in terms of AD/AI is straightforward. Recall from \eqref{eq-asy-dep-chi-H} that variables $X_i$ and $X_j$ are asymptotically independent if and only if $H(\{\bm{\theta}:\theta_i,\theta_j > 0\})=0$. Then
-\begin{equation*}
-\chi_{ij} = 0 \iff \int_{\{\bm{\theta}\in\mathbb{S}_{+}^{d-1} \, : \, \theta_i,\theta_j > 0\}} \theta_i \theta_j \,\dee H(\bm{\theta}) = 0 \iff \mathrm{EDM}_{ij}=0.
-\end{equation*}
-The EDM is maximal when $X_i$ and $X_j$ are perfectly asymptotically dependent. The maximal value depends on the choice of norm and the mass of the angular measure. When $d=2$ and $\|\cdot\|=\|\cdot\|_p$ we have $\mathrm{EDM}_{ij} \leq 2^{-2/p}m$ with equality if and only if $H$ places all its mass at the simplex barycentre, that is $H(\{(2^{-1/p}, 2^{-1/p})\}) = m$. We return to the EDM in @sec-background-tpdm when introducing the tail pairwise dependence matrix.
+\begin{align*}
+\chi_{ij} = 0 
+&\iff H(\{\bm{\theta}:\theta_i,\theta_j > 0\})=0 \\
+&\iff \int_{\{\bm{\theta}\in\mathbb{S}_{+}^{d-1} \, : \, \theta_i,\theta_j > 0\}} \theta_i \theta_j \,\dee H(\bm{\theta}) = 0 \\
+&\iff \int_{\bm{\theta}\in\mathbb{S}_{+}^{d-1}} \theta_i \theta_j \,\dee H(\bm{\theta}) = 0 \\
+&\iff \mathrm{EDM}_{ij}=0.
+\end{align*}
+The EDM is maximal when $X_i$ and $X_j$ are perfectly asymptotically dependent [@larssonExtremalDependenceMeasure2012]. The maximal value depends on the choice of norm and the mass of the angular measure. For instance, when $d=2$ and $\|\cdot\|=\|\cdot\|_p$ we have $\mathrm{EDM}_{ij} \leq 2^{-2/p}m$ with equality if and only if $H$ places all its mass at the simplex barycentre, that is $H(\{(2^{-1/p}, 2^{-1/p})\}) = m$. Boundedness of the EDM could be exploited to derive risk bounds, but this is not a focus of this thesis. We return to the EDM in @sec-background-tpdm when introducing the tail pairwise dependence matrix.
 
 ## Inference {#sec-background-inference}
 
 We now shift our attention to the topic of (non-parametric) inference in multivariate extremes. The general approach entails using the angular components of large observations to learn a model for $H$. This strategy is justified by the MRV assumption: \eqref{eq-polar-mrv} implies that
 \begin{equation}\label{eq-extremal-angles-converge-H}
-    \bm{\Theta}\mid (R>t) \stackrel{d}{\to} H(\cdot), \qquad (t\to\infty).
+    \bm{\Theta}\mid (R>t) \stackrel{d}{\to} H(\cdot), \qquad t\to\infty.
 \end{equation}
 The angular measure is the limiting distribution of the angles of exceedances of some radial threshold. By analogy to the peaks-over-threshold approach (@sec-background-gpd), it suggests itself to base inference on the subset of data points whose norm exceeds some high, fixed threshold. Increasing the threshold reduces the number of observations that enter into the estimators, and vice versa. It is generally more convenient to specify the desired number of threshold exceedances, denoted $k$, and set the threshold accordingly. This approach is most conveniently described using order statistics. 
 
@@ -473,7 +491,7 @@ All estimators will require us to choose the number of extreme observations $k$ 
     \lim_{n\to\infty}k(n)=\infty, \qquad \lim_{n\to\infty}\frac{k(n)}{n}=0.
 \end{equation}
 These arise as sufficient conditions for proving various asymptotic properties (e.g. consistency, asymptotic normality) of estimators. The condition $k\to\infty$ ensures that the number of extremes -- the effective sample size -- grows arbitrarily large. The second condition $k/n\to 0$ requires that the proportion of threshold exceedances becomes vanishingly small, ensuring that inference is targeting the tail. 
-In practice, $n$ is fixed and selecting $k$ requires striking a balance between these two aspects. Choosing $k$ too small reduces the amount of available information and leads to unnecessarily high uncertainty. If $k$ is too large, we risk using data that does not reflect the extremal dependence structure, leading to bias. An appropriate choice depends on both the sample size and the underlying distribution of $\bm{X}$. If the convergence in \eqref{eq-extremal-angles-converge-H} is rapid, then a low threshold may be adequate. Several threshold selection procedures have been proposed in univariate extremes (@sec-background-univariate), but the literature on radial threshold selection is comparatively scant. By combining two sub-tests regarding (i) independence of the radial and angular components and (ii) regular variation of the radial component, @einmahlTestingMultivariateRegular2020 devise a formal procedure testing the validity of the MRV assumption. They suggest choosing the threshold by examining a plot of the sequence of p-values against $k$. The support-detection algorithm of @meyerMultivariateSparseClustering2023 chooses $k$ automatically via minimisation of a penalised log-likelihood. This procedure is specific to their setting and relies on additional technical assumptions. Most applied studies use a rule-of-thumb approach and/or produce a threshold stability plot checking the (in)sensitivity of some quantity to the choice of $k$ -- see @jiangPrincipalComponentAnalysis2020, @szemkusSpatialPatternsIndices2024 and @russellAnalyzingDependenceMatrices2018 for examples. 
+In practice, $n$ is fixed and selecting $k$ requires striking a balance between these two aspects. Choosing $k$ too small reduces the amount of available information and leads to unnecessarily high uncertainty. If $k$ is too large, we risk using data that does not reflect the extremal dependence structure, leading to bias. An appropriate choice depends on both the sample size and the underlying distribution of $\bm{X}$. If the convergence in \eqref{eq-extremal-angles-converge-H} is rapid, then a low threshold may be adequate. Several threshold selection procedures have been proposed in univariate extremes (@sec-background-univariate), but the literature on radial threshold selection is comparatively scant. By combining two sub-tests regarding (i) independence of the radial and angular components and (ii) regular variation of the radial component, @einmahlTestingMultivariateRegular2020 and @wanThresholdSelectionMultivariate2019 devise formal procedures testing the validity of the MRV assumption, which lead to strategies for threshold selection. The support-detection algorithm of @meyerMultivariateSparseClustering2023 chooses $k$ automatically via minimisation of a penalised log-likelihood. This procedure is specific to their setting and relies on additional technical assumptions. Most applied studies use a rule-of-thumb approach and/or produce a threshold stability plot checking the (in)sensitivity of some quantity to the choice of $k$ -- see @jiangPrincipalComponentAnalysis2020, @szemkusSpatialPatternsIndices2024 and @russellAnalyzingDependenceMatrices2018 for examples. 
 
 ### The empirical angular measure {#sec-background-empirical-angular-measure}
 
@@ -486,7 +504,7 @@ The empirical angular measure based on $\bm{X}_1,\ldots,\bm{X}_n$ is the random 
 \end{equation}
 :::
 
-Note that $\hat{H}$ does not enforce the moment constraints \eqref{eq-H-mean-constraints}, so is not necessarily a valid angular measure. @einmahlMaximumEmpiricalLikelihood2009 construct an alternative non-parametric estimator that does enforce these restrictions, but it is limited to the bivariate setting. Proposition 3.3 in @janssenKmeansClusteringExtremes2020 establishes consistency $\hat{H}\overset{p}{\to}H$ of the empirical angular measure provided the level $k$ satisfies the rate conditions \eqref{eq-k-rate-conditions}. Their result holds for general norms in arbitrary dimensions. @clemenconConcentrationBoundsEmpirical2023 conduct a non-asymptotic (i.e. finite sample) analysis of $\hat{H}$, establishing high-probability bounds on the worst-case estimation error $\sup_{A\in\mathcal{A}}|H(A) - \hat{H}(A)|$ over classes $\mathcal{A}$ of Borel subsets on $\mathbb{S}_{+}^{d-1}$. Their results hold with $\|\cdot\|=\|\cdot\|_p$ for $p\in[1,\infty]$. Since $\hat{H}$ is a discrete measure concentrating at $k$ points, there exists a max-linear random vector $\bm{X}$ with parameter matrix 
+Here (and throughout this thesis), we assume that the mass $m$ is known; if this is not the case, it may be estimated from the data as $\hat{m}=R_{(k+1)}^2 k/n$ [@cooleyDecompositionsDependenceHighdimensional2019]. Note that $\hat{H}$ does not enforce the moment constraints \eqref{eq-H-mean-constraints}, so is not necessarily a valid angular measure. @einmahlMaximumEmpiricalLikelihood2009 construct an alternative non-parametric estimator that does enforce these restrictions, but it is limited to the bivariate setting. Proposition 3.3 in @janssenKmeansClusteringExtremes2020 establishes consistency $\hat{H}\overset{p}{\to}H$ of the empirical angular measure provided the level $k$ satisfies the rate conditions \eqref{eq-k-rate-conditions}. Their result holds for general norms in arbitrary dimensions. @clemenconConcentrationBoundsEmpirical2023 conduct a non-asymptotic (i.e. finite sample) analysis of $\hat{H}$, establishing high-probability bounds on the worst-case estimation error $\sup_{A\in\mathcal{A}}|H(A) - \hat{H}(A)|$ over classes $\mathcal{A}$ of Borel subsets on $\mathbb{S}_{+}^{d-1}$. Their results hold with $\|\cdot\|=\|\cdot\|_p$ for $p\in[1,\infty]$. Since $\hat{H}$ is a discrete measure concentrating at $k$ points, there exists a max-linear random vector $\bm{X}$ with parameter matrix 
 \begin{equation}\label{eq-empirical-A}
     \hat{A} := \left(\frac{m}{k}\right)^{1/\alpha}\left(\bm{\Theta}_{(1)}, \ldots, \bm{\Theta}_{(k)}\right) \in\R_+^{d\times k}.
 \end{equation}
@@ -498,7 +516,7 @@ whose angular measure is $\hat{H}$. Estimates of tail event probabilities under 
 \begin{equation}\label{eq-expectation-f}
     \mathbb{E}_{H}[f(\bm{\Theta})] := \int_{\mathbb{S}_{+}^{d-1}} f(\bm{\theta})\,\dee H(\bm{\theta}) = \mathbb{E}_{m^{-1}H}[mf(\bm{\Theta})],
 \end{equation}
-where $f:\mathbb{S}_{+}^{d-1}\to\R$. We have already seen an example of this in @def-edm: the EDM between $X_i$ and $X_j$ is defined as \eqref{eq-expectation-f} with $f(\bm{\theta})=\theta_i\theta_j$. We reiterate that in our notation, the expectation is with respect to a measure $H$ that is not necessarily normalised. When manipulating expectations/variances, the following relations may be useful to bear in mind:
+where $f:\mathbb{S}_{+}^{d-1}\to\R$. We have already seen an example of this in @def-edm: the EDM between $X_i$ and $X_j$ is defined as \eqref{eq-expectation-f} with $f(\bm{\theta})=\theta_i\theta_j$. We reiterate that in our notation, the expectation is with respect to a measure $H$ that is not necessarily normalised. If the reader finds this impedes understanding, they are free to simply normalise $H$ and rest assured that all results will hold except certain quantities will differ by a known factor of $d$. When manipulating expectations/variances, the following relations may be useful to bear in mind:
 \begin{align*}
 \mathbb{E}_{H} [f(\bm{\Theta})] &= \mathbb{E}_{m^{-1}H}[m f(\bm{\Theta})] = m \mathbb{E}_{m^{-1}H}[f(\bm{\Theta})] \\ 
 \mathrm{Var}_{H}[f(\bm{\Theta})] &= \mathbb{E}_{m^{-1}H} [m^2 f(\bm{\Theta})^2] - \mathbb{E}_{m^{-1}H} [mf(\bm{\Theta})]^2 = m^2 \mathrm{Var}_{m^{-1}H}[f(\bm{\Theta})].
@@ -522,13 +540,13 @@ holds locally uniformly for $t\in[0,\infty)$, where $\bar{F}_R(\cdot)=\mathbb{P}
 \end{equation}
 Then
 \begin{equation}
-    \sqrt{k}\left[\hat{\mathbb{E}}_{H} [f(\bm{\Theta})] - \mathbb{E}_{H} [f(\bm{\Theta})]\right]\to N(0, \nu^2), \qquad (n\to\infty).
+    \sqrt{k}\left[\hat{\mathbb{E}}_{H} [f(\bm{\Theta})] - \mathbb{E}_{H} [f(\bm{\Theta})]\right]\to N(0, \nu^2), \qquad n\to\infty.
 \end{equation}
 :::
 
 The rate condition \eqref{eq-clt-rate-condition} requires that the dependence between the radius and angle decays sufficiently quickly. This condition is non-observable and must be assumed.
 
-:::{#exm-edm-estimator}
+:::{#cor-edm-estimator}
 Let $\bm{X}_1,\ldots,\bm{X}_n$ be independent copies of $\bm{X}\in\mathcal{RV}_+^d(\alpha)$. The estimator for the EDM between $X_i$ and $X_j$ is
 \begin{equation*}
 \widehat{\mathrm{EDM}}_{ij} := \hat{\mathbb{E}}_{H} [\Theta_i\Theta_j] = \frac{m}{k}\sum_{l=1}^k \Theta_{(l),i}\Theta_{(l),j}.
@@ -639,7 +657,7 @@ Therefore $\Sigma=A^{\alpha/2}(A^{\alpha/2})^T$. Taking $A$ to be $A^{(1)}$ and 
 \Sigma^{(1)} = I_d I_d^T  = I_d, \qquad
 \Sigma^{(2)} = \bm{1}_d\bm{1}_d^T = J_d,
 \end{equation*}
-where $J_d$ is the $d\times d$ all-ones matrix. By construction, these represent the TPDMs under asymptotic dependence and complete dependence, respectively.
+where $J_d$ is the $d\times d$ all-ones matrix. By construction, these represent the TPDMs under asymptotic independence and complete dependence, respectively.
 :::
 
 ### Interpretation of the TPDM entries {#sec-background-tpdm-interpretation}
@@ -728,10 +746,10 @@ The TPDM is completely positive.
 :::
 
 ::: {.proof}
-Let $\bm{X}\in\mathcal{RV}_+^d(\alpha)$ with angular measure $H$ and TPDM $\Sigma$. By Proposition 5 in @fougeresDenseClassesMultivariate2013, there exists a sequence of matrices $\{A_q\in\R_+^{d\times q}:q\geq 1\}$ such that $H_q\overset{v}{\to} H$, where $H_q$ is the angular measure of the max-linear random vector $\bm{X}_q\in\mathcal{RV}_+^d(\alpha)$ parametrised by $A_q$. The TPDM of $\bm{X}_q$ is $\Sigma_q=A_q^{\alpha/2}(A_q^{\alpha/2})^T$ by @exm-max-linear-tpdm. Thus, $\{\Sigma_q : q\geq 1\}$ is a sequence of completely positive matrices. The limit $\lim_{q\to\infty}\Sigma_q=\Sigma$ must also be completely positive because the set of completely positive matrices is closed [@haufmannCompletelyPositiveMatrices2011, Theorem 2.1.9]. \qedhere
+Let $\bm{X}\in\mathcal{RV}_+^d(\alpha)$ with angular measure $H$ and TPDM $\Sigma$. By Proposition 5 in @fougeresDenseClassesMultivariate2013, there exists a sequence of matrices $\{A_q\in\R_+^{d\times q}:q\geq 1\}$ such that $H_q\overset{v}{\to} H$, where $H_q$ is the angular measure of the max-linear random vector $\bm{X}_q\in\mathcal{RV}_+^d(\alpha)$ parametrised by $A_q$. Note that $q$ is both the index of the sequence and the number of columns of the max-linear parameter matrix. The TPDM of $\bm{X}_q$ is $\Sigma_q=A_q^{\alpha/2}(A_q^{\alpha/2})^T$ by @exm-max-linear-tpdm. Thus, $\{\Sigma_q : q\geq 1\}$ is a sequence of completely positive matrices. The limit $\lim_{q\to\infty}\Sigma_q=\Sigma$ must also be completely positive because the set of completely positive matrices is closed [@haufmannCompletelyPositiveMatrices2011, Theorem 2.1.9]. \qedhere
 :::
 
-In principle this provides a way to check whether a given matrix is a TPDM, but the membership problem for the completely positive cone is NP-hard [@dickinsonComputationalComplexityMembership2014]. The following example illustrates how these two decompositions apply to the symmetric logistic model and hints towards their use for dimension reduction, to be formalised in @sec-background-tpdm-review.
+This result guarantees that for any TPDM, there exists a max-linear model with that TPDM. (The mapping from max-linear models to TPDMs is many-to-one.) In principle this provides a way to check whether a given matrix is a TPDM, but the membership problem for the completely positive cone is NP-hard [@dickinsonComputationalComplexityMembership2014]. The following example illustrates how these two decompositions apply to the symmetric logistic model and hints towards their use for dimension reduction, to be formalised in @sec-background-tpdm-review.
 
 :::{#exm-symmetric-logistic-tpdm-decomposition}
 Suppose $\bm{X}=(X_1,\ldots,X_d)\in\mathcal{RV}_+^d(\alpha)$ is symmetric logistic with parameter $\gamma\in(0,1]$. Then 
@@ -800,7 +818,7 @@ Under the conditions of @thm-clt-extremes, the entries of $\hat{\Sigma}$ are con
 :::  
 
 ::: {.proof}
-See @exm-edm-estimator. \qedhere
+See @cor-edm-estimator. \qedhere
 :::
 
 If $X_i$ and $X_j$ are asymptotically independent ($\sigma_{ij}=0$), then $\nu_{ij}^2=0$ and the limit distribution is degenerate. In this case, the above result only proves consistency, i.e. $\hat{\sigma}_{ij}\to 0$, and cannot be used to formally test for asymptotic independence [@lehtomaaAsymptoticIndependenceSupport2020].
@@ -860,7 +878,7 @@ where $\nu_{ij}^2$ is as defined in @prp-empirical-tpdm-normality-entries and
  \end{equation*}
 :::
 
-The proof can be found in @sec-app-tpdm-asy-normality-proof. It extends the proof of Theorem 5.23 in @kraliCausalityEstimationMultivariate2018 to permit general $\alpha$. The following example illustrates an application of @prp-empirical-tpdm-normality to the max-linear model.
+The proof can be found in @sec-app-tpdm-asy-normality-proof. It extends the proof of Theorem 5.23 in @kraliCausalityEstimationMultivariate2018 to permit general values of $\alpha$ not necessarily equal to two. The following example illustrates an application of @prp-empirical-tpdm-normality to the max-linear model.
 
 :::{#exm-max-linear-asymptotic-tpdm}
 Suppose $\bm{X}=(X_1,\ldots,X_4)\in\mathcal{RV}_+^4(1)$ is max-linear with (randomly generated) parameter matrix $A\in\R_+^{4\times 12}$ as shown in @fig-max-linear-example-A-Sigma-V (top). The TPDM $\Sigma=A^{1/2}(A^{1/2})^T$ is visualised in the bottom-left plot, with each cell's colour intensity representing the magnitude of the corresponding entry of $\Sigma$. All pairs of components exhibit strong dependence. The matrix in the bottom-right is the asymptotic covariance matrix $V$ of $\hat{\bm{\sigma}}$, derived in @sec-app-tpdm-V-max-linear. It has ${4\choose 2}=6$ rows and columns. We now run simulations verifying/illustrating @prp-empirical-tpdm-normality for this example. We generate $n=10^4$ independent observations $\bm{x}_1,\ldots,\bm{x}_n$ of $\bm{X}=A\times_{\max}\bm{Z}$ (see \eqref{eq-max-linear-X}) and compute the empirical TPDM using $k=\sqrt{n}=100$ extremes. Repeating this process, we obtain 1,000 independent realisations of $\hat{\Sigma}$. After row-wise vectorisation, these estimates should be approximately $N(\bm{\sigma}, k^{-1}V)$ distributed. @fig-max-linear-example-ggpairs examines whether this is the case. First consider the diagonal panels. These show that the density function of an $N(\sigma_{ij},\nu_{ij}^2/k)$ random variable (blue curve) provides a good fit for the empirical distribution of $\hat{\sigma}_{ij}$ (red histogram). Now consider the scatter plots in the lower triangular portion of the plot. The grey points represent 1,000 realisations of $(\hat{\sigma}_{ij},\hat{\sigma}_{lm})$. The blue ellipses are the true asymptotic 95\% data ellipses centred at $(\sigma_{ij},\sigma_{lm})$ (blue crosses). Their orientation relates to the association $\rho_{ij,lm}$ between $\hat{\sigma}_{ij}$ and $\hat{\sigma}_{lm}$, while the lengths of the major and minor axes are dictated by the asymptotic variances $\nu_{ij}^2,\nu_{lm}^2$. The red ellipses and crosses are defined analogously but estimated from the data. They are generally in close agreement. The upper-triangular panels list the values of $\rho_{ij,lm}$ (blue) alongside empirical estimates (red) based on the sample covariance between $\hat{\sigma}_{ij}$ and $\hat{\sigma}_{lm}$. 
@@ -930,22 +948,22 @@ Treating the angles $\bm{\Theta}_{(1)},\ldots,\bm{\Theta}_{(k)}$ as points in $\
     \tau:\R\to \R_+, \qquad \tau(x) = \log[1+\exp(x)].
 \end{equation*}
 This transformation is bijective with inverse function $\tau^{-1}(y)=\log[\exp(y)-1]$ and, crucially, it is tail-preserving, i.e. $\lim_{x\to 1}\tau(x)/x = 1$. The role of $\tau$ is to provide a pathway between $\R^d$ and $\R_+^d$ that doesn't disturb the tails. The inner product space is constructed as follows. For any $\bm{x},\bm{y}\in\R_+^d$ and $\alpha\in\R$, they define operations
-\begin{equation*}
+\begin{equation}\label{eq-cooley-vector-ops}
     \bm{x} \oplus \bm{y} = \tau[\tau^{-1}(\bm{x})+\tau^{-1}(\bm{y})],\qquad 
     \alpha \odot \bm{x} = \tau[a\tau^{-1}(\bm{x})].
-\end{equation*}
+\end{equation}
 and an inner product and norm
 \begin{equation*}
     \left\langle \bm{x},\bm{y}\right\rangle_\tau =\left\langle \tau^{-1}(\bm{x}),\tau^{-1}(\bm{y})\right\rangle ,\qquad 
     \|\bm{x}\|_\tau = \left\langle \bm{x},\bm{x}\right\rangle_\tau^{1/2} = \|\tau^{-1}(\bm{x})\|_2.
 \end{equation*}
-The PCA procedure may then be formulated in the transformed-linear space $\mathcal{H}=\R_+^d$ or in $\R^d$ under the transform/back-transform approach (see @sec-app-pca-hilbert). As in @dreesPrincipalComponentAnalysis2021, let $(\hat{\bm{u}}_j,\hat{\lambda}_j)$ be the ordered eigenpairs (in $\R^d$) of $\hat{\Sigma}$. Then $\{\hat{\bm{\omega}}_1,\ldots,\hat{\bm{\omega}}_d\}=\{\tau(\hat{\bm{u}}_1),\ldots,\tau(\hat{\bm{u}}_d)\}$ forms an orthonormal basis of $\R_+^d$. In this new basis, the random vector $\bm{X}$ may be decomposed as
+The PCA procedure may then be formulated in the transformed-linear space $\mathcal{H}=\R_+^d$ or in $\R^d$ under the transform/back-transform approach (see @sec-app-pca-hilbert). Under the former approach, one works with the raw observations viewed as members of $\mathcal{H}$. Under the latter approach, the data are transformed to a Euclidean space, where familiar algebraic operations may be applied. These two approaches are exactly equivalent: it is a matter of taste whether one to work in 'exotic' geometries or with transformed data. Here, we elect for the former characterisation. As in @dreesPrincipalComponentAnalysis2021, let $(\hat{\bm{u}}_j,\hat{\lambda}_j)$ be the ordered eigenpairs (in $\R^d$) of $\hat{\Sigma}$. Then $\{\hat{\bm{\omega}}_1,\ldots,\hat{\bm{\omega}}_d\}=\{\tau(\hat{\bm{u}}_1),\ldots,\tau(\hat{\bm{u}}_d)\}$ forms an orthonormal basis of $\R_+^d$. In this new basis, the random vector $\bm{X}$ may be decomposed as
 \begin{equation}\label{eq-cooley-pca-expansion}
     \bm{X} = \bigoplus_{j=1}^d (\hat{V}_j \odot \hat{\bm{\omega}}_j) = \tau\left(\sum_{j=1}^d \hat{V}_j\hat{\bm{u}}_j\right),
 \end{equation}
 where $\hat{V}_j = \left\langle \bm{X},\hat{\bm{\omega}}_j\right\rangle_\tau$ for $j=1,\ldots,d$. Truncating the expansion \eqref{eq-cooley-pca-expansion} yields low-rank reconstructions of $\bm{X}$. The random variables $\hat{V}_1,\ldots,\hat{V}_d$ are called the extremal principal components of $\bm{X}$. The MRV $\R^d$-valued random vector $\hat{\bm{V}}$ has the same dimension as $\bm{X}$, but its components are ordered according to their contribution to the extremal behaviour of $\bm{X}$ in the sense that [@cooleyDecompositionsDependenceHighdimensional2019, Proposition 6]
 \begin{equation*}
-    \mathrm{scale}(|\hat{V}_i|) = \hat{\lambda}_i^{1/\alpha}, \qquad (i=1,\ldots,d),
+    \mathrm{scale}(|\hat{V}_i|) = \hat{\lambda}_i^{1/\alpha}, \qquad i=1,\ldots,d,
 \end{equation*}
 Thus, the $i$th eigenvector $\hat{\bm{\omega}}_i$ represents the direction of maximum scale after accounting for information contained in the previous eigenvectors $\{\hat{\bm{\omega}}_j:j<i\}$. 
 
